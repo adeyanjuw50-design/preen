@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Preen</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+</head>
+<body>
+
+  <!-- WELCOME SCREEN -->
+  <div class="screen active" id="screen-welcome">
+    <div class="welcome-bg">
+      <div class="welcome-content">
+        <div class="logo-wrap">
+          <div class="logo-icon">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#F59E0B"/>
+              <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+            </svg>
+          </div>
+          <div class="logo-text">Preen</div>
+        </div>
+        <p class="tagline">Book beauty, your way.</p>
+        <div class="welcome-cats">
+          <span>Hair</span><span>Nails</span><span>Barber</span><span>Lash</span><span>Massage</span>
+        </div>
+        <div class="welcome-bottom">
+          <p class="welcome-headline">Nigeria's #1 beauty booking platform</p>
+          <p class="welcome-sub">Discover top professionals near you.</p>
+          <button class="btn-primary" onclick="showScreen('screen-signup')">Create Account</button>
+          <button class="btn-secondary" onclick="showScreen('screen-login')">Log In</button>
+          <p class="guest-link" onclick="showScreen('screen-home')">Continue as Guest &rarr;</p>
+          <p class="provider-link" onclick="showScreen('screen-provider-login')">Are you a provider? Join here &rarr;</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGN UP SCREEN -->
+  <div class="screen" id="screen-signup">
+    <div class="auth-screen">
+      <div class="auth-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <div class="logo-text small">Preen</div>
+      </div>
+      <h2>Create Account</h2>
+      <p class="auth-sub">Join thousands looking and feeling great</p>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="signup-name" placeholder="Enter your full name"/>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="signup-phone" placeholder="+234 800 000 0000"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" placeholder="Enter your email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" placeholder="Create a password"/>
+      </div>
+      <button class="btn-primary" onclick="handleSignup()">Create Account</button>
+      <p class="auth-switch">Already have an account? <span onclick="showScreen('screen-login')">Log In</span></p>
+    </div>
+  </div>
+
+  <!-- LOGIN SCREEN -->
+  <div class="screen" id="screen-login">
+    <div class="auth-screen">
+      <div class="auth-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <div class="logo-text small">Preen</div>
+      </div>
+      <h2>Welcome Back</h2>
+      <p class="auth-sub">Log in to your Preen account</p>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="Enter your email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password"/>
+      </div>
+      <p class="forgot-link">Forgot password?</p>
+      <button class="btn-primary" onclick="handleLogin()">Log In</button>
+      <p class="auth-switch">Don't have an account? <span onclick="showScreen('screen-signup')">Sign Up</span></p>
+      <div class="divider">or</div>
+      <p class="guest-link" onclick="showScreen('screen-home')">Continue as Guest &rarr;</p>
+    </div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div class="screen" id="screen-home">
+    <div class="app-screen">
+      <div class="home-header">
+        <div>
+          <p class="greeting">Good day 👋</p>
+          <p class="headline">Who's making you<br/>look good today?</p>
+        </div>
+        <div class="header-icons">
+          <div class="icon-btn" onclick="showScreen('screen-notifications')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span class="notif-dot"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="location-bar" onclick="showScreen('screen-location')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span id="selected-location">Abuja, FCT</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+
+      <div class="search-bar" onclick="showScreen('screen-search')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Search venues, professionals...</span>
+      </div>
+
+      <!-- EXPLORE SECTION -->
+      <div class="section-header"><span class="section-title">Explore</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
+      <div class="explore-grid">
+        <div class="explore-card" onclick="filterAndSearch('Hair salons')" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
+          <span>Hair salons</span>
+        </div>
+        <div class="explore-card" onclick="filterAndSearch('Barbers')" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
+          <span>Barbers</span>
+        </div>
+        <div class="explore-card" onclick="filterAndSearch('Nails')" style="background: linear-gradient(135deg, #db2777, #ec4899);">
+          <span>Nails</span>
+        </div>
+        <div class="explore-card" onclick="filterAndSearch('Massage')" style="background: linear-gradient(135deg, #059669, #10b981);">
+          <span>Massage</span>
+        </div>
+        <div class="explore-card" onclick="filterAndSearch('Medspa')" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6);">
+          <span>Medspa</span>
+        </div>
+        <div class="explore-card" onclick="filterAndSearch('Spa')" style="background: linear-gradient(135deg, #b45309, #d97706);">
+          <span>Spa & sauna</span>
+        </div>
+      </div>
+
+      <!-- RECENTLY VIEWED -->
+      <div class="section-header"><span class="section-title">Recently Viewed</span><span class="see-all">See all</span></div>
+      <div class="h-scroll">
+        <div class="h-card" onclick="showScreen('screen-provider')">
+          <div class="h-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
+            <span class="h-card-emoji">✂️</span>
+          </div>
+          <p class="h-card-name">Kings Barbershop</p>
+          <p class="h-card-meta">★ 4.9 · Wuse 2</p>
+        </div>
+        <div class="h-card" onclick="showScreen('screen-provider')">
+          <div class="h-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
+            <span class="h-card-emoji">💅</span>
+          </div>
+          <p class="h-card-name">Glam Nails by Temi</p>
+          <p class="h-card-meta">★ 4.8 · Garki</p>
+        </div>
+        <div class="h-card" onclick="showScreen('screen-provider')">
+          <div class="h-card-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
+            <span class="h-card-emoji">👁️</span>
+          </div>
+          <p class="h-card-name">Lash Queen Ada</p>
+          <p class="h-card-meta">★ 5.0 · Maitama</p>
+        </div>
+      </div>
+
+      <!-- RECOMMENDED -->
+      <div class="section-header"><span class="section-title">Recommended for You</span><span class="see-all">See all</span></div>
+      <div class="h-scroll">
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
+            <span style="font-size:36px;">✂️</span>
+            <div class="h-card-wide-badge">★ 4.9</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Kings Barbershop</p>
+            <p class="h-card-meta">Wuse 2, Abuja · 0.8km</p>
+            <p class="h-card-price">From ₦1,000</p>
+          </div>
+        </div>
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e2e1a, #1a6e3a);">
+            <span style="font-size:36px;">💇</span>
+            <div class="h-card-wide-badge">★ 4.7</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Zara Hair Studio</p>
+            <p class="h-card-meta">Gwarinpa, Abuja · 3.4km</p>
+            <p class="h-card-price">From ₦8,000</p>
+          </div>
+        </div>
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
+            <span style="font-size:36px;">💅</span>
+            <div class="h-card-wide-badge">★ 4.8</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Glam Nails by Temi</p>
+            <p class="h-card-meta">Garki, Abuja · 1.2km</p>
+            <p class="h-card-price">From ₦5,000</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW TO PREEN -->
+      <div class="section-header"><span class="section-title">New to Preen</span><span class="see-all">See all</span></div>
+      <div class="h-scroll">
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #2e1a0e, #6e3a1a);">
+            <span style="font-size:36px;">💆</span>
+            <div class="h-card-wide-badge new">New</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Serenity Spa</p>
+            <p class="h-card-meta">Asokoro, Abuja · 4.1km</p>
+            <p class="h-card-price">From ₦15,000</p>
+          </div>
+        </div>
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
+            <span style="font-size:36px;">👄</span>
+            <div class="h-card-wide-badge new">New</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Glow Makeup Studio</p>
+            <p class="h-card-meta">Wuse 2, Abuja · 1.5km</p>
+            <p class="h-card-price">From ₦10,000</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRENDING -->
+      <div class="section-header"><span class="section-title">Trending</span><span class="see-all">See all</span></div>
+      <div class="h-scroll" style="padding-bottom: 100px;">
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
+            <span style="font-size:36px;">👁️</span>
+            <div class="h-card-wide-badge trending">🔥 Hot</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Lash Queen Ada</p>
+            <p class="h-card-meta">Maitama, Abuja · 2.1km</p>
+            <p class="h-card-price">From ₦8,000</p>
+          </div>
+        </div>
+        <div class="h-card-wide" onclick="showScreen('screen-provider')">
+          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
+            <span style="font-size:36px;">✂️</span>
+            <div class="h-card-wide-badge trending">🔥 Hot</div>
+          </div>
+          <div class="h-card-wide-info">
+            <p class="h-card-name">Kings Barbershop</p>
+            <p class="h-card-meta">Wuse 2, Abuja · 0.8km</p>
+            <p class="h-card-price">From ₦1,000</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="showScreen('screen-home')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-search')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Bookings</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-profile')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEARCH SCREEN -->
+  <div class="screen" id="screen-search">
+    <div class="app-screen">
+      <div class="search-header">
+        <div class="search-input-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="search-input" placeholder="All treatments" oninput="filterProviders(this.value)"/>
+          <span style="font-size:11px; color:#888;">Current location</span>
+        </div>
+        <div class="search-list-btn" onclick="toggleSearchView()">☰</div>
+      </div>
+
+      <div class="search-filters">
+        <div class="filter-pill active" onclick="toggleVenueDropdown()">
+          Venues <span>▾</span>
+        </div>
+        <div class="filter-pill" onclick="toggleSortDropdown()">
+          Best match <span>▾</span>
+        </div>
+        <div class="filter-pill" onclick="setSearchFilter(this, 'amenities')">
+          Amenities <span>▾</span>
+        </div>
+        <div class="filter-pill" onclick="setSearchFilter(this, 'price')">
+          Price <span>▾</span>
+        </div>
+        <div class="filter-pill" onclick="setSearchFilter(this, 'verified')">
+          ✓ Only verified
+        </div>
+      </div>
+
+      <!-- VENUE DROPDOWN -->
+      <div id="venue-dropdown" style="display:none; margin: 0 20px 12px; background:#1a1a1a; border-radius:14px; border:1px solid #2a2a2a; overflow:hidden;">
+        <div class="dropdown-item active-item" onclick="selectVenueType('Venues')">
+          <div class="dropdown-icon">🏪</div>
+          <div>
+            <p style="font-size:14px; font-weight:500;">Venues</p>
+            <p style="font-size:11px; color:#888; margin-top:2px;">Search by business or salon</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="selectVenueType('Professionals')">
+          <div class="dropdown-icon">👤</div>
+          <div>
+            <p style="font-size:14px; font-weight:500;">Professionals</p>
+            <p style="font-size:11px; color:#888; margin-top:2px;">Search by individual service provider</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SORT DROPDOWN -->
+      <div id="sort-dropdown" style="display:none; margin: 0 20px 12px; background:#1a1a1a; border-radius:14px; border:1px solid #2a2a2a; overflow:hidden;">
+        <div class="dropdown-item active-item" onclick="selectSortType('Best match')">
+          <div class="dropdown-icon">❤️</div>
+          <div>
+            <p style="font-size:14px; font-weight:500;">Best match</p>
+            <p style="font-size:11px; color:#888; margin-top:2px;">Most relevant to you</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="selectSortType('Top rated')">
+          <div class="dropdown-icon">⭐</div>
+          <div>
+            <p style="font-size:14px; font-weight:500;">Top rated</p>
+            <p style="font-size:11px; color:#888; margin-top:2px;">Highest rated providers first</p>
+          </div>
+        </div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-item" onclick="selectSortType('Nearest')">
+          <div class="dropdown-icon">📍</div>
+          <div>
+            <p style="font-size:14px; font-weight:500;">Nearest</p>
+            <p style="font-size:11px; color:#888; margin-top:2px;">Closest to your location</p>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:12px; color:#888; padding: 0 20px 12px;">6 venues nearby</p>
+
+      <div id="search-results" class="providers-list" style="padding-bottom: 100px;">
+        <div class="provider-card-new" onclick="showScreen('screen-provider')">
+          <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
+            <span style="font-size:32px;">✂️</span>
+            <div class="provider-card-rating-badge">★ 4.9</div>
+          </div>
+          <div class="provider-card-body">
+            <div class="provider-card-top">
+              <p class="provider-name">Kings Barbershop <span class="verified-dot">✓</span></p>
+              <p style="font-size:11px; color:#888;">0.8km · Wuse 2, Abuja</p>
+              <p style="font-size:11px; color:#888;">Barber · Open until 8:00 PM</p>
+            </div>
+            <div class="provider-service-preview">
+              <span>Signature Fade</span>
+              <span class="service-price-sm">₦2,500</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="provider-card-new" onclick="showScreen('screen-provider')">
+          <div class="provider-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
+            <span style="font-size:32px;">💅</span>
+            <div class="provider-card-rating-badge">★ 4.8</div>
+          </div>
+          <div class="provider-card-body">
+            <div class="provider-card-top">
+              <p class="provider-name">Glam Nails by Temi <span class="verified-dot">✓</span></p>
+              <p style="font-size:11px; color:#888;">1.2km · Garki, Abuja</p>
+              <p style="font-size:11px; color:#888;">Nail Tech · Open until 7:00 PM</p>
+            </div>
+            <div class="provider-service-preview">
+              <span>Gel Manicure</span>
+              <span class="service-price-sm">₦8,000</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="provider-card-new" onclick="showScreen('screen-provider')">
+          <div class="provider-card-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
+            <span style="font-size:32px;">👁️</span>
+            <div class="provider-card-rating-badge">★ 5.0</div>
+          </div>
+          <div class="provider-card-body">
+            <div class="provider-card-top">
+              <p class="provider-name">Lash Queen Ada <span class="verified-dot">✓</span></p>
+              <p style="font-size:11px; color:#888;">2.1km · Maitama, Abuja</p>
+              <p style="font-size:11px; color:#888;">Lash Tech · Open until 6:00 PM</p>
+            </div>
+            <div class="provider-service-preview">
+              <span>Classic Lash Set</span>
+              <span class="service-price-sm">₦8,000</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="provider-card-new" onclick="showScreen('screen-provider')">
+          <div class="provider-card-img" style="background: linear-gradient(135deg, #0e2e1a, #1a6e3a);">
+            <span style="font-size:32px;">💇</span>
+            <div class="provider-card-rating-badge">★ 4.7</div>
+          </div>
+          <div class="provider-card-body">
+            <div class="provider-card-top">
+              <p class="provider-name">Zara Hair Studio</p>
+              <p style="font-size:11px; color:#888;">3.4km · Gwarinpa, Abuja</p>
+              <p style="font-size:11px; color:#888;">Hair Stylist · Open until 8:00 PM</p>
+            </div>
+            <div class="provider-service-preview">
+              <span>Weave Installation</span>
+              <span class="service-price-sm">₦15,000</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Home</span>
+        </div>
+        <div class="nav-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg>
+          <span>Bookings</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-profile')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Profile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER PROFILE SCREEN - TABBED -->
+  <div class="screen" id="screen-provider">
+    <div class="app-screen">
+      <!-- COVER -->
+      <div class="provider-cover-new">
+        <div class="provider-cover-actions">
+          <div class="back-btn light" onclick="goBack()">&#8592;</div>
+          <div style="display:flex; gap:10px;">
+            <div class="cover-action-btn" onclick="shareProfile('Kings Barbershop')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            </div>
+            <div class="cover-action-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="provider-cover-content">
+          <div style="font-size:56px;">✂️</div>
+        </div>
+      </div>
+
+      <!-- PROVIDER INFO -->
+      <div class="provider-info-bar">
+        <div>
+          <h2 class="provider-title">Kings Barbershop <span class="verified-check">✓</span></h2>
+          <p style="font-size:12px; color:#888; margin-top:2px;">★ 4.9 (312 reviews) · Wuse 2, Abuja · 0.8km</p>
+          <p style="font-size:12px; color:#22c55e; margin-top:2px;">Open until 8:00 PM</p>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <span class="provider-tag">Featured</span>
+          <span class="provider-tag verified-tag">✓ Verified</span>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="provider-tabs">
+        <div class="tab active" onclick="switchTab(this, 'tab-photos')">Photos</div>
+        <div class="tab" onclick="switchTab(this, 'tab-services')">Services</div>
+        <div class="tab" onclick="switchTab(this, 'tab-team')">Team</div>
+        <div class="tab" onclick="switchTab(this, 'tab-reviews')">Reviews</div>
+        <div class="tab" onclick="switchTab(this, 'tab-about')">About</div>
+      </div>
+
+      <!-- TAB: PHOTOS -->
+      <div class="tab-content active" id="tab-photos">
+        <div class="photos-grid">
+          <div class="photo-item" style="background: linear-gradient(135deg, #1e1040, #3b1a7a); grid-column: span 2;"><span style="font-size:48px;">✂️</span></div>
+          <div class="photo-item" style="background: linear-gradient(135deg, #2e1040, #4b1a7a);"><span style="font-size:32px;">💈</span></div>
+          <div class="photo-item" style="background: linear-gradient(135deg, #1e2040, #3b3a7a);"><span style="font-size:32px;">🪒</span></div>
+          <div class="photo-item" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);"><span style="font-size:32px;">✂️</span></div>
+          <div class="photo-item" style="background: linear-gradient(135deg, #2e1040, #4b1a7a);"><span style="font-size:32px;">💈</span></div>
+        </div>
+      </div>
+
+      <!-- TAB: SERVICES -->
+      <div class="tab-content" id="tab-services">
+        <div style="padding: 16px 20px;">
+          <p style="font-size:13px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Haircuts</p>
+          <div class="service-row" onclick="showScreen('screen-booking')">
+            <div>
+              <p style="font-size:14px; font-weight:500;">Signature Fade</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">45 min</p>
+            </div>
+            <div style="text-align:right;">
+              <p style="font-size:14px; font-weight:600; color:#F59E0B;">₦2,500</p>
+              <button class="book-sm-btn">Book</button>
+            </div>
+          </div>
+          <div class="service-row" onclick="showScreen('screen-booking')">
+            <div>
+              <p style="font-size:14px; font-weight:500;">Full Cut + Beard</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">1 hr</p>
+            </div>
+            <div style="text-align:right;">
+              <p style="font-size:14px; font-weight:600; color:#F59E0B;">₦3,500</p>
+              <button class="book-sm-btn">Book</button>
+            </div>
+          </div>
+          <div class="service-row" onclick="showScreen('screen-booking')">
+            <div>
+              <p style="font-size:14px; font-weight:500;">Line-up Only</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">20 min</p>
+            </div>
+            <div style="text-align:right;">
+              <p style="font-size:14px; font-weight:600; color:#F59E0B;">₦1,000</p>
+              <button class="book-sm-btn">Book</button>
+            </div>
+          </div>
+
+          <p style="font-size:13px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin: 20px 0 12px;">Beard</p>
+          <div class="service-row" onclick="showScreen('screen-booking')">
+            <div>
+              <p style="font-size:14px; font-weight:500;">Beard Trim & Shape</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">30 min</p>
+            </div>
+            <div style="text-align:right;">
+              <p style="font-size:14px; font-weight:600; color:#F59E0B;">₦1,500</p>
+              <button class="book-sm-btn">Book</button>
+            </div>
+          </div>
+
+          <button class="btn-secondary" style="margin-top:16px; width:100%;">See all 12 services</button>
+        </div>
+      </div>
+
+      <!-- TAB: TEAM -->
+      <div class="tab-content" id="tab-team">
+        <div style="padding: 16px 20px; display:flex; flex-direction:column; gap:12px;">
+          <div class="team-member">
+            <div class="team-avatar">KJ</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Kingsley James</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Senior Barber · 5 years experience</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.9 · 280 reviews</p>
+            </div>
+          </div>
+          <div class="team-member">
+            <div class="team-avatar">TA</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Tunde Adeyemi</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Barber · 3 years experience</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.8 · 156 reviews</p>
+            </div>
+          </div>
+          <div class="team-member">
+            <div class="team-avatar">EO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Emeka Okafor</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Junior Barber · 1 year experience</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.7 · 48 reviews</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: REVIEWS -->
+      <div class="tab-content" id="tab-reviews">
+        <div style="padding: 16px 20px;">
+          <div class="rating-summary">
+            <div style="text-align:center;">
+              <p style="font-size:48px; font-weight:700; color:#F9FAFB; line-height:1;">4.9</p>
+              <p style="font-size:18px; color:#F59E0B;">★★★★★</p>
+              <p style="font-size:12px; color:#888; margin-top:4px;">312 reviews</p>
+            </div>
+            <div style="flex:1; display:flex; flex-direction:column; gap:6px;">
+              <div class="rating-bar"><span>5★</span><div class="bar"><div class="bar-fill" style="width:85%"></div></div><span>85%</span></div>
+              <div class="rating-bar"><span>4★</span><div class="bar"><div class="bar-fill" style="width:10%"></div></div><span>10%</span></div>
+              <div class="rating-bar"><span>3★</span><div class="bar"><div class="bar-fill" style="width:3%"></div></div><span>3%</span></div>
+              <div class="rating-bar"><span>2★</span><div class="bar"><div class="bar-fill" style="width:1%"></div></div><span>1%</span></div>
+              <div class="rating-bar"><span>1★</span><div class="bar"><div class="bar-fill" style="width:1%"></div></div><span>1%</span></div>
+            </div>
+          </div>
+          <div class="reviews-list" style="margin-top:16px;">
+            <div class="review-item">
+              <div class="review-avatar">AO</div>
+              <div class="review-content">
+                <div class="review-name">Adebayo O. <span>★★★★★</span></div>
+                <p style="font-size:12px; color:#555; margin-bottom:4px;">Signature Fade · 2 days ago</p>
+                <p>Best barber in Abuja no cap. My fade was clean for 2 weeks straight.</p>
+              </div>
+            </div>
+            <div class="review-item">
+              <div class="review-avatar">CU</div>
+              <div class="review-content">
+                <div class="review-name">Chidi U. <span>★★★★★</span></div>
+                <p style="font-size:12px; color:#555; margin-bottom:4px;">Full Cut + Beard · 1 week ago</p>
+                <p>Always on time and professional. Highly recommend.</p>
+              </div>
+            </div>
+            <div class="review-item">
+              <div class="review-avatar">TM</div>
+              <div class="review-content">
+                <div class="review-name">Anonymous <span>★★★★☆</span></div>
+                <p style="font-size:12px; color:#555; margin-bottom:4px;">Beard Trim · 2 weeks ago</p>
+                <p>Great work as always. Could improve on wait times.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: ABOUT -->
+      <div class="tab-content" id="tab-about">
+        <div style="padding: 16px 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:100px;">
+          <div>
+            <p style="font-size:14px; font-weight:600; margin-bottom:6px;">About</p>
+            <p style="font-size:13px; color:#aaa; line-height:1.7;">Abuja's most trusted barbershop. Specializing in fades, beard grooming and creative designs. Walk-ins welcome but bookings get priority.</p>
+          </div>
+          <div>
+            <p style="font-size:14px; font-weight:600; margin-bottom:10px;">Working Hours</p>
+            <div class="hour-item"><span>Mon - Fri</span><span>8:00 AM - 8:00 PM</span></div>
+            <div class="hour-item"><span>Saturday</span><span>9:00 AM - 6:00 PM</span></div>
+            <div class="hour-item closed"><span>Sunday</span><span>Closed</span></div>
+          </div>
+          <div>
+            <p style="font-size:14px; font-weight:600; margin-bottom:10px;">Location</p>
+            <div style="background:#1a1a1a; border-radius:14px; padding:14px; display:flex; align-items:center; gap:10px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <p style="font-size:13px; color:#ccc;">Wuse 2, Abuja, FCT · 0.8km from you</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STICKY BOOK -->
+      <div class="sticky-book-new">
+        <div>
+          <p class="starting-from">Starting from</p>
+          <p class="sticky-price">₦1,000</p>
+          <p style="font-size:10px; color:#888;">162 services available</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="btn-primary small" onclick="showScreen('screen-booking')">Book Now →</button>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-secondary small" onclick="openOffer()" style="padding:6px 10px; font-size:11px; flex:1;">💰 Offer</button>
+            <button class="btn-secondary small" onclick="showScreen('screen-housecall')" style="padding:6px 10px; font-size:11px; flex:1;">🏠 House Call</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCATION SCREEN -->
+  <div class="screen" id="screen-location">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Select Location</h3>
+      </div>
+      <div class="search-bar" style="margin: 1rem;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search state..." oninput="filterStates(this.value)" style="background:transparent;border:none;outline:none;color:#F9FAFB;font-size:14px;width:100%;"/>
+      </div>
+      <div class="states-list" id="states-list"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div class="screen" id="screen-notifications">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Notifications</h3>
+      </div>
+      <div class="notif-list">
+        <div class="notif-item"><div class="notif-icon">✅</div><div class="notif-text"><p class="notif-title">Booking Confirmed</p><p class="notif-sub">Kings Barbershop · Tomorrow 10:00 AM</p></div></div>
+        <div class="notif-item"><div class="notif-icon">⏰</div><div class="notif-text"><p class="notif-title">Reminder</p><p class="notif-sub">Your appointment with Lash Queen Ada is in 1 hour</p></div></div>
+        <div class="notif-item"><div class="notif-icon">⭐</div><div class="notif-text"><p class="notif-title">Leave a Review</p><p class="notif-sub">How was your experience with Glam Nails by Temi?</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING SCREEN -->
+  <div class="screen" id="screen-booking">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Book Appointment</h3>
+      </div>
+      <div class="booking-provider-row">
+        <div class="provider-img barber small">✂️</div>
+        <div><p class="booking-provider-name">Kings Barbershop</p><p class="booking-provider-meta">Wuse 2, Abuja</p></div>
+      </div>
+      <div class="booking-form">
+        <div class="form-group">
+          <label>Select Service</label>
+          <select id="booking-service">
+            <option>Signature Fade — ₦2,500</option>
+            <option>Beard Trim & Shape — ₦1,500</option>
+            <option>Full Cut + Beard — ₦3,500</option>
+            <option>Line-up Only — ₦1,000</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Select Date</label>
+          <input type="date" id="booking-date"/>
+        </div>
+        <div class="form-group">
+          <label>Select Time</label>
+          <div class="time-slots">
+            <div class="time-slot" onclick="selectTime(this)">9:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this)">10:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this)">11:00 AM</div>
+            <div class="time-slot" onclick="selectTime(this)">12:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this)">2:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this)">3:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this)">4:00 PM</div>
+            <div class="time-slot" onclick="selectTime(this)">5:00 PM</div>
+          </div>
+        </div>
+        <div class="form-group"><label>Your Name</label><input type="text" id="booking-name" placeholder="Enter your full name"/></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" id="booking-phone" placeholder="+234 800 000 0000"/></div>
+        <div class="booking-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Payment is held securely. If you are 15+ minutes late, 50% goes to the provider automatically.
+        </div>
+        <button class="btn-primary" onclick="confirmBooking()">Confirm Booking · ₦2,500</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOKING SUCCESS -->
+  <div class="screen" id="screen-booking-success">
+    <div class="app-screen center">
+      <div class="success-icon">✅</div>
+      <h2>Booking Confirmed!</h2>
+      <p class="success-sub">Your appointment has been booked successfully.</p>
+      <div class="success-card">
+        <div class="success-row"><span>Provider</span><span>Kings Barbershop</span></div>
+        <div class="success-row"><span>Service</span><span>Signature Fade</span></div>
+        <div class="success-row"><span>Date</span><span id="confirmed-date">-</span></div>
+        <div class="success-row"><span>Amount</span><span>₦2,500</span></div>
+      </div>
+      <button class="btn-primary" onclick="showScreen('screen-home')">Back to Home</button>
+      <button class="btn-secondary" onclick="showScreen('screen-bookings')">View My Bookings</button>
+      <button class="btn-secondary" onclick="notifyBookingConfirmed('Kings Barbershop', 'Tomorrow', '10:00 AM')" style="background:#25D366; border-color:#25D366; color:#fff;">📱 Get WhatsApp Reminder</button>
+    </div>
+  </div>
+
+  <!-- MY BOOKINGS -->
+  <div class="screen" id="screen-bookings">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>My Bookings</h3></div>
+      <div class="bookings-list">
+        <div class="booking-item">
+          <div class="booking-item-left">
+            <div class="provider-img barber tiny">✂️</div>
+            <div><p class="booking-item-name">Kings Barbershop</p><p class="booking-item-meta">Signature Fade · Tomorrow 10:00 AM</p></div>
+          </div>
+          <div class="booking-item-right">
+            <span class="status confirmed">Confirmed</span>
+            <button class="cancel-btn" onclick="cancelBooking(this)">Cancel</button>
+          </div>
+        </div>
+        <div class="booking-item">
+          <div class="booking-item-left">
+            <div class="provider-img lash tiny">👁️</div>
+            <div><p class="booking-item-name">Lash Queen Ada</p><p class="booking-item-meta">Classic Set · Sat 2:00 PM</p></div>
+          </div>
+          <div class="booking-item-right">
+            <span class="status completed">Completed</span>
+            <button class="cancel-btn review-btn" onclick="openReview('Lash Queen Ada')">Review</button>
+            <button class="cancel-btn review-btn" onclick="openTip('Lash Queen Ada')">Tip 💛</button>
+          </div>
+        </div>
+        <div class="booking-item">
+          <div class="booking-item-left">
+            <div class="provider-img nails tiny">💅</div>
+            <div><p class="booking-item-name">Glam Nails by Temi</p><p class="booking-item-meta">Gel Manicure · Today 3:00 PM</p></div>
+          </div>
+          <div class="booking-item-right">
+            <span class="status confirmed">Confirmed</span>
+            <button class="cancel-btn" onclick="cancelBooking(this)">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item" onclick="showScreen('screen-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Bookings</span></div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div class="screen" id="screen-review">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Leave a Review</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="text-align: center; padding: 20px 0;">
+          <div class="profile-avatar" style="margin: 0 auto 12px; width:70px; height:70px; font-size:22px;">LA</div>
+          <p id="review-provider-name" style="font-size: 18px; font-weight: 600;">Lash Queen Ada</p>
+          <p style="font-size: 13px; color: #888; margin-top: 4px;">How was your experience?</p>
+        </div>
+        <div id="review-stars" style="display: flex; justify-content: center; gap: 12px;"></div>
+        <div class="form-group">
+          <label>Write your review</label>
+          <textarea id="review-text" placeholder="Tell others about your experience..." style="background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; padding:14px; font-size:14px; color:#F9FAFB; font-family:'Poppins',sans-serif; outline:none; width:100%; height:120px; resize:none;"></textarea>
+        </div>
+        <div style="display:flex; align-items:center; justify-content:space-between; background:#1a1a1a; border-radius:12px; padding:14px;">
+          <div><p style="font-size:13px; font-weight:500;">Post anonymously</p><p style="font-size:11px; color:#888; margin-top:2px;">Your name will show as "Anonymous"</p></div>
+          <div class="toggle" id="anon-toggle" onclick="toggleAnonymous()"></div>
+        </div>
+        <button class="btn-primary" onclick="submitReview()">Submit Review</button>
+        <button class="btn-secondary" onclick="goBack()">Skip for Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIP SCREEN -->
+  <div class="screen" id="screen-tip">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Leave a Tip</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="text-align: center; padding: 20px 0;">
+          <div class="profile-avatar" style="margin: 0 auto 12px; width:70px; height:70px; font-size:22px;">KS</div>
+          <p id="tip-provider-name" style="font-size: 18px; font-weight: 600;">Kings Barbershop</p>
+          <p style="font-size: 13px; color: #888; margin-top: 4px;">Did they do an amazing job?</p>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="tip-option" onclick="selectTip(this, 500)">₦500</div>
+          <div class="tip-option" onclick="selectTip(this, 1000)">₦1,000</div>
+          <div class="tip-option" onclick="selectTip(this, 2000)">₦2,000</div>
+          <div class="tip-option" onclick="selectTip(this, 5000)">₦5,000</div>
+        </div>
+        <div class="form-group"><label>Or enter custom amount</label><input type="number" id="custom-tip" placeholder="Enter amount in Naira" oninput="setCustomTip(this.value)"/></div>
+        <div id="tip-summary" style="display:none; background:#1a1a1a; border-radius:14px; padding:16px;">
+          <div class="service-item"><span>Tip Amount</span><span class="service-price" id="tip-amount-display">₦0</span></div>
+          <div class="service-item"><span style="color:#555;">Platform fee (5%)</span><span style="color:#555;" id="tip-fee-display">₦0</span></div>
+          <div class="service-item"><span>Provider receives</span><span class="service-price" id="tip-provider-display">₦0</span></div>
+        </div>
+        <button class="btn-primary" onclick="sendTip()">Send Tip 💛</button>
+        <button class="btn-secondary" onclick="skipTip()">Maybe Next Time</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE SCREEN -->
+  <div class="screen" id="screen-profile">
+    <div class="app-screen">
+      <div class="inner-header"><h3>My Profile</h3></div>
+      <div class="profile-header">
+        <div class="profile-avatar">AK</div>
+        <div><p class="profile-name" id="profile-name">Kayode A.</p><p class="profile-email" id="profile-email">kayode@email.com</p></div>
+      </div>
+      <div class="profile-menu">
+        <div class="menu-item" onclick="showScreen('screen-bookings')"><span>📅 My Bookings</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-saved')"><span>❤️ Saved Providers</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-payment')"><span>💳 Payment Methods</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-promo')"><span>🎁 Promo Codes</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-loyalty')"><span>⭐ Loyalty Points</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-notifications')"><span>🔔 Notifications</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-terms')"><span>📋 Terms & Conditions</span><span>›</span></div>
+        <div class="menu-item danger" onclick="showScreen('screen-welcome')"><span>🚪 Sign Out</span><span>›</span></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item" onclick="showScreen('screen-search')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Bookings</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED PROVIDERS -->
+  <div class="screen" id="screen-saved">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Saved Providers</h3></div>
+      <div class="providers-list">
+        <div class="provider-card-new" onclick="showScreen('screen-provider')">
+          <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);"><span style="font-size:32px;">✂️</span><div class="provider-card-rating-badge">★ 4.9</div></div>
+          <div class="provider-card-body"><div class="provider-card-top"><p class="provider-name">Kings Barbershop <span class="verified-dot">✓</span></p><p style="font-size:11px; color:#888;">0.8km · Wuse 2, Abuja</p></div><div class="provider-service-preview"><span>Signature Fade</span><span class="service-price-sm">₦2,500</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT METHODS -->
+  <div class="screen" id="screen-payment">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Payment Methods</h3></div>
+      <div style="padding: 0 20px;">
+        <div class="booking-note" style="margin-bottom: 20px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>All payments are secured and processed via Paystack.</div>
+        <div class="menu-item"><span>💳 Add Debit Card</span><span>›</span></div>
+        <div class="menu-item"><span>🏦 Bank Transfer</span><span>›</span></div>
+        <div class="menu-item"><span>📱 USSD Payment</span><span>›</span></div>
+        <div style="margin-top: 30px; text-align:center;"><p style="font-size: 12px; color: #555;">Powered by</p><p style="font-size: 16px; font-weight: 700; color: #7C3AED; margin-top: 4px;">Paystack</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROMO CODES -->
+  <div class="screen" id="screen-promo">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Promo Codes</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group"><label>Enter Promo Code</label><input type="text" id="promo-input" placeholder="e.g. PREEN20" style="text-transform: uppercase;"/></div>
+        <button class="btn-primary" onclick="applyPromo()">Apply Code</button>
+        <div class="section-title" style="padding: 8px 0 4px;">Active Promos</div>
+        <div class="booking-item"><div class="booking-item-left"><div style="width:36px;height:36px;background:#7C3AED22;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">🎁</div><div><p class="booking-item-name">PREEN20</p><p class="booking-item-meta">20% off your first booking</p></div></div><span class="status confirmed">Active</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOYALTY POINTS -->
+  <div class="screen" id="screen-loyalty">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Loyalty Points</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
+        <div style="background: linear-gradient(135deg, #7C3AED, #3b1a7a); border-radius: 20px; padding: 24px; text-align: center;">
+          <p style="font-size: 13px; color: #ccc; margin-bottom: 8px;">Your Points Balance</p>
+          <p style="font-size: 48px; font-weight: 700; color: #F59E0B;">250</p>
+          <p style="font-size: 12px; color: #aaa; margin-top: 4px;">500 points = ₦1,000 discount</p>
+        </div>
+        <div class="section-title" style="padding: 8px 0 4px;">How to Earn</div>
+        <div class="service-item"><span>Complete a booking</span><span class="service-price">+50 pts</span></div>
+        <div class="service-item"><span>Leave a review</span><span class="service-price">+20 pts</span></div>
+        <div class="service-item"><span>Refer a friend</span><span class="service-price">+100 pts</span></div>
+        <div class="service-item"><span>Tip a provider</span><span class="service-price">+10 pts</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TERMS -->
+  <div class="screen" id="screen-terms">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Terms & Conditions</h3></div>
+      <div style="padding: 0 20px 40px; display: flex; flex-direction: column; gap: 16px;">
+        <p style="font-size: 12px; color: #555;">Last updated: April 2026</p>
+        <div><p style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">1. Booking Policy</p><p style="font-size: 13px; color: #888; line-height: 1.7;">All bookings must be made through Preen. Payment is collected at booking and held securely.</p></div>
+        <div><p style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">2. Late Arrival Policy</p><p style="font-size: 13px; color: #888; line-height: 1.7;">If a customer arrives more than 15 minutes late, 50% of the booking fee goes to the provider.</p></div>
+        <div><p style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">3. Cancellation Policy</p><p style="font-size: 13px; color: #888; line-height: 1.7;">Cancellations more than 2 hours before appointment get a full refund. Within 2 hours is non-refundable.</p></div>
+        <div><p style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">4. Platform Fee</p><p style="font-size: 13px; color: #888; line-height: 1.7;">Preen charges a 10% platform fee on each completed booking.</p></div>
+        <div><p style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">5. Privacy</p><p style="font-size: 13px; color: #888; line-height: 1.7;">Your personal data is never sold to third parties.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER LOGIN -->
+  <div class="screen" id="screen-provider-login">
+    <div class="auth-screen">
+      <div class="auth-header"><div class="back-btn" onclick="goBack()">&#8592;</div><div class="logo-text small">Preen</div></div>
+      <h2>Provider Login</h2>
+      <p class="auth-sub">Manage your bookings and grow your business</p>
+      <div class="form-group"><label>Email</label><input type="email" id="provider-email" placeholder="Enter your email"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="provider-password" placeholder="Enter your password"/></div>
+      <button class="btn-primary" onclick="handleProviderLogin()">Log In as Provider</button>
+      <div class="divider">or</div>
+      <button class="btn-secondary" onclick="showScreen('screen-provider-signup')">Create Provider Account</button>
+    </div>
+  </div>
+
+  <!-- PROVIDER SIGNUP -->
+  <div class="screen" id="screen-provider-signup">
+    <div class="auth-screen">
+      <div class="auth-header"><div class="back-btn" onclick="goBack()">&#8592;</div><div class="logo-text small">Preen</div></div>
+      <h2>Join as Provider</h2>
+      <p class="auth-sub">Start accepting bookings today</p>
+      <div class="form-group"><label>Full Name</label><input type="text" id="prov-name" placeholder="Your name or business name"/></div>
+      <div class="form-group"><label>Service Category</label><select id="prov-category"><option>Barber</option><option>Hair Stylist</option><option>Nail Tech</option><option>Lash Tech</option><option>Makeup Artist</option><option>Massage Therapist</option><option>Spa</option></select></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="prov-phone" placeholder="+234 800 000 0000"/></div>
+      <div class="form-group"><label>Email</label><input type="email" id="prov-email-signup" placeholder="Enter your email"/></div>
+      <div class="form-group"><label>Password</label><input type="password" id="prov-password" placeholder="Create a password"/></div>
+      <button class="btn-primary" onclick="handleProviderSignup()">Create Provider Account</button>
+    </div>
+  </div>
+
+  <!-- PROVIDER DASHBOARD -->
+  <div class="screen" id="screen-provider-dashboard">
+    <div class="app-screen">
+
+      <!-- HEADER -->
+      <div style="padding: 56px 20px 16px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div>
+            <p class="greeting">Good day 👋</p>
+            <p class="headline" id="prov-dashboard-name">Kings Barbershop</p>
+          </div>
+          <div class="availability-toggle">
+            <span id="avail-label" style="font-size:11px;color:#7C3AED;">Available</span>
+            <div class="toggle active" id="avail-toggle" onclick="toggleAvailability()"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EARNINGS CARD -->
+      <div style="margin: 0 20px 16px; background: linear-gradient(135deg, #7C3AED, #3b1a7a); border-radius: 20px; padding: 20px;">
+        <p style="font-size:12px; color:#ccc; margin-bottom:6px;">This Month's Earnings</p>
+        <p style="font-size:36px; font-weight:700; color:#F59E0B;">₦47,500</p>
+        <p style="font-size:12px; color:#aaa; margin-top:4px;">19 bookings completed</p>
+        <div style="display:flex; gap:16px; margin-top:14px; padding-top:14px; border-top:1px solid #ffffff22;">
+          <div><p style="font-size:18px; font-weight:700; color:#F9FAFB;">3</p><p style="font-size:11px; color:#aaa;">Today</p></div>
+          <div><p style="font-size:18px; font-weight:700; color:#F9FAFB;">4.9★</p><p style="font-size:11px; color:#aaa;">Rating</p></div>
+          <div><p style="font-size:18px; font-weight:700; color:#F9FAFB;">312</p><p style="font-size:11px; color:#aaa;">Reviews</p></div>
+          <div><p style="font-size:18px; font-weight:700; color:#22c55e;">✓</p><p style="font-size:11px; color:#aaa;">Verified</p></div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="section-header"><span class="section-title">Quick Actions</span></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:0 20px 16px;">
+        <div class="quick-action" onclick="showScreen('screen-ai-onboarding')">
+          <span style="font-size:24px;">✨</span>
+          <p>Edit Profile</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-skill-upload')">
+          <span style="font-size:24px;">📸</span>
+          <p>Upload Skills</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-provider-earnings')">
+          <span style="font-size:24px;">💰</span>
+          <p>View Earnings</p>
+        </div>
+        <div class="quick-action" onclick="shareProfile('Kings Barbershop')">
+          <span style="font-size:24px;">🔗</span>
+          <p>Share Profile</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-manage-team')">
+          <span style="font-size:24px;">👥</span>
+          <p>Manage Team</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-provider-earnings')">
+          <span style="font-size:24px;">📊</span>
+          <p>Analytics</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-provider-calendar')">
+          <span style="font-size:24px;">📅</span>
+          <p>Calendar</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-provider-notifications')">
+          <span style="font-size:24px;">🔔</span>
+          <p>Notifications</p>
+        </div>
+      </div>
+
+      <!-- TODAY'S BOOKINGS -->
+      <div class="section-header"><span class="section-title">Today's Bookings</span><span class="see-all" onclick="showScreen('screen-provider-all-bookings')">See all</span></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">AO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Adebayo O.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Signature Fade · 10:00 AM</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦2,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">CU</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Chidi U.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Beard Trim · 12:00 PM</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦1,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">TA</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Tunde A.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Full Cut + Beard · 3:00 PM</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦3,500</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- UPCOMING -->
+      <div class="section-header"><span class="section-title">Upcoming This Week</span><span class="see-all" onclick="showScreen('screen-provider-all-bookings')">See all</span></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 100px;">
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">EO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Emeka O.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Line-up · Tomorrow 9:00 AM</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦1,000</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">KA</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Kayode A.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Signature Fade · Sat 11:00 AM</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦2,500</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-provider-earnings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Earnings</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-provider-all-bookings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Bookings</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-welcome')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Sign Out</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER EARNINGS -->
+  <div class="screen" id="screen-provider-earnings">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Earnings</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 100px;">
+        <div style="background: linear-gradient(135deg, #7C3AED, #3b1a7a); border-radius: 20px; padding: 24px; text-align: center;">
+          <p style="font-size: 13px; color: #ccc; margin-bottom: 8px;">Total Earnings This Month</p>
+          <p style="font-size: 42px; font-weight: 700; color: #F59E0B;">₦47,500</p>
+          <p style="font-size: 12px; color: #aaa; margin-top: 4px;">19 bookings completed</p>
+        </div>
+        <div class="provider-stats" style="border-radius: 14px;">
+          <div class="stat"><span style="font-size:14px;">₦52k</span><p>Last Month</p></div>
+          <div class="stat"><span style="font-size:14px;">₦183k</span><p>This Year</p></div>
+          <div class="stat"><span style="font-size:14px;">4.9★</span><p>Rating</p></div>
+        </div>
+        <div class="section-title" style="padding: 8px 0 4px;">Recent Payouts</div>
+        <div class="service-item"><span>April 1 — 3 bookings</span><span class="service-price">₦7,500</span></div>
+        <div class="service-item"><span>March 28 — 2 bookings</span><span class="service-price">₦5,000</span></div>
+        <div class="service-item"><span>March 25 — 4 bookings</span><span class="service-price">₦10,000</span></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-provider-dashboard')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Dashboard</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Earnings</span></div>
+        <div class="nav-item" onclick="showScreen('screen-welcome')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign Out</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI ONBOARDING -->
+  <div class="screen" id="screen-ai-onboarding">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Smart Profile Setup</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="background: linear-gradient(135deg, #7C3AED, #3b1a7a); border-radius: 16px; padding: 20px;">
+          <p style="font-size: 13px; color: #ccc; margin-bottom: 6px;">✨ Powered by AI</p>
+          <p style="font-size: 16px; font-weight: 600; color: #F9FAFB;">Tell us about yourself in your own words</p>
+          <p style="font-size: 12px; color: #aaa; margin-top: 6px;">Our AI will automatically build your profile from what you write.</p>
+        </div>
+        <div class="form-group"><label>Describe yourself and your services</label><textarea id="ai-input" placeholder="e.g. My name is Emeka, I am a barber in Wuse 2 Abuja. I do fades, beards and creative designs. I charge between 2,000 and 5,000. I work Monday to Saturday from 8am to 8pm." style="background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; padding:14px; font-size:14px; color:#F9FAFB; font-family:'Poppins',sans-serif; outline:none; width:100%; height:160px; resize:none;"></textarea></div>
+        <button class="btn-primary" id="ai-build-btn" onclick="processAIOnboarding()">✨ Build My Profile</button>
+        <div id="ai-loading" style="display:none; text-align:center; padding:20px;"><div class="ai-spinner"></div><p style="font-size:13px; color:#888; margin-top:12px;">Reading your info and building your profile...</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI RESULT -->
+  <div class="screen" id="screen-ai-result">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Review Your Profile</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
+        <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Our AI built this profile from what you wrote. Review and edit before publishing.</div>
+        <div class="form-group"><label>Full Name</label><input type="text" id="ai-name" placeholder="Your name"/></div>
+        <div class="form-group"><label>Category</label><select id="ai-category"><option>Barber</option><option>Hair Stylist</option><option>Nail Tech</option><option>Lash Tech</option><option>Makeup Artist</option><option>Massage Therapist</option><option>Spa</option></select></div>
+        <div class="form-group"><label>Location</label><input type="text" id="ai-location" placeholder="Your location"/></div>
+        <div class="form-group"><label>Bio</label><textarea id="ai-bio" style="background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; padding:14px; font-size:14px; color:#F9FAFB; font-family:'Poppins',sans-serif; outline:none; width:100%; height:100px; resize:none;"></textarea></div>
+        <div class="section-title" style="padding: 4px 0;">Services Detected</div>
+        <div id="ai-services" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div class="section-title" style="padding: 4px 0;">Working Hours</div>
+        <div class="form-group"><input type="text" id="ai-hours" placeholder="Working hours"/></div>
+        <button class="btn-primary" onclick="publishProfile()">✅ Publish My Profile</button>
+        <button class="btn-secondary" onclick="showScreen('screen-ai-onboarding')">Edit My Description</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILL UPLOAD -->
+  <div class="screen" id="screen-skill-upload">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Upload Your Skills</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px;">
+        <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Providers with photos and videos get 3x more bookings.</div>
+        <div class="form-group"><label>Skill Name</label><input type="text" id="skill-name" placeholder="e.g. Signature Fade, Gel Nails"/></div>
+        <div class="form-group"><label>Upload a Photo of your work</label>
+          <div class="upload-box" onclick="simulatePhotoUpload()">
+            <div id="photo-preview" style="display:none; font-size:48px; text-align:center;">📸</div>
+            <div id="photo-placeholder" style="display:flex; flex-direction:column; align-items:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p style="font-size:13px; color:#555; margin-top:8px;">Tap to upload photo</p></div>
+          </div>
+        </div>
+        <div class="form-group"><label>Upload a Video (max 60 seconds)</label>
+          <div class="upload-box" onclick="simulateVideoUpload()">
+            <div id="video-preview" style="display:none; font-size:48px; text-align:center;">🎥</div>
+            <div id="video-placeholder" style="display:flex; flex-direction:column; align-items:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><p style="font-size:13px; color:#555; margin-top:8px;">Tap to upload video</p><p style="font-size:11px; color:#444; margin-top:4px;">Gets you a Verified badge</p></div>
+          </div>
+        </div>
+        <div id="skill-list" style="display:flex; flex-direction:column; gap:10px;"></div>
+        <button class="btn-primary" onclick="addSkill()">+ Add This Skill</button>
+        <button class="btn-secondary" onclick="submitSkills()">Save & Get Verified ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VERIFIED -->
+  <div class="screen" id="screen-verified">
+    <div class="app-screen center">
+      <div style="font-size:64px;">🏅</div>
+      <h2>You're Verified!</h2>
+      <p class="success-sub">Your profile now shows a Verified badge.</p>
+      <div class="success-card">
+        <div class="success-row"><span>Status</span><span style="color:#22c55e;">✓ Verified Provider</span></div>
+        <div class="success-row"><span>Skills Added</span><span id="skills-count">0</span></div>
+        <div class="success-row"><span>Profile Strength</span><span style="color:#F59E0B;">Strong 💪</span></div>
+      </div>
+      <button class="btn-primary" onclick="showScreen('screen-provider-dashboard')">Go to Dashboard</button>
+    </div>
+  </div>
+
+  <!-- HOUSE CALL -->
+  <div class="screen" id="screen-housecall">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Request House Call</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>The provider will come to your location. A travel fee may apply.</div>
+        <div class="form-group"><label>Select Service</label><select><option>Signature Fade — ₦2,500</option><option>Beard Trim — ₦1,500</option><option>Full Cut + Beard — ₦3,500</option></select></div>
+        <div class="form-group"><label>Your Address</label><input type="text" id="housecall-address" placeholder="e.g. 15 Aminu Kano Crescent, Wuse 2"/></div>
+        <div class="form-group"><label>Landmark (optional)</label><input type="text" placeholder="e.g. Behind Transcorp Hilton"/></div>
+        <div class="form-group"><label>Select Date</label><input type="date" id="housecall-date"/></div>
+        <div class="form-group"><label>Select Time</label><div class="time-slots"><div class="time-slot" onclick="selectTime(this)">9:00 AM</div><div class="time-slot" onclick="selectTime(this)">10:00 AM</div><div class="time-slot" onclick="selectTime(this)">11:00 AM</div><div class="time-slot" onclick="selectTime(this)">12:00 PM</div><div class="time-slot" onclick="selectTime(this)">2:00 PM</div><div class="time-slot" onclick="selectTime(this)">3:00 PM</div></div></div>
+        <div class="form-group"><label>Your Name</label><input type="text" placeholder="Enter your full name"/></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" placeholder="+234 800 000 0000"/></div>
+        <div style="background:#1a1a1a; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+          <div class="service-item"><span>Service Fee</span><span class="service-price">₦2,500</span></div>
+          <div class="service-item"><span>Travel Fee</span><span class="service-price">₦1,000</span></div>
+          <div class="service-item" style="border-top:1px solid #2a2a2a; padding-top:10px;"><span style="font-weight:600;">Total</span><span class="service-price" style="font-size:18px;">₦3,500</span></div>
+        </div>
+        <button class="btn-primary" onclick="confirmHouseCall()">Request House Call · ₦3,500</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOUSE CALL SUCCESS -->
+  <div class="screen" id="screen-housecall-success">
+    <div class="app-screen center">
+      <div style="font-size:64px;">🏠</div>
+      <h2>House Call Requested!</h2>
+      <p class="success-sub">The provider will confirm your request shortly.</p>
+      <div class="success-card">
+        <div class="success-row"><span>Provider</span><span>Kings Barbershop</span></div>
+        <div class="success-row"><span>Location</span><span id="housecall-confirmed-address">Your Address</span></div>
+        <div class="success-row"><span>Date</span><span id="housecall-confirmed-date">-</span></div>
+        <div class="success-row"><span>Total</span><span>₦3,500</span></div>
+      </div>
+      <button class="btn-primary" onclick="showScreen('screen-home')">Back to Home</button>
+      <button class="btn-secondary" onclick="showScreen('screen-bookings')">View My Bookings</button>
+    </div>
+  </div>
+
+  <!-- PRICE OFFER -->
+  <div class="screen" id="screen-offer">
+    <div class="app-screen">
+      <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Make an Offer</h3></div>
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="background:#1a1a1a; border-radius:16px; padding:16px;"><p style="font-size:13px; color:#888; margin-bottom:4px;">Listed Price</p><p style="font-size:28px; font-weight:700; color:#F59E0B;">₦2,500</p><p style="font-size:12px; color:#555; margin-top:4px;">Signature Fade · Kings Barbershop</p></div>
+        <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>You can make one offer per booking. Provider responds within 10 minutes.</div>
+        <div class="form-group"><label>Your Offer Amount (₦)</label><input type="number" id="offer-amount" placeholder="Enter your offer e.g. 2000" oninput="updateOfferPreview(this.value)"/></div>
+        <div id="offer-preview" style="display:none; background:#1a1a1a; border-radius:14px; padding:16px;">
+          <div class="service-item"><span>Listed Price</span><span class="service-price">₦2,500</span></div>
+          <div class="service-item"><span>Your Offer</span><span id="offer-display" style="color:#a78bfa; font-weight:600;">₦0</span></div>
+          <div class="service-item"><span>You save</span><span id="offer-saving" style="color:#22c55e; font-weight:600;">₦0</span></div>
+        </div>
+        <div class="form-group"><label>Add a message (optional)</label><textarea id="offer-message" placeholder="e.g. I'm a regular customer, can we work something out?" style="background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; padding:14px; font-size:14px; color:#F9FAFB; font-family:'Poppins',sans-serif; outline:none; width:100%; height:80px; resize:none;"></textarea></div>
+        <button class="btn-primary" onclick="sendOffer()">Send Offer</button>
+        <button class="btn-secondary" onclick="showScreen('screen-booking')">Book at Full Price</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- OFFER RESPONSE -->
+  <div class="screen" id="screen-offer-response">
+    <div class="app-screen center">
+      <div id="offer-response-icon" style="font-size:64px;">⏳</div>
+      <h2 id="offer-response-title">Offer Sent!</h2>
+      <p class="success-sub" id="offer-response-msg">Waiting for Kings Barbershop to respond.</p>
+      <div class="success-card">
+        <div class="success-row"><span>Provider</span><span>Kings Barbershop</span></div>
+        <div class="success-row"><span>Listed Price</span><span>₦2,500</span></div>
+        <div class="success-row"><span>Your Offer</span><span id="offer-sent-amount" style="color:#a78bfa;">₦0</span></div>
+        <div class="success-row"><span>Status</span><span id="offer-status" style="color:#F59E0B;">Pending</span></div>
+      </div>
+      <button class="btn-primary" id="offer-action-btn" onclick="showScreen('screen-booking')">Proceed to Book</button>
+      <button class="btn-secondary" onclick="showScreen('screen-home')">Back to Home</button>
+    </div>
+  </div>
+
+
+  <!-- MANAGE TEAM SCREEN -->
+  <div class="screen" id="screen-manage-team">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Manage Team</h3>
+      </div>
+
+      <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 16px; padding-bottom: 40px;">
+
+        <div class="booking-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Team members appear on your public profile. Customers can see who will be serving them.
+        </div>
+
+        <!-- ADD MEMBER FORM -->
+        <div style="background:#1a1a1a; border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:14px;">
+          <p style="font-size:14px; font-weight:600;">Add Team Member</p>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="team-name" placeholder="e.g. Kingsley James"/>
+          </div>
+          <div class="form-group">
+            <label>Role / Title</label>
+            <input type="text" id="team-role" placeholder="e.g. Senior Barber, Junior Stylist"/>
+          </div>
+          <div class="form-group">
+            <label>Years of Experience</label>
+            <select id="team-experience">
+              <option>Less than 1 year</option>
+              <option>1 year</option>
+              <option>2 years</option>
+              <option>3 years</option>
+              <option>4 years</option>
+              <option>5+ years</option>
+              <option>10+ years</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Profile Photo</label>
+            <div class="upload-box" id="team-photo-box" onclick="simulateTeamPhotoUpload()">
+              <div id="team-photo-preview" style="display:none; font-size:48px; text-align:center;">📸</div>
+              <div id="team-photo-placeholder" style="display:flex; flex-direction:column; align-items:center;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <p style="font-size:12px; color:#555; margin-top:8px;">Tap to upload photo</p>
+              </div>
+            </div>
+          </div>
+          <button class="btn-primary" onclick="addTeamMember()">+ Add to Team</button>
+        </div>
+
+        <!-- CURRENT TEAM -->
+        <div class="section-title" style="padding: 4px 0;">Current Team</div>
+        <div id="team-list" style="display:flex; flex-direction:column; gap:10px;">
+          <div class="team-member-card">
+            <div class="team-member-avatar">KJ</div>
+            <div style="flex:1;">
+              <p style="font-size:14px; font-weight:500;">Kingsley James</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Senior Barber · 5 years</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.9 · 280 bookings</p>
+            </div>
+            <button class="remove-btn" onclick="removeTeamMember(this)">Remove</button>
+          </div>
+          <div class="team-member-card">
+            <div class="team-member-avatar">TA</div>
+            <div style="flex:1;">
+              <p style="font-size:14px; font-weight:500;">Tunde Adeyemi</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Barber · 3 years</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.8 · 156 bookings</p>
+            </div>
+            <button class="remove-btn" onclick="removeTeamMember(this)">Remove</button>
+          </div>
+          <div class="team-member-card">
+            <div class="team-member-avatar">EO</div>
+            <div style="flex:1;">
+              <p style="font-size:14px; font-weight:500;">Emeka Okafor</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Junior Barber · 1 year</p>
+              <p style="font-size:11px; color:#F59E0B; margin-top:2px;">★ 4.7 · 48 bookings</p>
+            </div>
+            <button class="remove-btn" onclick="removeTeamMember(this)">Remove</button>
+          </div>
+        </div>
+
+        <button class="btn-secondary" onclick="goBack()">Done</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- PROVIDER CALENDAR SCREEN -->
+  <div class="screen" id="screen-provider-calendar">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>My Calendar</h3>
+      </div>
+      <div style="padding: 0 20px; padding-bottom: 40px;">
+
+        <!-- WEEK SELECTOR -->
+        <div class="calendar-week-nav">
+          <div class="cal-nav-btn" onclick="changeWeek(-1)">&#8592;</div>
+          <p id="cal-week-label" style="font-size:14px; font-weight:600;">This Week</p>
+          <div class="cal-nav-btn" onclick="changeWeek(1)">&#8594;</div>
+        </div>
+
+        <!-- DAY TABS -->
+        <div class="cal-days" id="cal-days"></div>
+
+        <!-- TIME SLOTS -->
+        <div id="cal-bookings" style="display:flex; flex-direction:column; gap:8px; margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER NOTIFICATIONS SCREEN -->
+  <div class="screen" id="screen-provider-notifications">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Notifications</h3>
+      </div>
+      <div style="padding: 0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
+
+        <!-- WHATSAPP TOGGLE -->
+        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">WhatsApp Notifications</p>
+          <p style="font-size:12px; color:#888; margin-bottom:14px;">Get booking reminders sent to your WhatsApp 15 minutes before each appointment</p>
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div>
+              <p style="font-size:13px; font-weight:500;">Enable WhatsApp reminders</p>
+              <p style="font-size:11px; color:#888; margin-top:2px;">Sent to your registered phone number</p>
+            </div>
+            <div class="toggle active" id="whatsapp-toggle" onclick="toggleWhatsApp()"></div>
+          </div>
+        </div>
+
+        <!-- PHONE NUMBER -->
+        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
+          <p style="font-size:14px; font-weight:600; margin-bottom:12px;">WhatsApp Number</p>
+          <div class="form-group">
+            <input type="tel" id="prov-whatsapp-number" placeholder="+234 800 000 0000" value="+234 800 000 0000"/>
+          </div>
+          <button class="btn-primary" style="margin-top:12px;" onclick="saveWhatsAppNumber()">Save Number</button>
+        </div>
+
+        <!-- IN-APP NOTIFICATIONS -->
+        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">In-App Notifications</p>
+          <p style="font-size:12px; color:#888; margin-bottom:14px;">Get alerts inside the Preen app</p>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:13px;">New booking alert</p>
+              <div class="toggle active" id="notif-new-booking" onclick="this.classList.toggle('active')"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:13px;">15 min reminder</p>
+              <div class="toggle active" id="notif-reminder" onclick="this.classList.toggle('active')"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:13px;">Booking cancelled</p>
+              <div class="toggle active" id="notif-cancel" onclick="this.classList.toggle('active')"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:13px;">New review received</p>
+              <div class="toggle" id="notif-review" onclick="this.classList.toggle('active')"></div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <p style="font-size:13px;">Tip received</p>
+              <div class="toggle active" id="notif-tip" onclick="this.classList.toggle('active')"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECENT NOTIFICATIONS -->
+        <div class="section-title" style="padding: 4px 0;">Recent Notifications</div>
+        <div id="prov-notif-list" style="display:flex; flex-direction:column; gap:4px;">
+          <div class="notif-item">
+            <div class="notif-icon">📅</div>
+            <div class="notif-text">
+              <p class="notif-title">Booking in 15 minutes</p>
+              <p class="notif-sub">Adebayo O. · Signature Fade · 10:00 AM</p>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">✅</div>
+            <div class="notif-text">
+              <p class="notif-title">New Booking Confirmed</p>
+              <p class="notif-sub">Kayode A. booked Signature Fade · Sat 11:00 AM</p>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">💛</div>
+            <div class="notif-text">
+              <p class="notif-title">Tip Received</p>
+              <p class="notif-sub">Chidi U. sent you a ₦1,000 tip</p>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-icon">⭐</div>
+            <div class="notif-text">
+              <p class="notif-title">New Review</p>
+              <p class="notif-sub">Emeka O. left you a 5 star review</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TEST WHATSAPP -->
+        <button class="btn-secondary" style="background:#25D366; border-color:#25D366; color:#fff;" onclick="testWhatsAppNotification()">
+          📱 Send Test WhatsApp Notification
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- PROVIDER ALL BOOKINGS SCREEN -->
+  <div class="screen" id="screen-provider-all-bookings">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>All Bookings</h3>
+      </div>
+
+      <!-- FILTER TABS -->
+      <div style="display:flex; gap:8px; padding: 0 20px 16px; overflow-x:auto; scrollbar-width:none;">
+        <div class="filter-pill active" onclick="filterProvBookings(this, 'all')">All</div>
+        <div class="filter-pill" onclick="filterProvBookings(this, 'today')">Today</div>
+        <div class="filter-pill" onclick="filterProvBookings(this, 'upcoming')">Upcoming</div>
+        <div class="filter-pill" onclick="filterProvBookings(this, 'completed')">Completed</div>
+        <div class="filter-pill" onclick="filterProvBookings(this, 'cancelled')">Cancelled</div>
+      </div>
+
+      <div id="prov-all-bookings-list" style="padding: 0 20px; display:flex; flex-direction:column; gap:10px; padding-bottom:100px;">
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">AO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Adebayo O.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Signature Fade · Today 10:00 AM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 801 234 5678</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦2,500</p>
+            <p style="font-size:10px; color:#555; margin-top:2px;" onclick="sendWhatsAppReminder('Adebayo O.', 'Signature Fade', '10:00 AM')" style="cursor:pointer; color:#25D366;">📱 Remind</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">CU</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Chidi U.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Beard Trim · Today 12:00 PM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 802 345 6789</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦1,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">TA</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Tunde A.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Full Cut + Beard · Today 3:00 PM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 803 456 7890</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦3,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">EO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Emeka O.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Line-up · Tomorrow 9:00 AM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 804 567 8901</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦1,000</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">KA</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Kayode A.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Signature Fade · Sat 11:00 AM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 805 678 9012</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦2,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">BO</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Bola K.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Signature Fade · Yesterday 2:00 PM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 806 789 0123</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status completed">Completed</span>
+            <p style="font-size:12px; color:#F59E0B; font-weight:600; margin-top:4px;">₦2,500</p>
+          </div>
+        </div>
+        <div class="prov-booking-card">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">SF</div>
+            <div>
+              <p style="font-size:14px; font-weight:500;">Segun F.</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">Beard Trim · Mon 11:00 AM</p>
+              <p style="font-size:11px; color:#555; margin-top:1px;">+234 807 890 1234</p>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="status cancelled">Cancelled</span>
+            <p style="font-size:12px; color:#555; font-weight:600; margin-top:4px;">₦1,500</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-provider-dashboard')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-provider-earnings')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          <span>Earnings</span>
+        </div>
+        <div class="nav-item active">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg>
+          <span>Bookings</span>
+        </div>
+        <div class="nav-item" onclick="showScreen('screen-welcome')">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Sign Out</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
