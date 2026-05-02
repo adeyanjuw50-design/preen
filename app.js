@@ -1,3 +1,705 @@
+// WITHDRAWAL SYSTEM
+let selectedWithdrawMethod = 'bank';
+let selectedWithdrawAmount = 0;
+
+function selectWithdrawalMethod(el, method) {
+  selectedWithdrawMethod = method;
+  document.querySelectorAll('.withdrawal-option').forEach(o => {
+    o.classList.remove('selected-method');
+    o.querySelector('.method-check').style.background = 'var(--border)';
+    o.querySelector('.method-check').style.color = 'transparent';
+  });
+  el.classList.add('selected-method');
+  el.querySelector('.method-check').style.background = 'var(--primary)';
+  el.querySelector('.method-check').style.color = '#fff';
+  if (method === 'bank') {
+    document.getElementById('bank-details-section').style.display = 'block';
+    document.getElementById('wallet-details-section').style.display = 'none';
+  } else {
+    document.getElementById('bank-details-section').style.display = 'none';
+    document.getElementById('wallet-details-section').style.display = 'block';
+    document.getElementById('wallet-title').textContent = method === 'opay' ? 'OPay Details' : 'PalmPay Details';
+  }
+}
+
+function setWithdrawAmount(el, amount) {
+  document.querySelectorAll('#screen-withdrawal .tip-option').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedWithdrawAmount = amount;
+  document.getElementById('withdraw-amount-input').value = '';
+  updateWithdrawSummary(amount);
+}
+
+function setCustomWithdrawAmount(value) {
+  document.querySelectorAll('#screen-withdrawal .tip-option').forEach(t => t.classList.remove('selected'));
+  selectedWithdrawAmount = parseInt(value) || 0;
+  if (selectedWithdrawAmount > 0) updateWithdrawSummary(selectedWithdrawAmount);
+  else document.getElementById('withdraw-summary').style.display = 'none';
+}
+
+function updateWithdrawSummary(amount) {
+  document.getElementById('withdraw-amount-display').textContent = '₦' + amount.toLocaleString();
+  document.getElementById('withdraw-receive-display').textContent = '₦' + amount.toLocaleString();
+  document.getElementById('withdraw-summary').style.display = 'block';
+}
+
+function verifyAccountNumber() {
+  const number = document.getElementById('account-number').value;
+  if (!number || number.length < 10) { alert('Please enter a valid 10-digit account number.'); return; }
+  document.getElementById('account-name').value = 'Verifying...';
+  setTimeout(() => {
+    document.getElementById('account-name').value = 'ADEYANJU WISDOM';
+    alert('Account verified ✓\nName: ADEYANJU WISDOM');
+  }, 1500);
+}
+
+function requestWithdrawal() {
+  if (selectedWithdrawAmount === 0) { alert('Please select or enter a withdrawal amount.'); return; }
+  if (selectedWithdrawAmount < 1000) { alert('Minimum withdrawal amount is ₦1,000.'); return; }
+  if (selectedWithdrawAmount > 47500) { alert('Amount exceeds your available balance of ₦47,500.'); return; }
+  if (selectedWithdrawMethod === 'bank') {
+    const bank = document.getElementById('bank-name').value;
+    const number = document.getElementById('account-number').value;
+    const name = document.getElementById('account-name').value;
+    if (!number || !name || name === 'Verifying...') { alert('Please verify your account number first.'); return; }
+    alert('Withdrawal request submitted!\n\nAmount: ₦' + selectedWithdrawAmount.toLocaleString() + '\nBank: ' + bank + '\nAccount: ' + number + '\n\nYou will receive your funds within 1 to 2 business days.');
+  } else {
+    const phone = document.getElementById('wallet-phone').value;
+    if (!phone) { alert('Please enter your wallet phone number.'); return; }
+    alert('Withdrawal request submitted!\n\nAmount: ₦' + selectedWithdrawAmount.toLocaleString() + '\nWallet: ' + selectedWithdrawMethod.toUpperCase() + '\nPhone: ' + phone + '\n\nYou will receive your funds instantly.');
+  }
+  showScreen('screen-provider-dashboard');
+}
+
+
+// PHOTO GALLERY
+const galleryPhotos = [
+  'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80',
+  'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=800&q=80',
+  'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=800&q=80',
+  'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&q=80',
+  'https://images.unsplash.com/photo-1581591524425-c7e0978865fc?w=800&q=80',
+];
+let galleryIndex = 0;
+
+function openGallery(index) {
+  galleryIndex = index;
+  const modal = document.getElementById('gallery-modal');
+  modal.style.display = 'flex';
+  renderGalleryImage();
+  renderGalleryThumbs();
+  document.body.style.overflow = 'hidden';
+  // swipe support
+  let startX = 0;
+  modal.ontouchstart = (e) => { startX = e.touches[0].clientX; };
+  modal.ontouchend = (e) => {
+    const diff = startX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) { diff > 0 ? galleryNext() : galleryPrev(); }
+  };
+}
+
+function closeGallery() {
+  document.getElementById('gallery-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function renderGalleryImage() {
+  const img = document.getElementById('gallery-img');
+  const counter = document.getElementById('gallery-counter');
+  img.style.opacity = '0';
+  setTimeout(() => {
+    img.style.backgroundImage = 'url(' + galleryPhotos[galleryIndex] + ')';
+    img.style.opacity = '1';
+  }, 150);
+  counter.textContent = (galleryIndex + 1) + ' / ' + galleryPhotos.length;
+}
+
+function renderGalleryThumbs() {
+  const thumbs = document.getElementById('gallery-thumbs');
+  thumbs.innerHTML = galleryPhotos.map((photo, i) =>
+    '<div onclick="galleryJump(' + i + ')" style="flex-shrink:0; width:56px; height:56px; border-radius:8px; background-image:url(' + photo + '); background-size:cover; background-position:center; opacity:' + (i === galleryIndex ? '1' : '0.5') + '; border:2px solid ' + (i === galleryIndex ? 'var(--primary)' : 'transparent') + '; cursor:pointer; transition:all 0.2s;"></div>'
+  ).join('');
+}
+
+function galleryNext() {
+  galleryIndex = (galleryIndex + 1) % galleryPhotos.length;
+  renderGalleryImage();
+  renderGalleryThumbs();
+}
+
+function galleryPrev() {
+  galleryIndex = (galleryIndex - 1 + galleryPhotos.length) % galleryPhotos.length;
+  renderGalleryImage();
+  renderGalleryThumbs();
+}
+
+function galleryJump(index) {
+  galleryIndex = index;
+  renderGalleryImage();
+  renderGalleryThumbs();
+}
+
+// Close gallery on escape key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeGallery();
+  if (e.key === 'ArrowRight') galleryNext();
+  if (e.key === 'ArrowLeft') galleryPrev();
+});
+
+
+// IMAGE CROP SYSTEM
+let cropFile = null;
+let cropCallback = null;
+let cropX = 0, cropY = 0, cropScale = 1;
+let isDragging = false, dragStartX, dragStartY, imgStartX, imgStartY;
+
+function openCropModal(file, callback) {
+  cropFile = file;
+  cropCallback = callback;
+  cropX = 0; cropY = 0; cropScale = 1;
+  const modal = document.getElementById('crop-modal');
+  const img = document.getElementById('crop-img');
+  const zoom = document.getElementById('crop-zoom');
+  if (!modal || !img) { callback(file); return; }
+  zoom.value = 1;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    img.src = e.target.result;
+    img.onload = () => {
+      const container = img.parentElement;
+      const scale = Math.max(container.clientWidth / img.naturalWidth, container.clientHeight / img.naturalHeight);
+      cropScale = scale;
+      zoom.min = scale * 0.8;
+      zoom.max = scale * 3;
+      zoom.step = scale * 0.05;
+      zoom.value = scale;
+      updateCropZoom(scale);
+    };
+  };
+  reader.readAsDataURL(file);
+  modal.style.display = 'flex';
+  setupCropDrag(img);
+}
+
+function setupCropDrag(img) {
+  img.onmousedown = img.ontouchstart = (e) => {
+    isDragging = true;
+    const touch = e.touches ? e.touches[0] : e;
+    dragStartX = touch.clientX; dragStartY = touch.clientY;
+    imgStartX = cropX; imgStartY = cropY;
+    e.preventDefault();
+  };
+  document.onmousemove = document.ontouchmove = (e) => {
+    if (!isDragging) return;
+    const touch = e.touches ? e.touches[0] : e;
+    cropX = imgStartX + (touch.clientX - dragStartX);
+    cropY = imgStartY + (touch.clientY - dragStartY);
+    img.style.left = cropX + 'px';
+    img.style.top = cropY + 'px';
+  };
+  document.onmouseup = document.ontouchend = () => { isDragging = false; };
+}
+
+function updateCropZoom(val) {
+  cropScale = parseFloat(val);
+  const img = document.getElementById('crop-img');
+  if (!img) return;
+  img.style.width = (img.naturalWidth * cropScale) + 'px';
+  img.style.height = (img.naturalHeight * cropScale) + 'px';
+  img.style.left = cropX + 'px';
+  img.style.top = cropY + 'px';
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').style.display = 'none';
+  cropFile = null; cropCallback = null;
+}
+
+function applyCrop() {
+  document.getElementById('crop-modal').style.display = 'none';
+  if (cropCallback && cropFile) cropCallback(cropFile);
+}
+
+// ENHANCED PHOTO UPLOAD WITH CROP
+function uploadWithCrop(callback) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    openCropModal(file, callback);
+  };
+  input.click();
+}
+
+
+// CLOUDINARY CONFIG
+const CLOUD_NAME = 'dwyss58sr';
+const UPLOAD_PRESET = 'preen_uploads';
+
+async function uploadToCloudinary(file, type = 'image') {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('folder', 'preen');
+  const resourceType = type === 'video' ? 'video' : 'image';
+  const url = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/' + resourceType + '/upload';
+  try {
+    const response = await fetch(url, { method: 'POST', body: formData });
+    const data = await response.json();
+    if (data.secure_url) {
+      console.log('Uploaded to Cloudinary:', data.secure_url);
+      return data.secure_url;
+    } else {
+      console.error('Cloudinary error:', data);
+      return null;
+    }
+  } catch (err) {
+    console.error('Upload failed:', err);
+    return null;
+  }
+}
+
+function triggerPhotoUpload(inputId, previewId, placeholderId, boxId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const placeholder = document.getElementById(placeholderId);
+    const preview = document.getElementById(previewId);
+    const box = document.getElementById(boxId);
+    if (placeholder) placeholder.innerHTML = '<div class="ai-spinner" style="margin:0 auto;"></div><p style="font-size:12px;color:var(--text3);margin-top:8px;">Uploading...</p>';
+    const url = await uploadToCloudinary(file, 'image');
+    if (url) {
+      if (preview) { preview.style.display = 'block'; preview.style.backgroundImage = 'url(' + url + ')'; preview.style.backgroundSize = 'cover'; preview.style.backgroundPosition = 'center'; preview.style.height = '100px'; preview.style.borderRadius = '10px'; }
+      if (placeholder) placeholder.style.display = 'none';
+      if (box) box.classList.add('uploaded');
+      return url;
+    } else {
+      if (placeholder) placeholder.innerHTML = '<p style="font-size:12px;color:var(--error);">Upload failed. Try again.</p>';
+    }
+  };
+  input.click();
+}
+
+function triggerVideoUpload(inputId, previewId, placeholderId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'video/*';
+  input.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) { alert('Video must be under 50MB.'); return; }
+    const placeholder = document.getElementById(placeholderId);
+    const preview = document.getElementById(previewId);
+    if (placeholder) placeholder.innerHTML = '<div class="ai-spinner" style="margin:0 auto;"></div><p style="font-size:12px;color:var(--text3);margin-top:8px;">Uploading video...</p>';
+    const url = await uploadToCloudinary(file, 'video');
+    if (url) {
+      videoUploaded = true;
+      if (preview) { preview.style.display = 'block'; preview.innerHTML = '<video src="' + url + '" controls style="width:100%;border-radius:10px;max-height:120px;"></video>'; }
+      if (placeholder) placeholder.style.display = 'none';
+    } else {
+      if (placeholder) placeholder.innerHTML = '<p style="font-size:12px;color:var(--error);">Upload failed. Try again.</p>';
+    }
+  };
+  input.click();
+}
+
+// PROFILE PHOTO UPLOAD
+let providerProfilePhotoUrl = null;
+
+async function uploadProviderProfilePhoto() {
+  uploadWithCrop(async (file) => {
+    const btn = document.getElementById('profile-photo-btn');
+    if (btn) btn.textContent = 'Uploading...';
+    const url = await uploadToCloudinary(file, 'image');
+    if (url) {
+      providerProfilePhotoUrl = url;
+      const cover = document.getElementById('provider-cover-preview');
+      if (cover) {
+        cover.style.backgroundImage = 'url(' + url + ')';
+        cover.style.backgroundSize = 'cover';
+        cover.style.backgroundPosition = 'center';
+        cover.style.borderStyle = 'solid';
+        cover.innerHTML = '';
+      }
+      if (btn) btn.textContent = '✓ Photo Updated';
+    } else {
+      if (btn) btn.textContent = 'Upload Photo';
+      alert('Upload failed. Please try again.');
+    }
+  });
+}
+
+
+// PROVIDER DATA - connects to Supabase
+const allProviders = [
+  {
+    name: 'Kings Barbershop',
+    category: 'Barber',
+    location: 'Wuse 2, Abuja',
+    distance: '0.8km',
+    rating: 4.9,
+    price: 2500,
+    emoji: '✂️',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: true,
+    service: 'Signature Fade',
+    hours: 'Open until 8:00 PM',
+    image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80'
+  },
+  {
+    name: 'Glam Nails by Temi',
+    category: 'Nails',
+    location: 'Garki, Abuja',
+    distance: '1.2km',
+    rating: 4.8,
+    price: 5000,
+    emoji: '💅',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: true,
+    service: 'Gel Manicure',
+    hours: 'Open until 7:00 PM',
+    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80'
+  },
+  {
+    name: 'Lash Queen Ada',
+    category: 'Lash',
+    location: 'Maitama, Abuja',
+    distance: '2.1km',
+    rating: 5.0,
+    price: 8000,
+    emoji: '👁️',
+    bg: 'linear-gradient(135deg, #EDE8FF, #C8B8FC)',
+    verified: true,
+    service: 'Classic Lash Set',
+    hours: 'Open until 6:00 PM',
+    image: 'https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&q=80'
+  },
+  {
+    name: 'Zara Hair Studio',
+    category: 'Hair',
+    location: 'Gwarinpa, Abuja',
+    distance: '3.4km',
+    rating: 4.7,
+    price: 12000,
+    emoji: '💇',
+    bg: 'linear-gradient(135deg, #ECFDF5, #A7F3D0)',
+    verified: false,
+    service: 'Weave Installation',
+    hours: 'Open until 8:00 PM',
+    image: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&q=80'
+  },
+  {
+    name: 'Serenity Spa',
+    category: 'Massage',
+    location: 'Asokoro, Abuja',
+    distance: '4.1km',
+    rating: 4.9,
+    price: 15000,
+    emoji: '💆',
+    bg: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+    verified: true,
+    service: 'Full Body Massage',
+    hours: 'Open until 9:00 PM',
+    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80'
+  },
+  {
+    name: 'Glow Makeup Studio',
+    category: 'Makeup',
+    location: 'Wuse 2, Abuja',
+    distance: '1.5km',
+    rating: 4.8,
+    price: 10000,
+    emoji: '👄',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: true,
+    service: 'Glam Makeup',
+    hours: 'Open until 7:00 PM',
+    image: 'https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80'
+  },
+  {
+    name: 'Sharp Cuts Barbershop',
+    category: 'Barber',
+    location: 'Garki, Abuja',
+    distance: '2.3km',
+    rating: 4.6,
+    price: 2000,
+    emoji: '✂️',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: false,
+    service: 'Fade & Beard',
+    hours: 'Open until 7:00 PM',
+    image: 'https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&q=80'
+  },
+  {
+    name: 'Luxe Nail Bar',
+    category: 'Nails',
+    location: 'Maitama, Abuja',
+    distance: '2.8km',
+    rating: 4.9,
+    price: 9000,
+    emoji: '💅',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: true,
+    service: 'Acrylic Full Set',
+    hours: 'Open until 8:00 PM',
+    image: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80'
+  },
+  {
+    name: 'Glamour Wigs by Chioma',
+    category: 'Wig Stylist',
+    location: 'Lekki, Lagos',
+    distance: '2.4km',
+    rating: 4.9,
+    price: 15000,
+    emoji: '👱',
+    bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+    verified: true,
+    service: 'Wig Installation & Style',
+    hours: 'Open until 7:00 PM',
+    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80'
+  },
+  {
+    name: 'Queen Gele by Adunni',
+    category: 'Gele Tying',
+    location: 'Ikeja, Lagos',
+    distance: '3.1km',
+    rating: 5.0,
+    price: 8000,
+    emoji: '👑',
+    bg: 'linear-gradient(135deg, #FEF3C7, #FDE68A)',
+    verified: true,
+    service: 'Bridal Gele Tying',
+    hours: 'Open until 8:00 PM',
+    image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'
+  },
+  {
+    name: 'Detty December Ready — Lash Queen Ada',
+    category: 'Lash',
+    location: 'Victoria Island, Lagos',
+    distance: '1.8km',
+    rating: 5.0,
+    price: 45000,
+    emoji: '👁️',
+    bg: 'linear-gradient(135deg, #EDE8FF, #C8B8FC)',
+    verified: true,
+    service: 'Premium Lash Set',
+    hours: 'Booking fast — Dec slots filling',
+    image: 'https://images.unsplash.com/photo-1560869713-7d0a29430803?w=400&q=80'
+  }
+];
+
+function buildProviderCard(p) {
+  return '<div class="provider-card-new" onclick="showScreen(\'screen-provider\')">' +
+    '<div class="provider-card-img" style="' + (p.image ? 'background-image:url(' + p.image + '); background-size:cover; background-position:center;' : 'background:' + p.bg + '; display:flex; align-items:center; justify-content:center;') + '">' +
+    (p.image ? '' : '<span style="font-size:40px;">' + p.emoji + '</span>') +
+    '<div class="provider-card-rating-badge">★ ' + p.rating + '</div>' +
+    '</div>' +
+    '<div class="provider-card-body">' +
+    '<div class="provider-card-top">' +
+    '<p class="provider-name">' + p.name + (p.verified ? ' <span class="verified-dot">✓</span>' : '') + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + p.distance + ' · ' + p.location + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + p.category + ' · ' + p.hours + '</p>' +
+    '</div>' +
+    '<div class="provider-service-preview">' +
+    '<span>' + p.service + '</span>' +
+    '<span class="service-price-sm">₦' + p.price.toLocaleString() + '</span>' +
+    '</div>' +
+    '</div>' +
+    '</div>';
+}
+
+async function showCategory(category) {
+  document.getElementById('category-title').textContent = category === 'Hair' ? 'Hair Salons' : category === 'Barber' ? 'Barbers' : category + ' Specialists';
+  const container = document.getElementById('category-results');
+  container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="ai-spinner"></div><p style="margin-top:12px; font-size:13px; color:var(--text3);">Finding providers near you...</p></div>';
+  showScreen('screen-category');
+
+  await new Promise(r => setTimeout(r, 800));
+
+  let providers = allProviders.filter(p => p.category === category);
+
+  if (db) {
+    try {
+      const { data, error } = await db.from('providers').select('*').eq('category', category);
+      if (!error && data && data.length > 0) {
+        const dbCards = data.map(p => ({
+          name: p.full_name,
+          category: p.category,
+          location: p.location || 'Abuja',
+          distance: 'Nearby',
+          rating: p.rating || 0,
+          price: 2500,
+          emoji: '✂️',
+          bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+          verified: p.is_verified,
+          service: 'Available services',
+          hours: p.is_available ? 'Available now' : 'Currently unavailable',
+          image: null
+        }));
+        providers = [...dbCards, ...providers];
+      }
+    } catch(e) {
+      console.log('Using local data');
+    }
+  }
+
+  if (providers.length === 0) {
+    const noProviderHTML = [
+      '<div style="text-align:center; padding:40px 20px;">',
+      '<p style="font-size:32px; margin-bottom:12px;">🔍</p>',
+      '<p style="font-size:16px; font-weight:600;">No providers yet</p>',
+      '<p style="font-size:13px; color:var(--text3); margin-top:8px;">Be the first ' + category + ' provider in your area!</p>',
+      '<button class="btn-primary" style="margin-top:20px; width:auto; padding:12px 24px;" onclick="showScreen(\x27screen-provider-login\x27)">Join as Provider</button>',
+      '</div>'
+    ].join('');
+    container.innerHTML = noProviderHTML;
+    return;
+  }
+
+  container.innerHTML = '<p style="font-size:12px; color:var(--text3); padding:0 0 12px;">' + providers.length + ' provider' + (providers.length > 1 ? 's' : '') + ' found near you</p>' + providers.map(buildProviderCard).join('');
+}
+
+async function loadHomeProviders() {
+  const container = document.getElementById('home-providers-list');
+  if (!container) return;
+
+  let providers = allProviders.slice(0, 4);
+
+  if (db) {
+    try {
+      const { data, error } = await db.from('providers').select('*').limit(8);
+      if (!error && data && data.length > 0) {
+        const dbCards = data.map(p => ({
+          name: p.full_name,
+          category: p.category,
+          location: p.location || 'Abuja',
+          distance: 'Nearby',
+          rating: p.rating || 0,
+          price: 2500,
+          emoji: getCategoryEmoji(p.category),
+          bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+          verified: p.is_verified,
+          service: 'Available services',
+          hours: p.is_available ? 'Available now' : 'Unavailable',
+          image: null
+        }));
+        providers = [...dbCards, ...allProviders.slice(0, 4)];
+      }
+    } catch(e) {}
+  }
+
+  container.innerHTML = providers.slice(0, 6).map(buildProviderCard).join('');
+}
+
+function getCategoryEmoji(category) {
+  const map = { 'Barber': '✂️', 'Nails': '💅', 'Lash': '👁️', 'Hair': '💇', 'Makeup': '👄', 'Massage': '💆', 'Spa': '🧖', 'Wig Stylist': '👱', 'Gele Tying': '👑' };
+  return map[category] || '✂️';
+}
+
+
+// SPLASH SCREEN
+function initSplash() {
+  const splash = document.getElementById('screen-splash');
+  if (!splash) return;
+  setTimeout(() => {
+    splash.style.opacity = '0';
+    splash.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => {
+      splash.style.display = 'none';
+    }, 500);
+  }, 2500);
+}
+
+// MULTI SERVICE SELECTION
+let selectedServices = [];
+let selectedServiceTotal = 0;
+
+function toggleService(el, serviceName, price) {
+  const idx = selectedServices.findIndex(s => s.name === serviceName);
+  if (idx > -1) {
+    selectedServices.splice(idx, 1);
+    el.classList.remove('selected');
+  } else {
+    selectedServices.push({ name: serviceName, price });
+    el.classList.add('selected');
+  }
+  selectedServiceTotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
+  const totalBar = document.getElementById('service-total-bar');
+  const label = document.getElementById('selected-services-label');
+  const priceEl = document.getElementById('services-total-price');
+  const confirmBtn = document.getElementById('confirm-booking-btn');
+  if (selectedServices.length > 0) {
+    totalBar.style.display = 'flex';
+    label.textContent = selectedServices.length + ' service' + (selectedServices.length > 1 ? 's' : '') + ' selected';
+    priceEl.textContent = '₦' + selectedServiceTotal.toLocaleString();
+    if (confirmBtn) confirmBtn.textContent = 'Confirm Booking · ₦' + selectedServiceTotal.toLocaleString();
+  } else {
+    totalBar.style.display = 'none';
+    if (confirmBtn) confirmBtn.textContent = 'Confirm Booking · ₦2,500';
+  }
+}
+
+// TEAM MEMBER SELECTION
+let selectedTeamMember = 'No preference';
+
+function selectTeamMember(el, memberName) {
+  document.querySelectorAll('#team-select-list .team-member').forEach(m => m.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedTeamMember = memberName;
+}
+
+// CHAT
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const container = document.getElementById('chat-messages');
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0') + ' ' + (now.getHours() >= 12 ? 'PM' : 'AM');
+  const div = document.createElement('div');
+  div.innerHTML = '<div class="chat-bubble sent">' + msg + '</div><div class="chat-time" style="text-align:right; padding-right:4px;">' + time + '</div>';
+  container.appendChild(div);
+  input.value = '';
+  container.scrollTop = container.scrollHeight;
+  setTimeout(() => {
+    const replies = [
+      'Thank you for your message! We will get back to you shortly.',
+      'Great question! Yes we can definitely help with that.',
+      'Our slots are filling up fast. Would you like to book now?',
+      'Please check our services tab for full pricing details.',
+      'We look forward to seeing you! Book anytime.'
+    ];
+    const reply = document.createElement('div');
+    reply.innerHTML = '<div class="chat-bubble received">' + replies[Math.floor(Math.random() * replies.length)] + '</div><div class="chat-time" style="padding-left:4px;">' + time + '</div>';
+    container.appendChild(reply);
+    container.scrollTop = container.scrollHeight;
+  }, 1200);
+}
+
+// SOCIAL LINKS
+function saveSocialLinks() {
+  const instagram = document.getElementById('instagram-link').value.trim();
+  const tiktok = document.getElementById('tiktok-link').value.trim();
+  if (!instagram && !tiktok) { alert('Please add at least one social media link.'); return; }
+  alert('Social media links saved! They will appear on your public profile.');
+  goBack();
+}
+
+// BACK BUTTON HANDLER
+window.addEventListener('popstate', function(e) {
+  e.preventDefault();
+  const current = document.querySelector('.screen.active');
+  if (current && current.id !== 'screen-welcome' && current.id !== 'screen-splash') {
+    goBack();
+    history.pushState(null, '', window.location.href);
+  }
+});
+
 // SUPABASE
 const SUPABASE_URL = 'https://noucyqailmqgaujgzxay.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdWN5cWFpbG1xZ2F1amd6eGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgwMjksImV4cCI6MjA5MTA4NDAyOX0.5PQ5_pIyu-loK3PM9s813SEDI3cywrqtmEPZi7MOI8Y';
@@ -114,16 +816,23 @@ function handleLogin() {
 async function confirmBooking() {
   const date = document.getElementById('booking-date').value;
   const selectedTime = document.querySelector('.time-slot.selected');
-  const service = document.getElementById('booking-service').value;
   const customerName = document.getElementById('booking-name').value.trim();
   const customerPhone = document.getElementById('booking-phone').value.trim();
+  if (selectedServices.length === 0) { alert('Please select at least one service.'); return; }
   if (!date) { alert('Please select a date.'); return; }
   if (!selectedTime) { alert('Please select a time slot.'); return; }
   if (!customerName) { alert('Please enter your name.'); return; }
   if (!customerPhone) { alert('Please enter your phone number.'); return; }
   const formattedDate = new Date(date).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const serviceNames = selectedServices.map(s => s.name).join(', ');
+  const totalAmount = '₦' + selectedServiceTotal.toLocaleString();
   document.getElementById('confirmed-date').textContent = formattedDate + ' · ' + selectedTime.textContent;
-  saveBooking(customerName, customerPhone, 'Kings Barbershop', service, formattedDate, selectedTime.textContent, '₦2,500');
+  document.getElementById('confirmed-services').textContent = serviceNames;
+  document.getElementById('confirmed-amount').textContent = totalAmount;
+  document.getElementById('confirmed-team').textContent = selectedTeamMember;
+  saveBooking(customerName, customerPhone, 'Kings Barbershop', serviceNames, formattedDate, selectedTime.textContent, totalAmount);
+  selectedServices = [];
+  selectedServiceTotal = 0;
   showScreen('screen-booking-success');
 }
 
@@ -800,14 +1509,89 @@ function scheduleBookingReminder(clientName, service, time, providerPhone) {
   window.open('https://wa.me/' + clean + '?text=' + encodeURIComponent(msg), '_blank');
 }
 
+
+// SKILL UPLOAD - REAL CLOUDINARY
+async function handleSkillPhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const placeholder = document.getElementById('photo-placeholder');
+  const preview = document.getElementById('photo-preview');
+  const box = document.getElementById('photo-upload-box');
+  if (placeholder) {
+    placeholder.innerHTML = '<div class="ai-spinner" style="margin:0 auto;"></div><p style="font-size:12px;color:var(--text3);margin-top:8px;">Uploading...</p>';
+  }
+  const url = await uploadToCloudinary(file, 'image');
+  if (url) {
+    photoUploaded = true;
+    if (placeholder) placeholder.style.display = 'none';
+    if (preview) {
+      preview.style.display = 'block';
+      preview.style.backgroundImage = 'url(' + url + ')';
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+      preview.style.width = '100%';
+      preview.style.height = '160px';
+      preview.style.borderRadius = '10px';
+    }
+    if (box) { box.style.borderColor = 'var(--primary)'; box.style.borderStyle = 'solid'; }
+  } else {
+    if (placeholder) placeholder.innerHTML = '<p style="font-size:13px;color:var(--error);font-weight:500;">Upload failed. Check your internet and try again.</p>';
+  }
+}
+
+async function handleSkillVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50 * 1024 * 1024) { alert('Video must be under 50MB.'); return; }
+  const placeholder = document.getElementById('video-placeholder');
+  const preview = document.getElementById('video-preview');
+  const box = document.getElementById('video-upload-box');
+  if (placeholder) {
+    placeholder.innerHTML = '<div class="ai-spinner" style="margin:0 auto;"></div><p style="font-size:12px;color:var(--text3);margin-top:8px;">Uploading video... this may take a moment</p>';
+  }
+  const url = await uploadToCloudinary(file, 'video');
+  if (url) {
+    videoUploaded = true;
+    if (placeholder) placeholder.style.display = 'none';
+    if (preview) {
+      preview.style.display = 'block';
+      preview.innerHTML = '<video src="' + url + '" controls playsinline style="width:100%;border-radius:10px;max-height:180px;"></video>';
+    }
+    if (box) { box.style.borderColor = 'var(--primary)'; box.style.borderStyle = 'solid'; }
+  } else {
+    if (placeholder) placeholder.innerHTML = '<p style="font-size:13px;color:var(--error);font-weight:500;">Upload failed. Check your internet and try again.</p>';
+  }
+}
+
 // TEAM MANAGEMENT
 let teamPhotoUploaded = false;
+let teamPhotoUrl = null;
 
-function simulateTeamPhotoUpload() {
-  teamPhotoUploaded = true;
-  document.getElementById('team-photo-placeholder').style.display = 'none';
-  document.getElementById('team-photo-preview').style.display = 'block';
-  document.getElementById('team-photo-box').classList.add('uploaded');
+function uploadTeamMemberPhoto() {
+  uploadWithCrop(async (file) => {
+    const placeholder = document.getElementById('team-photo-placeholder');
+    const preview = document.getElementById('team-photo-preview');
+    const box = document.getElementById('team-photo-box');
+    if (placeholder) placeholder.innerHTML = '<div class="ai-spinner" style="margin:0 auto; width:24px; height:24px; border-width:2px;"></div>';
+    const url = await uploadToCloudinary(file, 'image');
+    if (url) {
+      teamPhotoUploaded = true;
+      teamPhotoUrl = url;
+      if (preview) {
+        preview.style.display = 'block';
+        preview.style.backgroundImage = 'url(' + url + ')';
+        preview.style.backgroundSize = 'cover';
+        preview.style.backgroundPosition = 'center';
+        preview.style.borderRadius = '50%';
+        preview.style.width = '100%';
+        preview.style.height = '100%';
+      }
+      if (placeholder) placeholder.style.display = 'none';
+      if (box) { box.style.borderStyle = 'solid'; box.style.borderColor = 'var(--primary)'; }
+    } else {
+      if (placeholder) placeholder.innerHTML = '<p style="font-size:10px;color:var(--error);">Failed</p>';
+    }
+  });
 }
 
 function addTeamMember() {
@@ -818,13 +1602,16 @@ function addTeamMember() {
   if (!role) { alert('Please enter their role or title.'); return; }
 
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const avatarHtml = teamPhotoUrl
+    ? '<div class="team-member-avatar" style="background-image:url(' + teamPhotoUrl + '); background-size:cover; background-position:center;"></div>'
+    : '<div class="team-member-avatar">' + initials + '</div>';
   const card = document.createElement('div');
   card.className = 'team-member-card';
-  card.innerHTML = '<div class="team-member-avatar">' + initials + '</div>' +
+  card.innerHTML = avatarHtml +
     '<div style="flex:1;">' +
     '<p style="font-size:14px; font-weight:500;">' + name + '</p>' +
-    '<p style="font-size:12px; color:#888; margin-top:2px;">' + role + ' · ' + experience + '</p>' +
-    '<p style="font-size:11px; color:#F59E0B; margin-top:2px;">New member</p>' +
+    '<p style="font-size:12px; color:var(--text3); margin-top:2px;">' + role + ' · ' + experience + '</p>' +
+    '<p style="font-size:11px; color:var(--primary); margin-top:2px;">New member</p>' +
     '</div>' +
     '<button class="remove-btn" onclick="removeTeamMember(this)">Remove</button>';
 
@@ -834,10 +1621,12 @@ function addTeamMember() {
   document.getElementById('team-role').value = '';
   document.getElementById('team-experience').selectedIndex = 0;
   teamPhotoUploaded = false;
+  teamPhotoUrl = null;
   document.getElementById('team-photo-placeholder').style.display = 'flex';
+  document.getElementById('team-photo-placeholder').innerHTML = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p style="font-size:12px; color:var(--text3); margin-top:8px;">Tap to upload photo</p>';
   document.getElementById('team-photo-preview').style.display = 'none';
+  document.getElementById('team-photo-preview').style.backgroundImage = '';
   document.getElementById('team-photo-box').classList.remove('uploaded');
-
   alert(name + ' has been added to your team!');
 }
 
@@ -850,7 +1639,10 @@ function removeTeamMember(btn) {
 // INIT
 document.addEventListener('DOMContentLoaded', () => {
   initSupabase();
+  initSplash();
+  history.pushState(null, '', window.location.href);
   renderStates();
+  setTimeout(loadHomeProviders, 500);
   renderStars(0);
   const dateInput = document.getElementById('booking-date');
   if (dateInput) { const today = new Date().toISOString().split('T')[0]; dateInput.min = today; }

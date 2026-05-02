@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Preen Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+    :root{
+      --p:#E8547A;--p2:#C43A60;--accent:#F59E0B;
+      --bg:#F8F9FA;--card:#fff;--border:#E9ECEF;
+      --text:#1A1A1A;--text2:#6C757D;--text3:#ADB5BD;
+      --success:#10B981;--error:#EF4444;--warning:#F59E0B;
+      --sidebar:#1A1A2E;
+    }
+    body{background:var(--bg);color:var(--text);min-height:100vh;}
+
+    /* LOGIN */
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#1A1A2E,#E8547A);padding:20px;}
+    .login-box{background:#fff;border-radius:20px;padding:36px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+    .login-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+    .login-icon{width:42px;height:42px;background:var(--p);border-radius:12px;display:flex;align-items:center;justify-content:center;}
+    .login-name{font-size:22px;font-weight:700;color:var(--p);}
+    .login-sub{font-size:12px;color:var(--text2);margin-bottom:24px;}
+    .inp{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Poppins',sans-serif;outline:none;color:var(--text);margin-bottom:10px;transition:border-color 0.2s;}
+    .inp:focus{border-color:var(--p);}
+    .login-btn{width:100%;background:var(--p);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
+    .login-btn:hover{background:var(--p2);}
+    .login-err{font-size:12px;color:var(--error);text-align:center;margin-top:8px;display:none;}
+    .role-badge{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:600;margin-bottom:16px;}
+    .role-badge.super{background:#FDE8EE;color:var(--p);}
+    .role-badge.staff{background:#EDE9FE;color:#7C3AED;}
+
+    /* LAYOUT */
+    #dashboard{display:none;}
+    .layout{display:flex;min-height:100vh;}
+    .sidebar{width:220px;background:var(--sidebar);flex-shrink:0;position:fixed;top:0;left:0;height:100vh;z-index:200;display:flex;flex-direction:column;transition:transform 0.3s;}
+    .sidebar-head{padding:20px 16px;border-bottom:1px solid rgba(255,255,255,0.08);}
+    .sidebar-brand{font-size:20px;font-weight:700;color:#fff;}
+    .sidebar-tag{font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;}
+    .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+    .nav-grp{font-size:9px;color:rgba(255,255,255,0.25);text-transform:uppercase;letter-spacing:1px;padding:12px 16px 4px;}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(255,255,255,0.55);font-size:13px;cursor:pointer;transition:all 0.15s;border-left:3px solid transparent;}
+    .nav-item:hover{color:#fff;background:rgba(255,255,255,0.05);}
+    .nav-item.active{color:#fff;background:rgba(232,84,122,0.2);border-left-color:var(--p);}
+    .nav-icon{font-size:16px;flex-shrink:0;}
+    .sidebar-foot{padding:14px 16px;border-top:1px solid rgba(255,255,255,0.08);}
+    .sidebar-user{display:flex;align-items:center;gap:10px;}
+    .sidebar-av{width:34px;height:34px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+    .overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:199;}
+    .overlay.show{display:block;}
+    .main{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+    .topbar{background:var(--card);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+    .hamburger{display:none;background:none;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:18px;color:var(--text);width:38px;height:38px;align-items:center;justify-content:center;}
+    .page-title{font-size:17px;font-weight:700;}
+    .topbar-right{display:flex;align-items:center;gap:10px;}
+    .topbar-btn{background:var(--p);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:12px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
+    .content{padding:20px;flex:1;}
+
+    /* TIME FILTER */
+    .time-filter{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+    .tf-btn{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:6px 14px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Poppins',sans-serif;color:var(--text2);transition:all 0.15s;}
+    .tf-btn.active{background:var(--p);border-color:var(--p);color:#fff;}
+    .tf-date{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;font-family:'Poppins',sans-serif;outline:none;color:var(--text);}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+    .stat-card{background:var(--card);border-radius:14px;padding:18px;border:1px solid var(--border);position:relative;overflow:hidden;}
+    .stat-icon{font-size:24px;margin-bottom:8px;}
+    .stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+    .stat-value{font-size:26px;font-weight:700;color:var(--text);}
+    .stat-change{font-size:11px;color:var(--success);margin-top:4px;}
+    .stat-accent{position:absolute;bottom:0;right:0;width:60px;height:60px;border-radius:50%;opacity:0.1;transform:translate(20px,20px);}
+
+    /* CHARTS */
+    .charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:20px;}
+    .card{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;margin-bottom:14px;}
+    .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;}
+    .card-title{font-size:14px;font-weight:600;}
+    .card-body{padding:18px;}
+    .chart-wrap{position:relative;height:200px;}
+
+    /* TABLES */
+    .table-wrap{overflow-x:auto;}
+    table{width:100%;border-collapse:collapse;}
+    th{padding:10px 14px;text-align:left;font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;background:var(--bg);border-bottom:1px solid var(--border);white-space:nowrap;}
+    td{padding:12px 14px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border);}
+    tr:last-child td{border-bottom:none;}
+    tr:hover td{background:#FAFAFA;}
+
+    /* BADGES */
+    .badge{border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;white-space:nowrap;}
+    .badge.confirmed{background:#FDE8EE;color:var(--p);}
+    .badge.completed{background:#ECFDF5;color:var(--success);}
+    .badge.cancelled{background:#FEF2F2;color:var(--error);}
+    .badge.suspended{background:#FEF2F2;color:var(--error);}
+    .badge.pending{background:#FEF3C7;color:#D97706;}
+    .badge.verified{background:#ECFDF5;color:var(--success);}
+    .badge.provider{background:#EDE9FE;color:#7C3AED;}
+    .badge.customer{background:#FDE8EE;color:var(--p);}
+    .badge.super_admin{background:#FDE8EE;color:var(--p);}
+    .badge.support{background:#EDE9FE;color:#7C3AED;}
+    .badge.provider_manager{background:#ECFDF5;color:var(--success);}
+    .badge.online{background:#ECFDF5;color:var(--success);}
+    .badge.offline{background:var(--bg);color:var(--text3);}
+
+    /* BUTTONS */
+    .act-btn{background:transparent;border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;color:var(--text2);transition:all 0.15s;margin-left:3px;white-space:nowrap;}
+    .act-btn:hover{border-color:var(--p);color:var(--p);}
+    .act-btn.red{border-color:#FECACA;color:var(--error);}
+    .act-btn.red:hover{background:#FEF2F2;}
+    .act-btn.green{border-color:#A7F3D0;color:var(--success);}
+    .act-btn.green:hover{background:#ECFDF5;}
+    .act-btn.blue{border-color:#BFDBFE;color:#3B82F6;}
+
+    /* CONTROLS */
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+    .search-inp{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;font-family:'Poppins',sans-serif;outline:none;color:var(--text);flex:1;min-width:160px;}
+    .search-inp:focus{border-color:var(--p);}
+    .filter-sel{background:var(--card);border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:12px;font-family:'Poppins',sans-serif;outline:none;color:var(--text);}
+
+    /* PAGES */
+    .page{display:none;}
+    .page.active{display:block;}
+
+    /* MODAL */
+    .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+    .modal-overlay.show{display:flex;}
+    .modal{background:var(--card);border-radius:20px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+    .modal-title{font-size:18px;font-weight:700;margin-bottom:6px;}
+    .modal-sub{font-size:13px;color:var(--text2);margin-bottom:20px;}
+    .modal-inp{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 14px;font-size:14px;font-family:'Poppins',sans-serif;outline:none;color:var(--text);margin-bottom:10px;}
+    .modal-inp:focus{border-color:var(--p);}
+    .modal-btns{display:flex;gap:10px;margin-top:16px;}
+    .modal-btn-primary{flex:1;background:var(--p);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;font-family:'Poppins',sans-serif;cursor:pointer;}
+    .modal-btn-secondary{flex:1;background:var(--bg);color:var(--text2);border:1.5px solid var(--border);border-radius:10px;padding:12px;font-size:14px;font-family:'Poppins',sans-serif;cursor:pointer;}
+
+    /* PERMISSION CHECKBOXES */
+    .permission-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+    .permission-item{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:10px 12px;border:1.5px solid var(--border);cursor:pointer;transition:all 0.15s;}
+    .permission-item.selected{background:#FDE8EE;border-color:var(--p);}
+    .permission-item input{accent-color:var(--p);width:16px;height:16px;}
+    .permission-item label{font-size:12px;font-weight:500;cursor:pointer;}
+
+    /* SETTINGS */
+    .setting-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--border);}
+    .setting-row:last-child{border-bottom:none;}
+    .setting-inp{width:90px;text-align:center;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:6px;font-family:'Poppins',sans-serif;font-size:13px;outline:none;}
+    .setting-inp:focus{border-color:var(--p);}
+    .toggle-sw{width:42px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;position:relative;transition:background 0.3s;flex-shrink:0;}
+    .toggle-sw.on{background:var(--p);}
+    .toggle-sw::after{content:'';position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left 0.3s;box-shadow:0 1px 4px rgba(0,0,0,0.2);}
+    .toggle-sw.on::after{left:23px;}
+
+    /* STAFF ACTIVITY LOG */
+    .activity-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+    .activity-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+    .activity-text{font-size:13px;color:var(--text);}
+    .activity-time{font-size:11px;color:var(--text3);margin-top:2px;}
+
+    /* NOTIFICATION COMPOSER */
+    .notif-preview{background:var(--sidebar);border-radius:14px;padding:16px;margin-top:12px;}
+    .notif-preview-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+    .notif-preview-icon{width:28px;height:28px;background:var(--p);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+    .notif-preview-app{font-size:11px;color:rgba(255,255,255,0.5);}
+    .notif-preview-title{font-size:13px;font-weight:600;color:#fff;margin-bottom:4px;}
+    .notif-preview-msg{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.5;}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:40px;color:var(--text2);font-size:14px;}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;border-radius:12px;padding:12px 20px;font-size:13px;font-weight:500;z-index:9999;transform:translateY(100px);transition:transform 0.3s;max-width:320px;}
+    .toast.show{transform:translateY(0);}
+    .toast.success{background:var(--success);}
+    .toast.error{background:var(--error);}
+
+    @media(max-width:900px){
+      .sidebar{transform:translateX(-100%);width:260px;}
+      .sidebar.open{transform:translateX(0);}
+      .main{margin-left:0!important;}
+      .hamburger{display:flex!important;}
+      .charts-grid{grid-template-columns:1fr;}
+      .stats-grid{grid-template-columns:1fr 1fr;}
+      .permission-grid{grid-template-columns:1fr;}
+    }
+    @media(max-width:600px){
+      .stats-grid{grid-template-columns:1fr 1fr;}
+      .content{padding:14px;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-icon">
+        <svg width="22" height="22" viewBox="0 0 64 64" fill="none">
+          <path d="M14 10 C14 10 14 30 14 38" stroke="#fff" stroke-width="5" stroke-linecap="round"/>
+          <path d="M14 10 C14 10 36 10 36 20 C36 30 14 30 14 30" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <circle cx="44" cy="38" r="6" fill="#F59E0B"/>
+        </svg>
+      </div>
+      <div class="login-name">Preen</div>
+    </div>
+    <p class="login-sub" id="login-sub-text">Admin & Staff Portal</p>
+    <input type="email" class="inp" id="admin-email" placeholder="Email address" autocomplete="email"/>
+    <input type="password" class="inp" id="admin-pass" placeholder="Password"/>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <p class="login-err" id="login-err">Wrong credentials. Please try again.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-brand">Preen</div>
+        <div class="sidebar-tag" id="sidebar-role-tag">Super Admin</div>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Populated by JS based on role -->
+      </nav>
+      <div class="sidebar-foot">
+        <div class="sidebar-user">
+          <div class="sidebar-av" id="sidebar-av">PA</div>
+          <div>
+            <p style="font-size:12px;color:#fff;font-weight:500;" id="sidebar-name">Preen Admin</p>
+            <p style="font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer;" onclick="doLogout()">Sign out</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="hamburger" onclick="openSidebar()">☰</button>
+          <div class="page-title" id="topbar-title">Overview</div>
+        </div>
+        <div class="topbar-right">
+          <span style="font-size:11px;color:var(--text2);" id="last-updated"></span>
+          <button class="topbar-btn" onclick="refreshCurrent()">↻ Refresh</button>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- OVERVIEW PAGE -->
+        <div class="page active" id="pg-overview">
+          <div class="time-filter">
+            <button class="tf-btn active" onclick="setTimeframe('today',this)">Today</button>
+            <button class="tf-btn" onclick="setTimeframe('week',this)">This Week</button>
+            <button class="tf-btn" onclick="setTimeframe('month',this)">This Month</button>
+            <button class="tf-btn" onclick="setTimeframe('all',this)">All Time</button>
+            <input type="date" class="tf-date" id="date-from"/>
+            <input type="date" class="tf-date" id="date-to"/>
+            <button class="tf-btn" onclick="setTimeframe('custom',this)">Go</button>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Users</div><div class="stat-value" id="ov-users">-</div><div class="stat-change" id="ov-users-sub">Loading...</div><div class="stat-accent" style="background:var(--p);"></div></div>
+            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Bookings</div><div class="stat-value" id="ov-bookings">-</div><div class="stat-change" id="ov-bookings-sub">Loading...</div><div class="stat-accent" style="background:var(--accent);"></div></div>
+            <div class="stat-card"><div class="stat-icon">✂️</div><div class="stat-label">Providers</div><div class="stat-value" id="ov-providers">-</div><div class="stat-change" id="ov-providers-sub">Loading...</div><div class="stat-accent" style="background:var(--success);"></div></div>
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Platform Fees</div><div class="stat-value" id="ov-fees">-</div><div class="stat-change">10% of all bookings</div><div class="stat-accent" style="background:#7C3AED;"></div></div>
+          </div>
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-head"><div class="card-title">Revenue Growth (₦)</div><select class="filter-sel" onchange="loadAll()"><option value="7">7 days</option><option value="30">30 days</option></select></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="revenue-chart"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">Bookings by Category</div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="category-chart"></canvas></div></div>
+            </div>
+          </div>
+          <div class="charts-grid">
+            <div class="card">
+              <div class="card-head"><div class="card-title">User Growth</div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="users-chart"></canvas></div></div>
+            </div>
+            <div class="card">
+              <div class="card-head"><div class="card-title">Booking Status</div></div>
+              <div class="card-body"><div class="chart-wrap"><canvas id="status-chart"></canvas></div></div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+            <div class="card"><div class="card-head"><div class="card-title">Recent Bookings</div><button class="act-btn" onclick="showPage('pg-bookings',null)">View all</button></div><div id="ov-recent-bookings"><div class="empty">Loading...</div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">New Users</div><button class="act-btn" onclick="showPage('pg-users',null)">View all</button></div><div id="ov-recent-users"><div class="empty">Loading...</div></div></div>
+          </div>
+        </div>
+
+        <!-- TODAY PAGE -->
+        <div class="page" id="pg-today">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
+            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Bookings Today</div><div class="stat-value" id="today-bookings">-</div></div>
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Revenue Today</div><div class="stat-value" id="today-revenue">-</div></div>
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">New Users Today</div><div class="stat-value" id="today-users">-</div></div>
+            <div class="stat-card"><div class="stat-icon">✂️</div><div class="stat-label">New Providers Today</div><div class="stat-value" id="today-providers">-</div></div>
+          </div>
+          <div class="card"><div class="card-head"><div class="card-title">Today's Bookings</div><span id="today-date-label" style="font-size:12px;color:var(--text2);"></span></div><div id="today-bookings-table"><div class="empty">Loading...</div></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
+            <div class="card"><div class="card-head"><div class="card-title">New Users Today</div></div><div id="today-users-table"><div class="empty">Loading...</div></div></div>
+            <div class="card"><div class="card-head"><div class="card-title">New Providers Today</div></div><div id="today-providers-table"><div class="empty">Loading...</div></div></div>
+          </div>
+        </div>
+
+        <!-- BOOKINGS PAGE -->
+        <div class="page" id="pg-bookings">
+          <div class="time-filter">
+            <button class="tf-btn active" onclick="filterBookingTime('all',this)">All</button>
+            <button class="tf-btn" onclick="filterBookingTime('today',this)">Today</button>
+            <button class="tf-btn" onclick="filterBookingTime('week',this)">This Week</button>
+            <button class="tf-btn" onclick="filterBookingTime('month',this)">This Month</button>
+          </div>
+          <div class="controls">
+            <input type="text" class="search-inp" placeholder="Search bookings..." oninput="searchTable('bookings-tbl',this.value)"/>
+            <select class="filter-sel" onchange="filterCol('bookings-tbl',6,this.value)">
+              <option value="">All Status</option>
+              <option>confirmed</option><option>completed</option><option>cancelled</option>
+            </select>
+          </div>
+          <div class="card"><div class="table-wrap" id="pg-bookings-content"><div class="empty">Loading...</div></div></div>
+        </div>
+
+        <!-- USERS PAGE -->
+        <div class="page" id="pg-users">
+          <div class="time-filter">
+            <button class="tf-btn active" onclick="filterUserTime('all',this)">All</button>
+            <button class="tf-btn" onclick="filterUserTime('today',this)">Today</button>
+            <button class="tf-btn" onclick="filterUserTime('week',this)">This Week</button>
+            <button class="tf-btn" onclick="filterUserTime('month',this)">This Month</button>
+          </div>
+          <div class="controls">
+            <input type="text" class="search-inp" placeholder="Search users..." oninput="searchTable('users-tbl',this.value)"/>
+            <select class="filter-sel" onchange="filterCol('users-tbl',3,this.value)">
+              <option value="">All Roles</option>
+              <option>customer</option><option>provider</option>
+            </select>
+          </div>
+          <div class="card"><div class="table-wrap" id="pg-users-content"><div class="empty">Loading...</div></div></div>
+        </div>
+
+        <!-- PROVIDERS PAGE -->
+        <div class="page" id="pg-providers">
+          <div class="controls">
+            <input type="text" class="search-inp" placeholder="Search providers..." oninput="searchTable('prov-tbl',this.value)"/>
+            <select class="filter-sel" onchange="filterCol('prov-tbl',1,this.value)">
+              <option value="">All Categories</option>
+              <option>Barber</option><option>Hair Stylist</option><option>Nail Tech</option>
+              <option>Lash Tech</option><option>Makeup Artist</option><option>Massage Therapist</option>
+              <option>Wig Stylist</option><option>Gele Tying</option>
+            </select>
+          </div>
+          <div class="card"><div class="table-wrap" id="pg-providers-content"><div class="empty">Loading...</div></div></div>
+        </div>
+
+        <!-- REVIEWS PAGE -->
+        <div class="page" id="pg-reviews">
+          <div class="controls"><input type="text" class="search-inp" placeholder="Search reviews..." oninput="searchTable('rev-tbl',this.value)"/></div>
+          <div class="card"><div class="table-wrap" id="pg-reviews-content"><div class="empty">Loading...</div></div></div>
+        </div>
+
+        <!-- FINANCE PAGE -->
+        <div class="page" id="pg-finance">
+          <div class="time-filter">
+            <button class="tf-btn active" onclick="filterFinanceTime('all',this)">All</button>
+            <button class="tf-btn" onclick="filterFinanceTime('today',this)">Today</button>
+            <button class="tf-btn" onclick="filterFinanceTime('week',this)">This Week</button>
+            <button class="tf-btn" onclick="filterFinanceTime('month',this)">This Month</button>
+          </div>
+          <div class="stats-grid" style="margin-bottom:20px;">
+            <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-label">Gross Volume</div><div class="stat-value" id="fin-total">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon">🏦</div><div class="stat-label">Platform Fees (10%)</div><div class="stat-value" id="fin-fees">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-label">Provider Payouts</div><div class="stat-value" id="fin-payouts">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-label">Avg Booking</div><div class="stat-value" id="fin-avg">₦0</div></div>
+          </div>
+          <div class="card" style="margin-bottom:14px;"><div class="card-head"><div class="card-title">Revenue Chart</div></div><div class="card-body"><div class="chart-wrap"><canvas id="fin-chart"></canvas></div></div></div>
+          <div class="card"><div class="card-head"><div class="card-title">Transaction Log</div></div><div class="table-wrap" id="fin-table"><div class="empty">Loading...</div></div></div>
+        </div>
+
+        <!-- NOTIFICATIONS PAGE -->
+        <div class="page" id="pg-notifs">
+          <div class="card" style="padding:20px;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:4px;">Send Push Notification</div>
+            <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Write once. Send to thousands. Make it funny, make it real, make it Nigerian. 🔥</p>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div>
+                <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Notification Title</label>
+                <input type="text" class="search-inp" id="notif-title" placeholder="e.g. Your edges are calling 😭" style="width:100%;" oninput="updateNotifPreview()"/>
+              </div>
+              <div>
+                <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Message</label>
+                <textarea class="search-inp" id="notif-msg" placeholder="e.g. My sister even if nah all back come make. No dey look like your problem 😭 Book now on Preen." style="height:90px;resize:vertical;width:100%;" oninput="updateNotifPreview()"></textarea>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                <div>
+                  <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Send To</label>
+                  <select class="filter-sel" id="notif-target" style="width:100%;">
+                    <option>All Users</option><option>Customers Only</option>
+                    <option>Providers Only</option><option>Abuja Users</option>
+                    <option>Lagos Users</option><option>Port Harcourt</option>
+                  </select>
+                </div>
+                <div>
+                  <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Schedule (optional)</label>
+                  <input type="datetime-local" class="tf-date" id="notif-schedule" style="width:100%;padding:8px 10px;"/>
+                </div>
+              </div>
+              <!-- PREVIEW -->
+              <div class="notif-preview" id="notif-preview">
+                <div class="notif-preview-header">
+                  <div class="notif-preview-icon">P</div>
+                  <div class="notif-preview-app">Preen • now</div>
+                </div>
+                <div class="notif-preview-title" id="preview-title">Your notification title</div>
+                <div class="notif-preview-msg" id="preview-msg">Your message will appear here...</div>
+              </div>
+              <button class="topbar-btn" style="width:fit-content;" onclick="sendNotif()">Send Notification 🚀</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Notification History</div></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Title</th><th>Message</th><th>Sent To</th><th>Sent By</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody id="notif-history">
+                <tr><td>Welcome to Preen!</td><td>Book your first appointment today...</td><td>All Users</td><td>Super Admin</td><td>10 Apr 2026</td><td><span class="badge completed">Sent</span></td></tr>
+                <tr><td>New Promo Code</td><td>Use PREEN20 for 20% off...</td><td>All Users</td><td>Super Admin</td><td>8 Apr 2026</td><td><span class="badge completed">Sent</span></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PROMOS PAGE -->
+        <div class="page" id="pg-promos">
+          <div class="card" style="padding:18px;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:14px;">Create New Promo Code</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;align-items:end;">
+              <div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px;">Code</label><input type="text" class="search-inp" id="promo-code" placeholder="PREEN20" style="text-transform:uppercase;"/></div>
+              <div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px;">Discount</label><input type="text" class="search-inp" id="promo-discount" placeholder="20% or ₦1000"/></div>
+              <div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px;">Expires</label><input type="date" class="tf-date" id="promo-expiry" style="width:100%;"/></div>
+              <button class="topbar-btn" style="height:40px;" onclick="createPromo()">+ Create</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><div class="card-title">Active Promo Codes</div></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Code</th><th>Discount</th><th>Uses</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="promos-body">
+                <tr><td>PREEN20</td><td>20% off first booking</td><td>47</td><td>30 Apr 2026</td><td><span class="badge completed">Active</span></td><td><button class="act-btn red" onclick="disablePromo(this)">Disable</button></td></tr>
+                <tr><td>ABUJA10</td><td>₦1,000 off</td><td>23</td><td>15 May 2026</td><td><span class="badge completed">Active</span></td><td><button class="act-btn red" onclick="disablePromo(this)">Disable</button></td></tr>
+              </tbody></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- STAFF PAGE (Super Admin only) -->
+        <div class="page" id="pg-staff">
+          <div class="card-head" style="background:var(--card);border-radius:14px;border:1px solid var(--border);padding:16px 18px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div class="card-title">Staff Management</div>
+              <p style="font-size:12px;color:var(--text2);margin-top:2px;">Add staff, assign roles and control what each person can access</p>
+            </div>
+            <button class="topbar-btn" onclick="openAddStaffModal()">+ Add Staff</button>
+          </div>
+
+          <!-- ACTIVE STAFF -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-head"><div class="card-title">Active Staff</div><span style="font-size:12px;color:var(--text2);" id="staff-count">0 members</span></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Permissions</th><th>Status</th><th>Last Login</th><th>Actions</th></tr></thead>
+                <tbody id="staff-table">
+                  <tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px;">No staff added yet. Click + Add Staff to get started.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- STAFF ACTIVITY LOG -->
+          <div class="card">
+            <div class="card-head"><div class="card-title">Staff Activity Log</div><span style="font-size:12px;color:var(--text2);">Real-time activity tracking</span></div>
+            <div style="padding:0 18px 18px;" id="staff-activity-log">
+              <div class="empty">No activity yet</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SETTINGS PAGE (Super Admin only) -->
+        <div class="page" id="pg-settings">
+          <div class="card" style="padding:20px;max-width:500px;margin-bottom:14px;">
+            <div class="card-title" style="margin-bottom:16px;">Platform Settings</div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Platform Fee</p><p style="font-size:12px;color:var(--text2);">% taken from each booking</p></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" class="setting-inp" id="platform-fee" value="10" min="1" max="30"/>
+                <span style="font-size:13px;color:var(--text2);">%</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Late Penalty Fee</p><p style="font-size:12px;color:var(--text2);">% charged if customer 15+ min late</p></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" class="setting-inp" id="late-penalty" value="50" min="1" max="100"/>
+                <span style="font-size:13px;color:var(--text2);">%</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Tip Platform Fee</p><p style="font-size:12px;color:var(--text2);">% taken from customer tips</p></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" class="setting-inp" id="tip-fee" value="5" min="1" max="20"/>
+                <span style="font-size:13px;color:var(--text2);">%</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Elite Provider Fee</p><p style="font-size:12px;color:var(--text2);">Reduced fee for Elite providers</p></div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="number" class="setting-inp" id="elite-fee" value="8" min="1" max="30"/>
+                <span style="font-size:13px;color:var(--text2);">%</span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Maintenance Mode</p><p style="font-size:12px;color:var(--text2);">Take app offline for updates</p></div>
+              <div class="toggle-sw" id="maintenance-toggle" onclick="this.classList.toggle('on');showToast('Maintenance mode '+(this.classList.contains('on')?'enabled':'disabled'),'success');"></div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">New Registrations</p><p style="font-size:12px;color:var(--text2);">Allow new users to sign up</p></div>
+              <div class="toggle-sw on" onclick="this.classList.toggle('on');"></div>
+            </div>
+            <div class="setting-row">
+              <div><p style="font-size:14px;font-weight:500;">Provider Auto-Verify</p><p style="font-size:12px;color:var(--text2);">Auto verify all new providers</p></div>
+              <div class="toggle-sw" onclick="this.classList.toggle('on');"></div>
+            </div>
+            <button class="topbar-btn" style="margin-top:16px;width:100%;" onclick="saveSettings()">Save All Settings ✓</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STAFF MODAL -->
+<div class="modal-overlay" id="add-staff-modal">
+  <div class="modal">
+    <div class="modal-title">Add Staff Member</div>
+    <div class="modal-sub">They will receive login credentials via email</div>
+    <input type="text" class="modal-inp" id="staff-name" placeholder="Full name"/>
+    <input type="email" class="modal-inp" id="staff-email" placeholder="Email address"/>
+    <input type="password" class="modal-inp" id="staff-password" placeholder="Set a password"/>
+    <div style="margin-bottom:12px;">
+      <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:8px;">Role</label>
+      <select class="modal-inp" id="staff-role" onchange="updatePermissionsByRole()">
+        <option value="support">Customer Support</option>
+        <option value="provider_manager">Provider Manager</option>
+      </select>
+    </div>
+    <div style="margin-bottom:4px;">
+      <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:8px;">Permissions</label>
+      <div class="permission-grid" id="permission-grid">
+        <div class="permission-item selected" data-perm="view_bookings"><input type="checkbox" id="p-bookings" checked/><label for="p-bookings">📅 View Bookings</label></div>
+        <div class="permission-item selected" data-perm="manage_bookings"><input type="checkbox" id="p-manage-bookings" checked/><label for="p-manage-bookings">✅ Manage Bookings</label></div>
+        <div class="permission-item selected" data-perm="view_users"><input type="checkbox" id="p-users" checked/><label for="p-users">👥 View Users</label></div>
+        <div class="permission-item" data-perm="suspend_users"><input type="checkbox" id="p-suspend"/><label for="p-suspend">🚫 Suspend Users</label></div>
+        <div class="permission-item" data-perm="view_providers"><input type="checkbox" id="p-providers"/><label for="p-providers">✂️ View Providers</label></div>
+        <div class="permission-item" data-perm="verify_providers"><input type="checkbox" id="p-verify"/><label for="p-verify">✓ Verify Providers</label></div>
+        <div class="permission-item" data-perm="send_notifications"><input type="checkbox" id="p-notifs"/><label for="p-notifs">🔔 Send Notifications</label></div>
+        <div class="permission-item" data-perm="view_reviews"><input type="checkbox" id="p-reviews"/><label for="p-reviews">⭐ View Reviews</label></div>
+        <div class="permission-item" data-perm="manage_reviews"><input type="checkbox" id="p-manage-reviews"/><label for="p-manage-reviews">🗑️ Remove Reviews</label></div>
+        <div class="permission-item" data-perm="view_finance"><input type="checkbox" id="p-finance"/><label for="p-finance">💰 View Finance</label></div>
+        <div class="permission-item" data-perm="manage_promos"><input type="checkbox" id="p-promos"/><label for="p-promos">🎁 Manage Promos</label></div>
+        <div class="permission-item" data-perm="today_view"><input type="checkbox" id="p-today" checked/><label for="p-today">📆 Today View</label></div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-secondary" onclick="closeModal('add-staff-modal')">Cancel</button>
+      <button class="modal-btn-primary" onclick="addStaff()">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUSPEND CONFIRM MODAL -->
+<div class="modal-overlay" id="suspend-modal">
+  <div class="modal">
+    <div class="modal-title" id="suspend-modal-title">Suspend Account</div>
+    <div class="modal-sub" id="suspend-modal-sub">This will prevent the user from accessing Preen.</div>
+    <div style="background:#FEF2F2;border-radius:12px;padding:14px;border:1px solid #FECACA;margin-bottom:16px;">
+      <p style="font-size:13px;color:var(--error);line-height:1.6;" id="suspend-modal-name">Are you sure?</p>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Reason for suspension (optional)</label>
+      <input type="text" class="modal-inp" id="suspend-reason" placeholder="e.g. Repeated no-shows, fake account..."/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-secondary" onclick="closeModal('suspend-modal')">Cancel</button>
+      <button class="modal-btn-primary" style="background:var(--error);" onclick="confirmSuspend()">Yes, Suspend</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SURL='https://noucyqailmqgaujgzxay.supabase.co';
+const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdWN5cWFpbG1xZ2F1amd6eGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgwMjksImV4cCI6MjA5MTA4NDAyOX0.5PQ5_pIyu-loK3PM9s813SEDI3cywrqtmEPZi7MOI8Y';
+
+// CREDENTIALS
+const ACCOUNTS = {
+  'admin@preen.ng': { password: 'Preen@Admin2026', role: 'super_admin', name: 'Preen Admin' }
+};
+
+// STAFF stored in localStorage
+let staffMembers = JSON.parse(localStorage.getItem('preen_staff') || '[]');
+let staffActivityLog = JSON.parse(localStorage.getItem('preen_activity_log') || '[]');
+let settingsData = JSON.parse(localStorage.getItem('preen_settings') || '{"platform_fee":10,"late_penalty":50,"tip_fee":5,"elite_fee":8}');
+
+let db, currentUser, currentPage='pg-overview', currentTimeframe='today';
+let allBookings=[], allUsers=[], allProviders=[], allReviews=[];
+let charts={};
+let suspendTarget = null;
+
+window.onload=()=>{
+  db=supabase.createClient(SURL,SKEY);
+  // Load settings
+  document.getElementById('platform-fee').value = settingsData.platform_fee || 10;
+  document.getElementById('late-penalty').value = settingsData.late_penalty || 50;
+  document.getElementById('tip-fee').value = settingsData.tip_fee || 5;
+  if(document.getElementById('elite-fee')) document.getElementById('elite-fee').value = settingsData.elite_fee || 8;
+};
+
+// LOGIN
+function doLogin(){
+  const email = document.getElementById('admin-email').value.trim().toLowerCase();
+  const pass = document.getElementById('admin-pass').value.trim();
+
+  // Check super admin
+  if(ACCOUNTS[email] && ACCOUNTS[email].password === pass){
+    currentUser = { email, role: 'super_admin', name: ACCOUNTS[email].name };
+    loginSuccess();
+    return;
+  }
+
+  // Check staff
+  const staffMember = staffMembers.find(s => s.email.toLowerCase() === email && s.password === pass && s.active);
+  if(staffMember){
+    currentUser = { email, role: staffMember.role, name: staffMember.name, permissions: staffMember.permissions };
+    // Log login
+    logActivity(staffMember.name, 'Logged in', 'login');
+    loginSuccess();
+    return;
+  }
+
+  document.getElementById('login-err').style.display='block';
+}
+
+function loginSuccess(){
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  setupSidebar();
+  loadAll();
+}
+
+function doLogout(){
+  if(currentUser && currentUser.role !== 'super_admin'){
+    logActivity(currentUser.name, 'Logged out', 'logout');
+  }
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('admin-email').value='';
+  document.getElementById('admin-pass').value='';
+  document.getElementById('login-err').style.display='none';
+}
+
+// SETUP SIDEBAR BASED ON ROLE
+function setupSidebar(){
+  const isSuperAdmin = currentUser.role === 'super_admin';
+  const perms = currentUser.permissions || [];
+
+  document.getElementById('sidebar-role-tag').textContent = isSuperAdmin ? 'Super Admin' : currentUser.role.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase());
+  document.getElementById('sidebar-name').textContent = currentUser.name;
+  document.getElementById('sidebar-av').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+
+  const nav = document.getElementById('sidebar-nav');
+  const items = [
+    { page:'pg-overview', icon:'📊', label:'Overview', always:true },
+    { page:'pg-today', icon:'📆', label:'Today', perm:'today_view', always:isSuperAdmin },
+    { page:'pg-bookings', icon:'📅', label:'Bookings', perm:'view_bookings', always:isSuperAdmin },
+    { page:'pg-users', icon:'👥', label:'Users', perm:'view_users', always:isSuperAdmin },
+    { page:'pg-providers', icon:'✂️', label:'Providers', perm:'view_providers', always:isSuperAdmin },
+    { page:'pg-reviews', icon:'⭐', label:'Reviews', perm:'view_reviews', always:isSuperAdmin },
+    { label:'__group__', text:'Finance' },
+    { page:'pg-finance', icon:'💰', label:'Revenue', perm:'view_finance', always:isSuperAdmin },
+    { page:'pg-promos', icon:'🎁', label:'Promo Codes', perm:'manage_promos', always:isSuperAdmin },
+    { label:'__group__', text:'Engagement' },
+    { page:'pg-notifs', icon:'🔔', label:'Notifications', perm:'send_notifications', always:isSuperAdmin },
+    { label:'__group__', text:'Admin' },
+    { page:'pg-staff', icon:'👤', label:'Staff', always:isSuperAdmin, superOnly:true },
+    { page:'pg-settings', icon:'⚙️', label:'Settings', always:isSuperAdmin, superOnly:true },
+    { label:'__logout__' }
+  ];
+
+  nav.innerHTML = items.map(item => {
+    if(item.label === '__group__') return '<div class="nav-grp">'+item.text+'</div>';
+    if(item.label === '__logout__') return '<div class="nav-item" onclick="doLogout()"><span class="nav-icon">🚪</span><span>Sign Out</span></div>';
+    if(item.superOnly && !isSuperAdmin) return '';
+    if(!item.always && !isSuperAdmin && !perms.includes(item.perm)) return '';
+    return '<div class="nav-item'+(item.page===currentPage?' active':'')+'" onclick="showPage(\''+item.page+'\',this)"><span class="nav-icon">'+item.icon+'</span><span>'+item.label+'</span></div>';
+  }).join('');
+}
+
+const pageTitles={
+  'pg-overview':'Overview','pg-today':'Today','pg-bookings':'Bookings',
+  'pg-users':'Users','pg-providers':'Providers','pg-reviews':'Reviews',
+  'pg-finance':'Revenue & Finance','pg-promos':'Promo Codes',
+  'pg-notifs':'Push Notifications','pg-staff':'Staff Management','pg-settings':'Settings'
+};
+
+function showPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  currentPage=id;
+  document.getElementById('topbar-title').textContent=pageTitles[id]||id;
+  if(el){document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));el.classList.add('active');}
+  closeSidebar();
+  if(id==='pg-bookings')renderBookings(allBookings);
+  if(id==='pg-users')renderUsers(allUsers);
+  if(id==='pg-providers')renderProviders(allProviders);
+  if(id==='pg-reviews')renderReviews(allReviews);
+  if(id==='pg-finance')renderFinance(allBookings);
+  if(id==='pg-today')renderToday();
+  if(id==='pg-staff')renderStaff();
+  if(id==='pg-settings')loadSettings();
+  // Log page visit for staff
+  if(currentUser && currentUser.role !== 'super_admin'){
+    logActivity(currentUser.name, 'Visited '+pageTitles[id], 'page');
+  }
+}
+
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+function refreshCurrent(){loadAll();}
+
+// LOAD ALL DATA
+async function loadAll(){
+  document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
+  try{
+    const[bRes,uRes,pRes,rRes]=await Promise.all([
+      db.from('bookings').select('*').order('created_at',{ascending:false}),
+      db.from('user').select('*').order('created_at',{ascending:false}),
+      db.from('providers').select('*').order('created_at',{ascending:false}),
+      db.from('reviews').select('*').order('created_at',{ascending:false})
+    ]);
+    allBookings=bRes.data||[];allUsers=uRes.data||[];allProviders=pRes.data||[];allReviews=rRes.data||[];
+    renderOverview();
+    renderToday();
+    if(currentPage==='pg-bookings')renderBookings(allBookings);
+    if(currentPage==='pg-users')renderUsers(allUsers);
+    if(currentPage==='pg-providers')renderProviders(allProviders);
+    if(currentPage==='pg-reviews')renderReviews(allReviews);
+    if(currentPage==='pg-finance')renderFinance(allBookings);
+  }catch(e){console.error(e);showToast('Error loading data','error');}
+}
+
+function filterByTime(arr,tf){
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const week=new Date(today);week.setDate(today.getDate()-7);
+  const month=new Date(today);month.setDate(today.getDate()-30);
+  if(tf==='today')return arr.filter(i=>new Date(i.created_at)>=today);
+  if(tf==='week')return arr.filter(i=>new Date(i.created_at)>=week);
+  if(tf==='month')return arr.filter(i=>new Date(i.created_at)>=month);
+  return arr;
+}
+
+function setTimeframe(tf,btn){
+  currentTimeframe=tf;
+  document.querySelectorAll('#pg-overview .tf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');renderOverview();
+}
+
+function n(v){return v||'-';}
+function fmt(n){return'₦'+(n||0).toLocaleString();}
+
+// OVERVIEW
+function renderOverview(){
+  const b=filterByTime(allBookings,currentTimeframe);
+  const u=filterByTime(allUsers,currentTimeframe);
+  const p=filterByTime(allProviders,currentTimeframe);
+  const fee=settingsData.platform_fee||10;
+  const totalRev=b.length*35000;
+  const fees=Math.round(totalRev*(fee/100));
+  document.getElementById('ov-users').textContent=u.length;
+  document.getElementById('ov-users-sub').textContent=allUsers.length+' total';
+  document.getElementById('ov-bookings').textContent=b.length;
+  document.getElementById('ov-bookings-sub').textContent=allBookings.length+' total';
+  document.getElementById('ov-providers').textContent=p.length;
+  document.getElementById('ov-providers-sub').textContent=allProviders.length+' total';
+  document.getElementById('ov-fees').textContent=fmt(fees);
+  renderRecentBookingsTable(b.slice(0,5));
+  renderRecentUsersTable(u.slice(0,5));
+  buildCharts(b,u);
+}
+
+function renderRecentBookingsTable(data){
+  const el=document.getElementById('ov-recent-bookings');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No bookings yet</div>';return;}
+  el.innerHTML='<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Provider</th><th>Amount</th><th>Status</th></tr></thead><tbody>'+
+    data.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.amount)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td></tr>').join('')+'</tbody></table></div>';
+}
+
+function renderRecentUsersTable(data){
+  const el=document.getElementById('ov-recent-users');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No users yet</div>';return;}
+  el.innerHTML='<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Joined</th></tr></thead><tbody>'+
+    data.map(u=>'<tr><td>'+n(u.full_name)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td>'+new Date(u.created_at).toLocaleDateString()+'</td></tr>').join('')+'</tbody></table></div>';
+}
+
+// TODAY
+function renderToday(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const tB=allBookings.filter(i=>new Date(i.created_at)>=today);
+  const tU=allUsers.filter(i=>new Date(i.created_at)>=today);
+  const tP=allProviders.filter(i=>new Date(i.created_at)>=today);
+  const fee=settingsData.platform_fee||10;
+  document.getElementById('today-bookings').textContent=tB.length;
+  document.getElementById('today-revenue').textContent=fmt(Math.round(tB.length*35000*(fee/100)));
+  document.getElementById('today-users').textContent=tU.length;
+  document.getElementById('today-providers').textContent=tP.length;
+  document.getElementById('today-date-label').textContent=new Date().toLocaleDateString('en-NG',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  const tbl=document.getElementById('today-bookings-table');
+  if(tB.length===0){tbl.innerHTML='<div class="empty">No bookings today yet</div>';return;}
+  tbl.innerHTML='<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Phone</th><th>Provider</th><th>Service</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    tB.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.amount)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)">✓ Complete</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)">✗ Cancel</button></td></tr>').join('')+'</tbody></table></div>';
+  const utbl=document.getElementById('today-users-table');
+  if(tU.length===0){utbl.innerHTML='<div class="empty">No new users today</div>';}
+  else utbl.innerHTML='<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th></tr></thead><tbody>'+tU.map(u=>'<tr><td>'+n(u.full_name)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td>'+n(u.email)+'</td></tr>').join('')+'</tbody></table></div>';
+  const ptbl=document.getElementById('today-providers-table');
+  if(tP.length===0){ptbl.innerHTML='<div class="empty">No new providers today</div>';}
+  else ptbl.innerHTML='<div class="table-wrap"><table><thead><tr><th>Name</th><th>Category</th><th>Status</th></tr></thead><tbody>'+tP.map(p=>'<tr><td>'+n(p.full_name)+'</td><td>'+n(p.category)+'</td><td><span class="badge '+(p.is_verified?'verified':'pending')+'">'+(p.is_verified?'Verified':'Pending')+'</span></td></tr>').join('')+'</tbody></table></div>';
+}
+
+// BOOKINGS
+function renderBookings(data){
+  const el=document.getElementById('pg-bookings-content');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No bookings yet</div>';return;}
+  el.innerHTML='<table id="bookings-tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Provider</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
+    data.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.booking_date).substring(0,12)+'</td><td>'+n(b.booking_time)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td style="white-space:nowrap;"><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)">✓</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)">✗</button></td></tr>').join('')+'</tbody></table>';
+}
+
+function filterBookingTime(tf,btn){
+  document.querySelectorAll('#pg-bookings .tf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  renderBookings(filterByTime(allBookings,tf));
+}
+
+// USERS
+function renderUsers(data){
+  const el=document.getElementById('pg-users-content');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No users yet</div>';return;}
+  const canSuspend = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('suspend_users');
+  el.innerHTML='<table id="users-tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>'+
+    data.map(u=>'<tr><td>'+n(u.full_name)+'</td><td>'+n(u.email)+'</td><td>'+n(u.phone)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td><span class="badge '+(u.is_suspended?'suspended':'completed')+'">'+(u.is_suspended?'Suspended':'Active')+'</span></td><td>'+new Date(u.created_at).toLocaleDateString()+'</td><td>'+
+    (canSuspend?'<button class="act-btn red" onclick="openSuspendModal(\'user\',\''+u.id+'\',\''+n(u.full_name)+'\')">'+(u.is_suspended?'Unsuspend':'Suspend')+'</button>':'<span style="color:var(--text3);font-size:12px;">No access</span>')+
+    '</td></tr>').join('')+'</tbody></table>';
+}
+
+function filterUserTime(tf,btn){
+  document.querySelectorAll('#pg-users .tf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  renderUsers(filterByTime(allUsers,tf));
+}
+
+// PROVIDERS
+function renderProviders(data){
+  const el=document.getElementById('pg-providers-content');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No providers yet</div>';return;}
+  const canVerify = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('verify_providers');
+  const canSuspend = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('suspend_users');
+  el.innerHTML='<table id="prov-tbl"><thead><tr><th>Name</th><th>Category</th><th>Email</th><th>Phone</th><th>State</th><th>Verified</th><th>Available</th><th>Actions</th></tr></thead><tbody>'+
+    data.map(p=>'<tr><td>'+n(p.full_name)+'</td><td>'+n(p.category)+'</td><td>'+n(p.email)+'</td><td>'+n(p.phone)+'</td><td>'+n(p.location)+'</td><td><span class="badge '+(p.is_verified?'verified':'pending')+'">'+(p.is_verified?'✓ Verified':'Pending')+'</span></td><td><span class="badge '+(p.is_available?'completed':'cancelled')+'">'+(p.is_available?'Yes':'No')+'</span></td><td style="white-space:nowrap;">'+
+    (canVerify&&!p.is_verified?'<button class="act-btn green" onclick="verifyProvider(\''+p.id+'\',this)">✓ Verify</button>':'')+
+    (canSuspend?'<button class="act-btn red" onclick="openSuspendModal(\'provider\',\''+p.id+'\',\''+n(p.full_name)+'\')">Suspend</button>':'')+
+    '</td></tr>').join('')+'</tbody></table>';
+}
+
+// REVIEWS
+function renderReviews(data){
+  const el=document.getElementById('pg-reviews-content');
+  if(!data||data.length===0){el.innerHTML='<div class="empty">No reviews yet</div>';return;}
+  const canRemove = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('manage_reviews');
+  el.innerHTML='<table id="rev-tbl"><thead><tr><th>Provider</th><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
+    data.map(r=>'<tr><td>'+n(r.provider_name)+'</td><td>'+n(r.customer_name)+'</td><td style="color:var(--accent);">'+'★'.repeat(r.rating||5)+'</td><td>'+n(r.review_text).substring(0,50)+'...</td><td>'+new Date(r.created_at).toLocaleDateString()+'</td><td>'+
+    (canRemove?'<button class="act-btn red" onclick="removeReview(\''+r.id+'\',this)">Remove</button>':'<span style="color:var(--text3);font-size:12px;">No access</span>')+
+    '</td></tr>').join('')+'</tbody></table>';
+}
+
+// FINANCE
+function renderFinance(data){
+  const fee=settingsData.platform_fee||10;
+  const total=data.length*35000;
+  const fees=Math.round(total*(fee/100));
+  const payouts=total-fees;
+  const avg=data.length>0?Math.round(total/data.length):0;
+  document.getElementById('fin-total').textContent=fmt(total);
+  document.getElementById('fin-fees').textContent=fmt(fees);
+  document.getElementById('fin-payouts').textContent=fmt(payouts);
+  document.getElementById('fin-avg').textContent=fmt(avg);
+  const el=document.getElementById('fin-table');
+  if(data.length===0){el.innerHTML='<div class="empty">No transactions yet</div>';return;}
+  el.innerHTML='<table><thead><tr><th>Customer</th><th>Provider</th><th>Service</th><th>Gross</th><th>Fee ('+fee+'%)</th><th>Provider Gets</th><th>Date</th></tr></thead><tbody>'+
+    data.map(b=>{const a=35000,f=Math.round(a*(fee/100));return'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+fmt(a)+'</td><td style="color:var(--p);">'+fmt(f)+'</td><td style="color:var(--success);">'+fmt(a-f)+'</td><td>'+new Date(b.created_at).toLocaleDateString()+'</td></tr>';}).join('')+'</tbody></table>';
+  buildFinChart(data);
+}
+
+function filterFinanceTime(tf,btn){
+  document.querySelectorAll('#pg-finance .tf-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  renderFinance(filterByTime(allBookings,tf));
+}
+
+// BOOKING ACTIONS
+async function updateBookingStatus(id,status,btn){
+  const original = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try{
+    const{error}=await db.from('bookings').update({status}).eq('id',id);
+    if(error)throw error;
+    const row=btn.closest('tr');
+    const statusCell=row.querySelector('.badge');
+    if(statusCell){statusCell.textContent=status;statusCell.className='badge '+status;}
+    showToast('Booking marked as '+status,'success');
+    if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Marked booking as '+status,'booking');
+    await loadAll();
+  }catch(e){
+    btn.textContent=original;btn.disabled=false;
+    showToast('Failed to update booking','error');
+  }
+}
+
+// SUSPEND MODAL
+function openSuspendModal(type, id, name){
+  suspendTarget = {type, id, name};
+  document.getElementById('suspend-modal-title').textContent = 'Suspend '+(type==='user'?'User':'Provider');
+  document.getElementById('suspend-modal-sub').textContent = 'This will prevent '+name+' from accessing Preen.';
+  document.getElementById('suspend-modal-name').textContent = name;
+  document.getElementById('suspend-reason').value = '';
+  document.getElementById('suspend-modal').classList.add('show');
+}
+
+async function confirmSuspend(){
+  if(!suspendTarget) return;
+  const {type, id, name} = suspendTarget;
+  const reason = document.getElementById('suspend-reason').value.trim();
+  try{
+    if(type==='user'){
+      await db.from('user').update({is_suspended:true}).eq('id',id);
+    } else {
+      await db.from('providers').update({is_available:false}).eq('id',id);
+    }
+    closeModal('suspend-modal');
+    showToast(name+' has been suspended','success');
+    if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Suspended '+type+': '+name+(reason?' — '+reason:''),'suspend');
+    await loadAll();
+    if(currentPage==='pg-users') renderUsers(allUsers);
+    if(currentPage==='pg-providers') renderProviders(allProviders);
+  }catch(e){
+    showToast('Failed to suspend account','error');
+  }
+}
+
+// VERIFY PROVIDER
+async function verifyProvider(id, btn){
+  btn.textContent='...';btn.disabled=true;
+  try{
+    await db.from('providers').update({is_verified:true}).eq('id',id);
+    showToast('Provider verified successfully!','success');
+    if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Verified provider','verify');
+    await loadAll();
+    renderProviders(allProviders);
+  }catch(e){
+    btn.textContent='✓ Verify';btn.disabled=false;
+    showToast('Failed to verify provider','error');
+  }
+}
+
+// REMOVE REVIEW
+async function removeReview(id, btn){
+  if(!confirm('Remove this review permanently?')) return;
+  btn.textContent='...';btn.disabled=true;
+  try{
+    await db.from('reviews').delete().eq('id',id);
+    btn.closest('tr').remove();
+    showToast('Review removed','success');
+    if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Removed a review','review');
+  }catch(e){
+    btn.textContent='Remove';btn.disabled=false;
+    showToast('Failed to remove review','error');
+  }
+}
+
+// NOTIFICATIONS
+function updateNotifPreview(){
+  const title = document.getElementById('notif-title').value || 'Your notification title';
+  const msg = document.getElementById('notif-msg').value || 'Your message will appear here...';
+  document.getElementById('preview-title').textContent = title;
+  document.getElementById('preview-msg').textContent = msg;
+}
+
+function sendNotif(){
+  const title=document.getElementById('notif-title').value.trim();
+  const msg=document.getElementById('notif-msg').value.trim();
+  const target=document.getElementById('notif-target').value;
+  const schedule=document.getElementById('notif-schedule').value;
+  if(!title||!msg){showToast('Please fill in title and message','error');return;}
+  const tbody=document.getElementById('notif-history');
+  const row=document.createElement('tr');
+  const dateStr=schedule?new Date(schedule).toLocaleDateString():new Date().toLocaleDateString();
+  row.innerHTML='<td>'+title+'</td><td>'+msg.substring(0,40)+'...</td><td>'+target+'</td><td>'+currentUser.name+'</td><td>'+dateStr+'</td><td><span class="badge completed">'+(schedule?'Scheduled':'Sent')+'</span></td>';
+  tbody.insertBefore(row,tbody.firstChild);
+  showToast('Notification '+(schedule?'scheduled':'sent')+' to '+target+' ✓','success');
+  if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Sent notification: '+title,'notification');
+  document.getElementById('notif-title').value='';
+  document.getElementById('notif-msg').value='';
+  document.getElementById('notif-schedule').value='';
+  updateNotifPreview();
+}
+
+// PROMOS
+function createPromo(){
+  const code=document.getElementById('promo-code').value.trim().toUpperCase();
+  const disc=document.getElementById('promo-discount').value.trim();
+  const exp=document.getElementById('promo-expiry').value;
+  if(!code||!disc){showToast('Please fill in code and discount','error');return;}
+  const tbody=document.getElementById('promos-body');
+  const row=document.createElement('tr');
+  row.innerHTML='<td>'+code+'</td><td>'+disc+'</td><td>0</td><td>'+(exp||'No expiry')+'</td><td><span class="badge completed">Active</span></td><td><button class="act-btn red" onclick="disablePromo(this)">Disable</button></td>';
+  tbody.insertBefore(row,tbody.firstChild);
+  document.getElementById('promo-code').value='';document.getElementById('promo-discount').value='';document.getElementById('promo-expiry').value='';
+  showToast('Promo code '+code+' created!','success');
+}
+
+function disablePromo(btn){
+  const row=btn.closest('tr');
+  const statusCell=row.querySelector('.badge');
+  statusCell.textContent='Disabled';statusCell.className='badge cancelled';
+  btn.textContent='Enable';btn.classList.remove('red');
+  showToast('Promo code disabled','success');
+}
+
+// SETTINGS
+function loadSettings(){
+  document.getElementById('platform-fee').value=settingsData.platform_fee||10;
+  document.getElementById('late-penalty').value=settingsData.late_penalty||50;
+  document.getElementById('tip-fee').value=settingsData.tip_fee||5;
+  if(document.getElementById('elite-fee')) document.getElementById('elite-fee').value=settingsData.elite_fee||8;
+}
+
+function saveSettings(){
+  settingsData.platform_fee=parseInt(document.getElementById('platform-fee').value)||10;
+  settingsData.late_penalty=parseInt(document.getElementById('late-penalty').value)||50;
+  settingsData.tip_fee=parseInt(document.getElementById('tip-fee').value)||5;
+  if(document.getElementById('elite-fee')) settingsData.elite_fee=parseInt(document.getElementById('elite-fee').value)||8;
+  localStorage.setItem('preen_settings',JSON.stringify(settingsData));
+  showToast('Settings saved successfully ✓','success');
+  renderOverview();
+}
+
+// STAFF MANAGEMENT
+function openAddStaffModal(){
+  document.getElementById('staff-name').value='';
+  document.getElementById('staff-email').value='';
+  document.getElementById('staff-password').value='';
+  document.getElementById('staff-role').value='support';
+  updatePermissionsByRole();
+  document.getElementById('add-staff-modal').classList.add('show');
+}
+
+function updatePermissionsByRole(){
+  const role=document.getElementById('staff-role').value;
+  const defaults={
+    support:['view_bookings','manage_bookings','view_users','view_reviews','today_view'],
+    provider_manager:['view_providers','verify_providers','view_reviews','manage_reviews','today_view']
+  };
+  const roleDefaults=defaults[role]||[];
+  document.querySelectorAll('#permission-grid .permission-item').forEach(item=>{
+    const perm=item.dataset.perm;
+    const checkbox=item.querySelector('input');
+    const isSelected=roleDefaults.includes(perm);
+    checkbox.checked=isSelected;
+    item.classList.toggle('selected',isSelected);
+  });
+}
+
+// Toggle permission items
+document.addEventListener('click',function(e){
+  const item=e.target.closest('.permission-item');
+  if(item&&item.closest('#permission-grid')){
+    const checkbox=item.querySelector('input');
+    checkbox.checked=!checkbox.checked;
+    item.classList.toggle('selected',checkbox.checked);
+  }
+});
+
+function addStaff(){
+  const name=document.getElementById('staff-name').value.trim();
+  const email=document.getElementById('staff-email').value.trim();
+  const password=document.getElementById('staff-password').value.trim();
+  const role=document.getElementById('staff-role').value;
+  if(!name||!email||!password){showToast('Please fill in all fields','error');return;}
+  if(staffMembers.find(s=>s.email.toLowerCase()===email.toLowerCase())){showToast('This email is already a staff member','error');return;}
+  const permissions=[];
+  document.querySelectorAll('#permission-grid .permission-item input:checked').forEach(cb=>{
+    permissions.push(cb.closest('.permission-item').dataset.perm);
+  });
+  const newStaff={
+    id:Date.now(),name,email,password,role,permissions,
+    active:true,addedAt:new Date().toISOString(),lastLogin:null
+  };
+  staffMembers.push(newStaff);
+  localStorage.setItem('preen_staff',JSON.stringify(staffMembers));
+  closeModal('add-staff-modal');
+  renderStaff();
+  showToast(name+' added as '+role.replace('_',' '),'success');
+  logActivity('Super Admin','Added staff: '+name+' ('+role+')','staff');
+}
+
+function renderStaff(){
+  document.getElementById('staff-count').textContent=staffMembers.filter(s=>s.active).length+' members';
+  const tbody=document.getElementById('staff-table');
+  if(staffMembers.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px;">No staff added yet. Click + Add Staff to get started.</td></tr>';
+  } else {
+    tbody.innerHTML=staffMembers.map(s=>'<tr><td style="font-weight:500;">'+s.name+'</td><td>'+s.email+'</td><td><span class="badge '+s.role+'">'+s.role.replace('_',' ').replace(/\b\w/g,l=>l.toUpperCase())+'</span></td><td><div style="display:flex;flex-wrap:wrap;gap:4px;">'+s.permissions.slice(0,3).map(p=>'<span style="background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:10px;">'+p.replace('_',' ')+'</span>').join('')+(s.permissions.length>3?'<span style="font-size:10px;color:var(--text3);">+'+( s.permissions.length-3)+' more</span>':'')+'</div></td><td><span class="badge '+(s.active?'completed':'cancelled')+'">'+(s.active?'Active':'Inactive')+'</span></td><td>'+( s.lastLogin?new Date(s.lastLogin).toLocaleString():'Never logged in')+'</td><td style="white-space:nowrap;"><button class="act-btn blue" onclick="editStaff('+s.id+')">Edit</button><button class="act-btn red" onclick="removeStaff('+s.id+')">Remove</button></td></tr>').join('');
+  }
+  renderActivityLog();
+}
+
+function editStaff(id){
+  const staff=staffMembers.find(s=>s.id===id);
+  if(!staff) return;
+  document.getElementById('staff-name').value=staff.name;
+  document.getElementById('staff-email').value=staff.email;
+  document.getElementById('staff-password').value=staff.password;
+  document.getElementById('staff-role').value=staff.role;
+  document.querySelectorAll('#permission-grid .permission-item').forEach(item=>{
+    const perm=item.dataset.perm;
+    const checkbox=item.querySelector('input');
+    const isSelected=staff.permissions.includes(perm);
+    checkbox.checked=isSelected;
+    item.classList.toggle('selected',isSelected);
+  });
+  // Remove old and re-add on save
+  staffMembers=staffMembers.filter(s=>s.id!==id);
+  localStorage.setItem('preen_staff',JSON.stringify(staffMembers));
+  document.getElementById('add-staff-modal').classList.add('show');
+}
+
+function removeStaff(id){
+  const staff=staffMembers.find(s=>s.id===id);
+  if(!staff||!confirm('Remove '+staff.name+' from staff?')) return;
+  staffMembers=staffMembers.filter(s=>s.id!==id);
+  localStorage.setItem('preen_staff',JSON.stringify(staffMembers));
+  renderStaff();
+  showToast(staff.name+' removed from staff','success');
+  logActivity('Super Admin','Removed staff: '+staff.name,'staff');
+}
+
+// ACTIVITY LOG
+function logActivity(staffName, action, type){
+  const entry={staffName,action,type,timestamp:new Date().toISOString()};
+  staffActivityLog.unshift(entry);
+  if(staffActivityLog.length>100) staffActivityLog=staffActivityLog.slice(0,100);
+  localStorage.setItem('preen_activity_log',JSON.stringify(staffActivityLog));
+  // Update last login if login
+  if(type==='login'){
+    const staff=staffMembers.find(s=>s.name===staffName);
+    if(staff){staff.lastLogin=new Date().toISOString();localStorage.setItem('preen_staff',JSON.stringify(staffMembers));}
+  }
+  renderActivityLog();
+}
+
+function renderActivityLog(){
+  const el=document.getElementById('staff-activity-log');
+  if(!el) return;
+  if(staffActivityLog.length===0){el.innerHTML='<div class="empty">No activity yet</div>';return;}
+  const colors={login:'var(--success)',logout:'var(--text3)',booking:'var(--p)',suspend:'var(--error)',verify:'var(--success)',notification:'var(--accent)',staff:'#7C3AED',page:'var(--border)',review:'var(--p)'};
+  el.innerHTML=staffActivityLog.slice(0,20).map(log=>'<div class="activity-item"><div class="activity-dot" style="background:'+( colors[log.type]||'var(--border)')+'"></div><div><div class="activity-text"><strong>'+log.staffName+'</strong> — '+log.action+'</div><div class="activity-time">'+new Date(log.timestamp).toLocaleString()+'</div></div></div>').join('');
+}
+
+// CHARTS
+function buildCharts(bookings,users){
+  const days=7;const labels=[];const revData=[];const userGrowth=[];
+  for(let i=days-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    labels.push(d.toLocaleDateString('en',{weekday:'short'}));
+    const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    const de=new Date(ds);de.setDate(ds.getDate()+1);
+    const fee=settingsData.platform_fee||10;
+    revData.push(bookings.filter(b=>{const t=new Date(b.created_at);return t>=ds&&t<de;}).length*35000*(fee/100));
+    userGrowth.push(users.filter(u=>{const t=new Date(u.created_at);return t>=ds&&t<de;}).length);
+  }
+  if(charts.rev)charts.rev.destroy();
+  charts.rev=new Chart(document.getElementById('revenue-chart').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Fees (₦)',data:revData,borderColor:'#E8547A',backgroundColor:'rgba(232,84,122,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#E8547A',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'}},x:{grid:{display:false}}}}});
+  if(charts.users)charts.users.destroy();
+  charts.users=new Chart(document.getElementById('users-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'New Users',data:userGrowth,backgroundColor:'rgba(124,58,237,0.7)',borderRadius:6}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'}},x:{grid:{display:false}}}}});
+  const cats={Barber:0,Nails:0,Hair:0,Lash:0,Makeup:0,Massage:0,'Wig/Gele':0,Other:0};
+  bookings.forEach(b=>{const s=(b.service||'').toLowerCase();if(s.includes('fade')||s.includes('beard'))cats.Barber++;else if(s.includes('nail')||s.includes('manicure'))cats.Nails++;else if(s.includes('hair')||s.includes('weave'))cats.Hair++;else if(s.includes('lash'))cats.Lash++;else if(s.includes('makeup'))cats.Makeup++;else if(s.includes('massage'))cats.Massage++;else if(s.includes('wig')||s.includes('gele'))cats['Wig/Gele']++;else cats.Other++;});
+  if(charts.cat)charts.cat.destroy();
+  charts.cat=new Chart(document.getElementById('category-chart').getContext('2d'),{type:'doughnut',data:{labels:Object.keys(cats),datasets:[{data:Object.values(cats),backgroundColor:['#E8547A','#F59E0B','#10B981','#7C3AED','#3B82F6','#EC4899','#F97316','#6B7280'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:6}}}}});
+  const confirmed=bookings.filter(b=>b.status==='confirmed'||!b.status).length;
+  const completed=bookings.filter(b=>b.status==='completed').length;
+  const cancelled=bookings.filter(b=>b.status==='cancelled').length;
+  if(charts.status)charts.status.destroy();
+  charts.status=new Chart(document.getElementById('status-chart').getContext('2d'),{type:'doughnut',data:{labels:['Confirmed','Completed','Cancelled'],datasets:[{data:[confirmed,completed,cancelled],backgroundColor:['#E8547A','#10B981','#EF4444'],borderWidth:2,borderColor:'#fff'}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:8}}}}});
+}
+
+function buildFinChart(bookings){
+  const days=30;const labels=[];const data=[];const fee=settingsData.platform_fee||10;
+  for(let i=days-1;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    labels.push(d.getDate()+'/'+(d.getMonth()+1));
+    const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    const de=new Date(ds);de.setDate(ds.getDate()+1);
+    data.push(bookings.filter(b=>{const t=new Date(b.created_at);return t>=ds&&t<de;}).length*35000*(fee/100));
+  }
+  if(charts.fin)charts.fin.destroy();
+  charts.fin=new Chart(document.getElementById('fin-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Platform Fees (₦)',data,backgroundColor:'rgba(232,84,122,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'}},x:{grid:{display:false},ticks:{maxTicksLimit:10}}}}});
+}
+
+// HELPERS
+function searchTable(tblId,q){
+  const tbl=document.getElementById(tblId);if(!tbl)return;
+  tbl.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
+}
+
+function filterCol(tblId,colIdx,val){
+  const tbl=document.getElementById(tblId);if(!tbl)return;
+  tbl.querySelectorAll('tbody tr').forEach(r=>{
+    if(!val){r.style.display='';return;}
+    const cell=r.cells[colIdx];
+    r.style.display=cell&&cell.textContent.toLowerCase().includes(val.toLowerCase())?'':'none';
+  });
+}
+
+function openModal(id){document.getElementById(id).classList.add('show');}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+function showToast(msg,type='success'){
+  const toast=document.getElementById('toast');
+  toast.textContent=msg;
+  toast.className='toast '+(type||'');
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),3500);
+}
+
+document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('add-staff-modal');closeModal('suspend-modal');}});
+</script>
+</body>
+</html>

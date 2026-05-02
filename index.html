@@ -10,15 +10,33 @@
 </head>
 <body>
 
+  <!-- SPLASH SCREEN -->
+  <div id="screen-splash" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#FDF8F3; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+    <div class="splash-logo">
+      <svg width="100" height="100" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="64" height="64" rx="18" fill="#E8547A"/>
+        <path d="M18 14 C18 14 18 36 18 44" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
+        <path d="M18 14 C18 14 40 14 40 24 C40 34 18 34 18 34" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <circle cx="46" cy="42" r="6" fill="#F59E0B"/>
+      </svg>
+    </div>
+    <div class="splash-name" style="font-family:'Poppins',sans-serif; font-size:36px; font-weight:700; color:#1A1A1A; letter-spacing:-1px;">Preen</div>
+    <div class="splash-tag" style="font-family:'Poppins',sans-serif; font-size:12px; color:#999; letter-spacing:2px; text-transform:uppercase;">Book beauty, your way</div>
+    <div style="margin-top:8px;">
+      <div class="splash-bar" style="height:3px; background:#E8547A; border-radius:2px;"></div>
+    </div>
+  </div>
+
   <!-- WELCOME SCREEN -->
   <div class="screen active" id="screen-welcome">
     <div class="welcome-bg">
       <div class="welcome-content">
         <div class="logo-wrap">
           <div class="logo-icon">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="#F59E0B"/>
-              <circle cx="12" cy="9" r="2.5" fill="#fff"/>
+            <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+              <path d="M12 4 C12 4 12 24 12 30" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
+              <path d="M12 4 C12 4 28 4 28 13 C28 22 12 22 12 22" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+              <circle cx="34" cy="28" r="5" fill="#F59E0B"/>
             </svg>
           </div>
           <div class="logo-text">Preen</div>
@@ -104,7 +122,7 @@
         </div>
         <div class="header-icons">
           <div class="icon-btn" onclick="showScreen('screen-notifications')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="notif-dot"></span>
           </div>
         </div>
@@ -120,27 +138,42 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <span>Search venues, professionals...</span>
       </div>
+      <!-- TOP PROVIDERS BANNER -->
+      <div onclick="showScreen('screen-leaderboard')" style="margin:0 20px 16px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer;">
+        <span style="font-size:28px;">🏆</span>
+        <div style="flex:1;">
+          <p style="font-size:13px; font-weight:600; color:#fff;">Top Providers This Month</p>
+          <p style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:1px;">See who's leading the Abuja leaderboard</p>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
 
       <!-- EXPLORE SECTION -->
       <div class="section-header"><span class="section-title">Explore</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
       <div class="explore-grid">
-        <div class="explore-card" onclick="filterAndSearch('Hair salons')" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
-          <span>Hair salons</span>
+        <div class="explore-card" onclick="showCategory('Hair')" style="background-image:url('https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Hair salons</span></div>
         </div>
-        <div class="explore-card" onclick="filterAndSearch('Barbers')" style="background: linear-gradient(135deg, #2563eb, #3b82f6);">
-          <span>Barbers</span>
+        <div class="explore-card" onclick="showCategory('Barber')" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Barbers</span></div>
         </div>
-        <div class="explore-card" onclick="filterAndSearch('Nails')" style="background: linear-gradient(135deg, #db2777, #ec4899);">
-          <span>Nails</span>
+        <div class="explore-card" onclick="showCategory('Nails')" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Nails</span></div>
         </div>
-        <div class="explore-card" onclick="filterAndSearch('Massage')" style="background: linear-gradient(135deg, #059669, #10b981);">
-          <span>Massage</span>
+        <div class="explore-card" onclick="showCategory('Massage')" style="background-image:url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Massage</span></div>
         </div>
-        <div class="explore-card" onclick="filterAndSearch('Medspa')" style="background: linear-gradient(135deg, #7c3aed, #8b5cf6);">
-          <span>Medspa</span>
+        <div class="explore-card" onclick="showCategory('Makeup')" style="background-image:url('https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Makeup</span></div>
         </div>
-        <div class="explore-card" onclick="filterAndSearch('Spa')" style="background: linear-gradient(135deg, #b45309, #d97706);">
-          <span>Spa & sauna</span>
+        <div class="explore-card" onclick="showCategory('Lash')" style="background-image:url('https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Lash</span></div>
+        </div>
+        <div class="explore-card" onclick="showCategory('Wig Stylist')" style="background-image:url('https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Wig Stylist</span></div>
+        </div>
+        <div class="explore-card" onclick="showCategory('Gele Tying')" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
+          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Gele Tying</span></div>
         </div>
       </div>
 
@@ -148,34 +181,28 @@
       <div class="section-header"><span class="section-title">Recently Viewed</span><span class="see-all">See all</span></div>
       <div class="h-scroll">
         <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-            <span class="h-card-emoji">✂️</span>
-          </div>
+          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80'); background-size:cover; background-position:center;"></div>
           <p class="h-card-name">Kings Barbershop</p>
           <p class="h-card-meta">★ 4.9 · Wuse 2</p>
         </div>
         <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
-            <span class="h-card-emoji">💅</span>
-          </div>
+          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80'); background-size:cover; background-position:center;"></div>
           <p class="h-card-name">Glam Nails by Temi</p>
           <p class="h-card-meta">★ 4.8 · Garki</p>
         </div>
         <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
-            <span class="h-card-emoji">👁️</span>
-          </div>
+          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80'); background-size:cover; background-position:center;"></div>
           <p class="h-card-name">Lash Queen Ada</p>
           <p class="h-card-meta">★ 5.0 · Maitama</p>
         </div>
       </div>
 
       <!-- RECOMMENDED -->
-      <div class="section-header"><span class="section-title">Recommended for You</span><span class="see-all">See all</span></div>
+      <div class="section-header"><span class="section-title">Recommended for You</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
       <div class="h-scroll">
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-            <span style="font-size:36px;">✂️</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge">★ 4.9</div>
           </div>
           <div class="h-card-wide-info">
@@ -185,8 +212,8 @@
           </div>
         </div>
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e2e1a, #1a6e3a);">
-            <span style="font-size:36px;">💇</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1562322140-8baeececf3df?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge">★ 4.7</div>
           </div>
           <div class="h-card-wide-info">
@@ -196,8 +223,8 @@
           </div>
         </div>
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
-            <span style="font-size:36px;">💅</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge">★ 4.8</div>
           </div>
           <div class="h-card-wide-info">
@@ -209,11 +236,11 @@
       </div>
 
       <!-- NEW TO PREEN -->
-      <div class="section-header"><span class="section-title">New to Preen</span><span class="see-all">See all</span></div>
+      <div class="section-header"><span class="section-title">New to Preen</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
       <div class="h-scroll">
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #2e1a0e, #6e3a1a);">
-            <span style="font-size:36px;">💆</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge new">New</div>
           </div>
           <div class="h-card-wide-info">
@@ -223,8 +250,8 @@
           </div>
         </div>
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
-            <span style="font-size:36px;">👄</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge new">New</div>
           </div>
           <div class="h-card-wide-info">
@@ -236,11 +263,11 @@
       </div>
 
       <!-- TRENDING -->
-      <div class="section-header"><span class="section-title">Trending</span><span class="see-all">See all</span></div>
+      <div class="section-header"><span class="section-title">Trending</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
       <div class="h-scroll" style="padding-bottom: 100px;">
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
-            <span style="font-size:36px;">👁️</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge trending">🔥 Hot</div>
           </div>
           <div class="h-card-wide-info">
@@ -250,8 +277,8 @@
           </div>
         </div>
         <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-            <span style="font-size:36px;">✂️</span>
+          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
+            
             <div class="h-card-wide-badge trending">🔥 Hot</div>
           </div>
           <div class="h-card-wide-info">
@@ -363,8 +390,7 @@
 
       <div id="search-results" class="providers-list" style="padding-bottom: 100px;">
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-            <span style="font-size:32px;">✂️</span>
+          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.9</div>
           </div>
           <div class="provider-card-body">
@@ -381,8 +407,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
-            <span style="font-size:32px;">💅</span>
+          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.8</div>
           </div>
           <div class="provider-card-body">
@@ -399,8 +424,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background: linear-gradient(135deg, #0e1a2e, #1a3a6e);">
-            <span style="font-size:32px;">👁️</span>
+          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 5.0</div>
           </div>
           <div class="provider-card-body">
@@ -417,8 +441,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background: linear-gradient(135deg, #0e2e1a, #1a6e3a);">
-            <span style="font-size:32px;">💇</span>
+          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1562322140-8baeececf3df?w=300&q=80); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.7</div>
           </div>
           <div class="provider-card-body">
@@ -460,33 +483,49 @@
   <div class="screen" id="screen-provider">
     <div class="app-screen">
       <!-- COVER -->
-      <div class="provider-cover-new">
-        <div class="provider-cover-actions">
+      <div class="provider-cover-new" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80'); background-size:cover; background-position:center;">
+        <div style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3);"></div>
+        <div class="provider-cover-actions" style="z-index:2;">
           <div class="back-btn light" onclick="goBack()">&#8592;</div>
           <div style="display:flex; gap:10px;">
             <div class="cover-action-btn" onclick="shareProfile('Kings Barbershop')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
             <div class="cover-action-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F9FAFB" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             </div>
           </div>
-        </div>
-        <div class="provider-cover-content">
-          <div style="font-size:56px;">✂️</div>
         </div>
       </div>
 
       <!-- PROVIDER INFO -->
       <div class="provider-info-bar">
-        <div>
-          <h2 class="provider-title">Kings Barbershop <span class="verified-check">✓</span></h2>
-          <p style="font-size:12px; color:#888; margin-top:2px;">★ 4.9 (312 reviews) · Wuse 2, Abuja · 0.8km</p>
-          <p style="font-size:12px; color:#22c55e; margin-top:2px;">Open until 8:00 PM</p>
-        </div>
-        <div style="display:flex; gap:6px; margin-top:8px;">
-          <span class="provider-tag">Featured</span>
-          <span class="provider-tag verified-tag">✓ Verified</span>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <div style="flex:1;">
+            <h2 class="provider-title">Kings Barbershop <span class="verified-check">✓</span></h2>
+            <p style="font-size:12px; color:var(--text3); margin-top:2px;">★ 4.9 (312 reviews) · Wuse 2, Abuja · 0.8km</p>
+            <p style="font-size:12px; color:var(--success); margin-top:2px;">Open until 8:00 PM</p>
+            <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+              <span class="provider-tag">Featured</span>
+              <span class="provider-tag verified-tag">✓ Verified</span>
+              <span class="provider-tag elite-tag">🏅 Preen Elite</span>
+            </div>
+          </div>
+          <!-- SCORE BADGE -->
+          <div onclick="showScreen('screen-provider-score')" style="flex-shrink:0; margin-left:12px; cursor:pointer;">
+            <div class="score-badge">
+              <div class="score-ring">
+                <svg width="64" height="64" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="5"/>
+                  <circle cx="32" cy="32" r="26" fill="none" stroke="var(--primary)" stroke-width="5"
+                    stroke-dasharray="163" stroke-dashoffset="24"
+                    stroke-linecap="round" transform="rotate(-90 32 32)"/>
+                </svg>
+                <div class="score-number">92</div>
+              </div>
+              <p style="font-size:9px; color:var(--text3); text-align:center; margin-top:2px;">Preen Score</p>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -499,14 +538,14 @@
         <div class="tab" onclick="switchTab(this, 'tab-about')">About</div>
       </div>
 
-      <!-- TAB: PHOTOS -->
+            <!-- TAB: PHOTOS -->
       <div class="tab-content active" id="tab-photos">
         <div class="photos-grid">
-          <div class="photo-item" style="background: linear-gradient(135deg, #1e1040, #3b1a7a); grid-column: span 2;"><span style="font-size:48px;">✂️</span></div>
-          <div class="photo-item" style="background: linear-gradient(135deg, #2e1040, #4b1a7a);"><span style="font-size:32px;">💈</span></div>
-          <div class="photo-item" style="background: linear-gradient(135deg, #1e2040, #3b3a7a);"><span style="font-size:32px;">🪒</span></div>
-          <div class="photo-item" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);"><span style="font-size:32px;">✂️</span></div>
-          <div class="photo-item" style="background: linear-gradient(135deg, #2e1040, #4b1a7a);"><span style="font-size:32px;">💈</span></div>
+          <div class="photo-item" onclick="openGallery(0)" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80); background-size:cover; background-position:center; grid-column: span 2; cursor:pointer;"></div>
+          <div class="photo-item" onclick="openGallery(1)" style="background-image:url(https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
+          <div class="photo-item" onclick="openGallery(2)" style="background-image:url(https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
+          <div class="photo-item" onclick="openGallery(3)" style="background-image:url(https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
+          <div class="photo-item" onclick="openGallery(4)" style="background-image:url(https://images.unsplash.com/photo-1581591524425-c7e0978865fc?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
         </div>
       </div>
 
@@ -651,6 +690,21 @@
             <div class="hour-item closed"><span>Sunday</span><span>Closed</span></div>
           </div>
           <div>
+            <p style="font-size:14px; font-weight:600; margin-bottom:10px;">Social Media</p>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <div class="social-link-item" onclick="window.open('https://instagram.com', '_blank')">
+                <div class="social-icon" style="background:#FDE8EE;">📸</div>
+                <div><p style="font-size:13px; font-weight:500;">Instagram</p><p style="font-size:11px; color:var(--text3);">@kingsbarbershopabuja</p></div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" style="margin-left:auto;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </div>
+              <div class="social-link-item" onclick="window.open('https://tiktok.com', '_blank')">
+                <div class="social-icon" style="background:#F0F0F0;">🎵</div>
+                <div><p style="font-size:13px; font-weight:500;">TikTok</p><p style="font-size:11px; color:var(--text3);">@kingsbarbershop</p></div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2" style="margin-left:auto;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </div>
+            </div>
+          </div>
+          <div>
             <p style="font-size:14px; font-weight:600; margin-bottom:10px;">Location</p>
             <div style="background:#1a1a1a; border-radius:14px; padding:14px; display:flex; align-items:center; gap:10px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -672,6 +726,7 @@
           <div style="display:flex; gap:6px;">
             <button class="btn-secondary small" onclick="openOffer()" style="padding:6px 10px; font-size:11px; flex:1;">💰 Offer</button>
             <button class="btn-secondary small" onclick="showScreen('screen-housecall')" style="padding:6px 10px; font-size:11px; flex:1;">🏠 House Call</button>
+          <button class="btn-secondary small" onclick="showScreen('screen-chat')" style="padding:6px 10px; font-size:11px; flex:1;">💬 Chat</button>
           </div>
         </div>
       </div>
@@ -721,13 +776,29 @@
       </div>
       <div class="booking-form">
         <div class="form-group">
-          <label>Select Service</label>
-          <select id="booking-service">
-            <option>Signature Fade — ₦2,500</option>
-            <option>Beard Trim & Shape — ₦1,500</option>
-            <option>Full Cut + Beard — ₦3,500</option>
-            <option>Line-up Only — ₦1,000</option>
-          </select>
+          <label>Select Services (choose one or more)</label>
+          <div class="service-select-list" id="service-select-list">
+            <div class="service-select-item" onclick="toggleService(this, 'Signature Fade', 2500)">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Signature Fade</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">45 min</p></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦2,500</span><div class="service-check">✓</div></div>
+            </div>
+            <div class="service-select-item" onclick="toggleService(this, 'Beard Trim & Shape', 1500)">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Beard Trim & Shape</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">30 min</p></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦1,500</span><div class="service-check">✓</div></div>
+            </div>
+            <div class="service-select-item" onclick="toggleService(this, 'Full Cut + Beard', 3500)">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Full Cut + Beard</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">1 hr</p></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦3,500</span><div class="service-check">✓</div></div>
+            </div>
+            <div class="service-select-item" onclick="toggleService(this, 'Line-up Only', 1000)">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Line-up Only</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">20 min</p></div>
+              <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦1,000</span><div class="service-check">✓</div></div>
+            </div>
+          </div>
+          <div class="service-total" style="margin-top:8px; display:none;" id="service-total-bar">
+            <span style="font-size:13px; color:var(--text2);" id="selected-services-label">0 services selected</span>
+            <span style="font-size:15px; font-weight:700; color:var(--primary);" id="services-total-price">₦0</span>
+          </div>
         </div>
         <div class="form-group">
           <label>Select Date</label>
@@ -746,13 +817,34 @@
             <div class="time-slot" onclick="selectTime(this)">5:00 PM</div>
           </div>
         </div>
+        <div class="form-group">
+          <label>Preferred Team Member (optional)</label>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="team-select-list">
+            <div class="team-member" onclick="selectTeamMember(this, 'No preference')">
+              <div class="team-avatar" style="background:var(--bg3);">👤</div>
+              <div><p style="font-size:13px; font-weight:500;">No preference</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">Any available team member</p></div>
+            </div>
+            <div class="team-member" onclick="selectTeamMember(this, 'Kingsley James')">
+              <div class="team-avatar">KJ</div>
+              <div><p style="font-size:13px; font-weight:500;">Kingsley James</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">Senior Barber · ★ 4.9</p></div>
+            </div>
+            <div class="team-member" onclick="selectTeamMember(this, 'Tunde Adeyemi')">
+              <div class="team-avatar">TA</div>
+              <div><p style="font-size:13px; font-weight:500;">Tunde Adeyemi</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">Barber · ★ 4.8</p></div>
+            </div>
+            <div class="team-member" onclick="selectTeamMember(this, 'Emeka Okafor')">
+              <div class="team-avatar">EO</div>
+              <div><p style="font-size:13px; font-weight:500;">Emeka Okafor</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">Junior Barber · ★ 4.7</p></div>
+            </div>
+          </div>
+        </div>
         <div class="form-group"><label>Your Name</label><input type="text" id="booking-name" placeholder="Enter your full name"/></div>
         <div class="form-group"><label>Phone Number</label><input type="tel" id="booking-phone" placeholder="+234 800 000 0000"/></div>
         <div class="booking-note">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
           Payment is held securely. If you are 15+ minutes late, 50% goes to the provider automatically.
         </div>
-        <button class="btn-primary" onclick="confirmBooking()">Confirm Booking · ₦2,500</button>
+        <button class="btn-primary" id="confirm-booking-btn" onclick="confirmBooking()">Confirm Booking · ₦2,500</button>
       </div>
     </div>
   </div>
@@ -765,13 +857,14 @@
       <p class="success-sub">Your appointment has been booked successfully.</p>
       <div class="success-card">
         <div class="success-row"><span>Provider</span><span>Kings Barbershop</span></div>
-        <div class="success-row"><span>Service</span><span>Signature Fade</span></div>
-        <div class="success-row"><span>Date</span><span id="confirmed-date">-</span></div>
-        <div class="success-row"><span>Amount</span><span>₦2,500</span></div>
+        <div class="success-row"><span>Services</span><span id="confirmed-services" style="text-align:right; max-width:180px;">-</span></div>
+        <div class="success-row"><span>Team Member</span><span id="confirmed-team">-</span></div>
+        <div class="success-row"><span>Date & Time</span><span id="confirmed-date">-</span></div>
+        <div class="success-row"><span>Total</span><span id="confirmed-amount" style="color:var(--primary); font-weight:700;">-</span></div>
       </div>
       <button class="btn-primary" onclick="showScreen('screen-home')">Back to Home</button>
       <button class="btn-secondary" onclick="showScreen('screen-bookings')">View My Bookings</button>
-      <button class="btn-secondary" onclick="notifyBookingConfirmed('Kings Barbershop', 'Tomorrow', '10:00 AM')" style="background:#25D366; border-color:#25D366; color:#fff;">📱 Get WhatsApp Reminder</button>
+      <button class="btn-secondary" onclick="notifyBookingConfirmed('Kings Barbershop', 'Tomorrow', '10:00 AM')" style="background:#25D366; border-color:#25D366; color:#fff; font-weight:600;">📱 Get WhatsApp Reminder</button>
     </div>
   </div>
 
@@ -907,7 +1000,7 @@
       <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Saved Providers</h3></div>
       <div class="providers-list">
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);"><span style="font-size:32px;">✂️</span><div class="provider-card-rating-badge">★ 4.9</div></div>
+          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;"><div class="provider-card-rating-badge">★ 4.9</div></div>
           <div class="provider-card-body"><div class="provider-card-top"><p class="provider-name">Kings Barbershop <span class="verified-dot">✓</span></p><p style="font-size:11px; color:#888;">0.8km · Wuse 2, Abuja</p></div><div class="provider-service-preview"><span>Signature Fade</span><span class="service-price-sm">₦2,500</span></div></div>
         </div>
       </div>
@@ -1011,12 +1104,18 @@
       <!-- HEADER -->
       <div style="padding: 56px 20px 16px;">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-          <div>
-            <p class="greeting">Good day 👋</p>
-            <p class="headline" id="prov-dashboard-name">Kings Barbershop</p>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div id="provider-cover-preview" style="width:52px; height:52px; border-radius:14px; background:var(--primary-light); display:flex; align-items:center; justify-content:center; font-size:22px; cursor:pointer; border:2px dashed var(--border); flex-shrink:0; overflow:hidden;" onclick="uploadProviderProfilePhoto()">
+              📷
+            </div>
+            <div>
+              <p class="greeting">Good day 👋</p>
+              <p class="headline" id="prov-dashboard-name">Kings Barbershop</p>
+              <p id="profile-photo-btn" onclick="uploadProviderProfilePhoto()" style="font-size:11px; color:var(--primary); cursor:pointer; margin-top:2px;">Tap to upload photo</p>
+            </div>
           </div>
           <div class="availability-toggle">
-            <span id="avail-label" style="font-size:11px;color:#7C3AED;">Available</span>
+            <span id="avail-label" style="font-size:11px;color:var(--primary);">Available</span>
             <div class="toggle active" id="avail-toggle" onclick="toggleAvailability()"></div>
           </div>
         </div>
@@ -1033,6 +1132,32 @@
           <div><p style="font-size:18px; font-weight:700; color:#F9FAFB;">312</p><p style="font-size:11px; color:#aaa;">Reviews</p></div>
           <div><p style="font-size:18px; font-weight:700; color:#22c55e;">✓</p><p style="font-size:11px; color:#aaa;">Verified</p></div>
         </div>
+      </div>
+
+      <!-- PREEN SCORE CARD -->
+      <div onclick="showScreen('screen-provider-score')" style="margin:0 20px 16px; background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border); display:flex; align-items:center; gap:14px; cursor:pointer;">
+        <div style="position:relative; width:64px; height:64px; flex-shrink:0;">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--border)" stroke-width="5"/>
+            <circle cx="32" cy="32" r="26" fill="none" stroke="var(--primary)" stroke-width="5"
+              stroke-dasharray="163" stroke-dashoffset="24"
+              stroke-linecap="round" transform="rotate(-90 32 32)"/>
+          </svg>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:16px;font-weight:700;color:var(--primary);">92</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+            <p style="font-size:14px; font-weight:600; color:var(--text);">Your Preen Score</p>
+            <span style="background:#FEF3C7; border:1px solid #FDE68A; color:#D97706; border-radius:20px; padding:2px 8px; font-size:10px; font-weight:600;">🏅 Elite</span>
+          </div>
+          <p style="font-size:12px; color:var(--text3);">Top 10% of providers in Abuja · Tap to see breakdown</p>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <div style="background:var(--bg3); border-radius:6px; padding:4px 8px; font-size:10px; color:var(--text2);">Show-up 98%</div>
+            <div style="background:var(--bg3); border-radius:6px; padding:4px 8px; font-size:10px; color:var(--text2);">Reviews 4.9★</div>
+            <div style="background:var(--bg3); border-radius:6px; padding:4px 8px; font-size:10px; color:var(--text2);">Response Fast</div>
+          </div>
+        </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
 
       <!-- QUICK ACTIONS -->
@@ -1069,6 +1194,14 @@
         <div class="quick-action" onclick="showScreen('screen-provider-notifications')">
           <span style="font-size:24px;">🔔</span>
           <p>Notifications</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-social-links')">
+          <span style="font-size:24px;">📱</span>
+          <p>Social Links</p>
+        </div>
+        <div class="quick-action" onclick="showScreen('screen-withdrawal')">
+          <span style="font-size:24px;">💸</span>
+          <p>Withdraw Funds</p>
         </div>
       </div>
 
@@ -1240,17 +1373,29 @@
       <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 40px;">
         <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Providers with photos and videos get 3x more bookings.</div>
         <div class="form-group"><label>Skill Name</label><input type="text" id="skill-name" placeholder="e.g. Signature Fade, Gel Nails"/></div>
-        <div class="form-group"><label>Upload a Photo of your work</label>
-          <div class="upload-box" onclick="simulatePhotoUpload()">
-            <div id="photo-preview" style="display:none; font-size:48px; text-align:center;">📸</div>
-            <div id="photo-placeholder" style="display:flex; flex-direction:column; align-items:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><p style="font-size:13px; color:#555; margin-top:8px;">Tap to upload photo</p></div>
-          </div>
+        <div class="form-group">
+          <label>Upload a Photo of your work</label>
+          <label for="skill-photo-input" class="upload-box" id="photo-upload-box" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:140px;">
+            <input type="file" id="skill-photo-input" accept="image/*" style="display:none;" onchange="handleSkillPhoto(this)"/>
+            <div id="photo-preview" style="display:none; width:100%; height:140px; border-radius:10px; background-size:cover; background-position:center;"></div>
+            <div id="photo-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              <p style="font-size:14px; color:var(--primary); font-weight:600;">Tap to upload photo</p>
+              <p style="font-size:12px; color:var(--text3);">JPG or PNG supported</p>
+            </div>
+          </label>
         </div>
-        <div class="form-group"><label>Upload a Video (max 60 seconds)</label>
-          <div class="upload-box" onclick="simulateVideoUpload()">
-            <div id="video-preview" style="display:none; font-size:48px; text-align:center;">🎥</div>
-            <div id="video-placeholder" style="display:flex; flex-direction:column; align-items:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg><p style="font-size:13px; color:#555; margin-top:8px;">Tap to upload video</p><p style="font-size:11px; color:#444; margin-top:4px;">Gets you a Verified badge</p></div>
-          </div>
+        <div class="form-group">
+          <label>Upload a Video (max 60 seconds)</label>
+          <label for="skill-video-input" class="upload-box" id="video-upload-box" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:140px;">
+            <input type="file" id="skill-video-input" accept="video/*" style="display:none;" onchange="handleSkillVideo(this)"/>
+            <div id="video-preview" style="display:none; width:100%;"></div>
+            <div id="video-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+              <p style="font-size:14px; color:var(--text2); font-weight:600;">Tap to upload video</p>
+              <p style="font-size:12px; color:var(--primary); font-weight:500;">Gets you a Verified badge ✓</p>
+            </div>
+          </label>
         </div>
         <div id="skill-list" style="display:flex; flex-direction:column; gap:10px;"></div>
         <button class="btn-primary" onclick="addSkill()">+ Add This Skill</button>
@@ -1392,11 +1537,17 @@
           </div>
           <div class="form-group">
             <label>Profile Photo</label>
-            <div class="upload-box" id="team-photo-box" onclick="simulateTeamPhotoUpload()">
-              <div id="team-photo-preview" style="display:none; font-size:48px; text-align:center;">📸</div>
-              <div id="team-photo-placeholder" style="display:flex; flex-direction:column; align-items:center;">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                <p style="font-size:12px; color:#555; margin-top:8px;">Tap to upload photo</p>
+            <div style="display:flex; align-items:center; gap:16px;">
+              <div id="team-photo-box" onclick="uploadTeamMemberPhoto()" style="width:80px; height:80px; border-radius:50%; border:2px dashed var(--border); display:flex; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; flex-shrink:0; background:var(--bg3); transition:border-color 0.2s;">
+                <div id="team-photo-preview" style="display:none; width:100%; height:100%; background-size:cover; background-position:center; border-radius:50%;"></div>
+                <div id="team-photo-placeholder" style="display:flex; flex-direction:column; align-items:center; padding:8px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+              </div>
+              <div>
+                <p style="font-size:13px; font-weight:500; color:var(--text);">Profile Photo</p>
+                <p style="font-size:11px; color:var(--text3); margin-top:2px;">Tap circle to upload</p>
+                <p style="font-size:11px; color:var(--primary); margin-top:4px; cursor:pointer;" onclick="uploadTeamMemberPhoto()">Choose photo →</p>
               </div>
             </div>
           </div>
@@ -1476,8 +1627,8 @@
       <div style="padding: 0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
 
         <!-- WHATSAPP TOGGLE -->
-        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
-          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">WhatsApp Notifications</p>
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px; color:var(--text);">WhatsApp Notifications</p>
           <p style="font-size:12px; color:#888; margin-bottom:14px;">Get booking reminders sent to your WhatsApp 15 minutes before each appointment</p>
           <div style="display:flex; align-items:center; justify-content:space-between;">
             <div>
@@ -1489,8 +1640,8 @@
         </div>
 
         <!-- PHONE NUMBER -->
-        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
-          <p style="font-size:14px; font-weight:600; margin-bottom:12px;">WhatsApp Number</p>
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:12px; color:var(--text);">WhatsApp Number</p>
           <div class="form-group">
             <input type="tel" id="prov-whatsapp-number" placeholder="+234 800 000 0000" value="+234 800 000 0000"/>
           </div>
@@ -1498,29 +1649,29 @@
         </div>
 
         <!-- IN-APP NOTIFICATIONS -->
-        <div style="background:#1a1a1a; border-radius:16px; padding:16px;">
-          <p style="font-size:14px; font-weight:600; margin-bottom:4px;">In-App Notifications</p>
-          <p style="font-size:12px; color:#888; margin-bottom:14px;">Get alerts inside the Preen app</p>
-          <div style="display:flex; flex-direction:column; gap:12px;">
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <p style="font-size:13px;">New booking alert</p>
-              <div class="toggle active" id="notif-new-booking" onclick="this.classList.toggle('active')"></div>
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px; color:var(--text);">In-App Notifications</p>
+          <p style="font-size:12px; color:var(--text3); margin-bottom:14px;">Get alerts inside the Preen app</p>
+          <div style="display:flex; flex-direction:column; gap:0;">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">New booking alert</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">When a customer books you</p></div>
+              <div class="toggle active" onclick="this.classList.toggle('active')"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <p style="font-size:13px;">15 min reminder</p>
-              <div class="toggle active" id="notif-reminder" onclick="this.classList.toggle('active')"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">15 min reminder</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">Before each appointment</p></div>
+              <div class="toggle active" onclick="this.classList.toggle('active')"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <p style="font-size:13px;">Booking cancelled</p>
-              <div class="toggle active" id="notif-cancel" onclick="this.classList.toggle('active')"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Booking cancelled</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">When a customer cancels</p></div>
+              <div class="toggle active" onclick="this.classList.toggle('active')"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <p style="font-size:13px;">New review received</p>
-              <div class="toggle" id="notif-review" onclick="this.classList.toggle('active')"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border);">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">New review received</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">When a customer reviews you</p></div>
+              <div class="toggle" onclick="this.classList.toggle('active')"></div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between;">
-              <p style="font-size:13px;">Tip received</p>
-              <div class="toggle active" id="notif-tip" onclick="this.classList.toggle('active')"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0;">
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Tip received</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">When a customer tips you</p></div>
+              <div class="toggle active" onclick="this.classList.toggle('active')"></div>
             </div>
           </div>
         </div>
@@ -1704,6 +1855,515 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           <span>Sign Out</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- IN-APP CHAT SCREEN -->
+  <div class="screen" id="screen-chat">
+    <div class="app-screen" style="display:flex; flex-direction:column; padding-bottom:0;">
+      <div class="inner-header" style="border-bottom:1.5px solid var(--border);">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="team-avatar">KS</div>
+          <div>
+            <p style="font-size:14px; font-weight:600; color:var(--text);">Kings Barbershop</p>
+            <p style="font-size:11px; color:var(--success);">● Online</p>
+          </div>
+        </div>
+      </div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages">
+          <div style="text-align:center; padding:10px 0;">
+            <span style="font-size:11px; color:var(--text3); background:var(--bg3); padding:4px 12px; border-radius:20px;">Today</span>
+          </div>
+          <div>
+            <div class="chat-bubble received">Hi! Welcome to Kings Barbershop. How can I help you today?</div>
+            <div class="chat-time" style="padding-left:4px;">10:02 AM</div>
+          </div>
+          <div>
+            <div class="chat-bubble sent">Hi! I want to know if you can do a skin fade with a design</div>
+            <div class="chat-time" style="text-align:right; padding-right:4px;">10:03 AM</div>
+          </div>
+          <div>
+            <div class="chat-bubble received">Yes absolutely! We specialise in skin fades and creative designs. Would you like to book an appointment?</div>
+            <div class="chat-time" style="padding-left:4px;">10:04 AM</div>
+          </div>
+          <div>
+            <div class="chat-bubble sent">How much will it cost?</div>
+            <div class="chat-time" style="text-align:right; padding-right:4px;">10:04 AM</div>
+          </div>
+          <div>
+            <div class="chat-bubble received">Skin fade with design starts from ₦3,500. Regular fade is ₦2,500. Want to book now?</div>
+            <div class="chat-time" style="padding-left:4px;">10:05 AM</div>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendChatMessage()"/>
+          <button class="chat-send" onclick="sendChatMessage()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER SOCIAL LINKS SCREEN -->
+  <div class="screen" id="screen-social-links">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Social Media Links</h3>
+      </div>
+      <div style="padding: 0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
+        <div class="booking-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Linking your social media gets you more bookings. Customers love to see your work before booking.
+        </div>
+        <div class="form-group">
+          <label>Instagram Username</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:14px; color:var(--text3); flex-shrink:0;">📸 instagram.com/</span>
+            <input type="text" id="instagram-link" placeholder="yourusername" style="flex:1;"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>TikTok Username</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:14px; color:var(--text3); flex-shrink:0;">🎵 tiktok.com/@</span>
+            <input type="text" id="tiktok-link" placeholder="yourusername" style="flex:1;"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>YouTube Channel</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:14px; color:var(--text3); flex-shrink:0;">▶️ youtube.com/</span>
+            <input type="text" id="youtube-link" placeholder="@yourchannel" style="flex:1;"/>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Facebook Page</label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:14px; color:var(--text3); flex-shrink:0;">👤 facebook.com/</span>
+            <input type="text" id="facebook-link" placeholder="yourpage" style="flex:1;"/>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="saveSocialLinks()">Save Social Links</button>
+        <button class="btn-secondary" onclick="goBack()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CATEGORY RESULTS SCREEN -->
+  <div class="screen" id="screen-category">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3 id="category-title">Hair Salons</h3>
+      </div>
+      <div id="category-results" class="providers-list" style="padding-bottom:100px;"></div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Bookings</span></div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- IMAGE CROP MODAL -->
+  <div id="crop-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:#fff; border-radius:20px; padding:20px; width:100%; max-width:400px;">
+      <p style="font-size:15px; font-weight:600; margin-bottom:12px; color:var(--text);">Adjust Photo</p>
+      <div style="position:relative; width:100%; height:260px; background:#f0f0f0; border-radius:12px; overflow:hidden; margin-bottom:12px;">
+        <img id="crop-img" style="position:absolute; cursor:move; max-width:none;" draggable="false"/>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:160px; height:160px; border:3px solid var(--primary); border-radius:50%; pointer-events:none; box-shadow:0 0 0 1000px rgba(0,0,0,0.4);"></div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <p style="font-size:11px; color:var(--text3); margin-bottom:6px;">Zoom</p>
+        <input type="range" id="crop-zoom" min="0.5" max="3" step="0.1" value="1" style="width:100%; accent-color:var(--primary);" oninput="updateCropZoom(this.value)"/>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button onclick="closeCropModal()" style="flex:1; background:var(--bg3); border:none; border-radius:10px; padding:12px; font-size:14px; font-family:'Poppins',sans-serif; cursor:pointer; color:var(--text2);">Cancel</button>
+        <button onclick="applyCrop()" style="flex:1; background:var(--primary); border:none; border-radius:10px; padding:12px; font-size:14px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; color:#fff;">Use Photo ✓</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- GALLERY LIGHTBOX -->
+  <div id="gallery-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+    <!-- Close button -->
+    <div onclick="closeGallery()" style="position:absolute; top:16px; right:16px; width:40px; height:40px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:20px; color:#fff; z-index:10;">✕</div>
+    <!-- Counter -->
+    <div id="gallery-counter" style="position:absolute; top:20px; left:50%; transform:translateX(-50%); font-size:13px; color:rgba(255,255,255,0.7); font-family:'Poppins',sans-serif;"></div>
+    <!-- Prev button -->
+    <div onclick="galleryPrev()" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:44px; height:44px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:22px; color:#fff; z-index:10;">‹</div>
+    <!-- Next button -->
+    <div onclick="galleryNext()" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); width:44px; height:44px; background:rgba(255,255,255,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:22px; color:#fff; z-index:10;">›</div>
+    <!-- Main image -->
+    <div id="gallery-img" style="width:100%; max-width:430px; height:70vh; background-size:contain; background-repeat:no-repeat; background-position:center; transition:opacity 0.2s;"></div>
+    <!-- Thumbnails -->
+    <div id="gallery-thumbs" style="display:flex; gap:8px; padding:12px 20px; overflow-x:auto; width:100%; max-width:430px; scrollbar-width:none;"></div>
+  </div>
+
+
+  <!-- PROVIDER SCORE SCREEN -->
+  <div class="screen" id="screen-provider-score">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Preen Score</h3>
+      </div>
+      <div style="padding:0 20px 40px; display:flex; flex-direction:column; gap:16px;">
+
+        <!-- BIG SCORE -->
+        <div style="background:linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius:20px; padding:28px 20px; text-align:center;">
+          <div style="position:relative; width:120px; height:120px; margin:0 auto 12px;">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="10"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#F59E0B" stroke-width="10"
+                stroke-dasharray="314" stroke-dashoffset="45"
+                stroke-linecap="round" transform="rotate(-90 60 60)"/>
+            </svg>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+              <div style="font-size:36px; font-weight:700; color:#fff; line-height:1;">92</div>
+              <div style="font-size:10px; color:rgba(255,255,255,0.7);">out of 100</div>
+            </div>
+          </div>
+          <p style="font-size:18px; font-weight:700; color:#fff;">Kings Barbershop</p>
+          <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,0.15); border-radius:20px; padding:6px 14px; margin-top:8px;">
+            <span style="font-size:16px;">🏅</span>
+            <span style="font-size:13px; color:#fff; font-weight:600;">Preen Elite Provider</span>
+          </div>
+          <p style="font-size:12px; color:rgba(255,255,255,0.7); margin-top:10px;">Top 10% of providers in Abuja</p>
+        </div>
+
+        <!-- SCORE BREAKDOWN -->
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:14px; color:var(--text);">Score Breakdown</p>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="score-row">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px; color:var(--text);">Show-up Rate</span>
+                <span style="font-size:13px; font-weight:600; color:var(--success);">98% · 25pts</span>
+              </div>
+              <div class="score-bar-bg"><div class="score-bar-fill" style="width:98%; background:var(--success);"></div></div>
+              <p style="font-size:11px; color:var(--text3); margin-top:3px;">Never misses a booking</p>
+            </div>
+            <div class="score-row">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px; color:var(--text);">Customer Reviews</span>
+                <span style="font-size:13px; font-weight:600; color:var(--primary);">4.9★ · 25pts</span>
+              </div>
+              <div class="score-bar-bg"><div class="score-bar-fill" style="width:98%; background:var(--primary);"></div></div>
+              <p style="font-size:11px; color:var(--text3); margin-top:3px;">312 reviews, mostly 5 stars</p>
+            </div>
+            <div class="score-row">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px; color:var(--text);">Response Time</span>
+                <span style="font-size:13px; font-weight:600; color:var(--accent);">Fast · 22pts</span>
+              </div>
+              <div class="score-bar-bg"><div class="score-bar-fill" style="width:88%; background:var(--accent);"></div></div>
+              <p style="font-size:11px; color:var(--text3); margin-top:3px;">Replies within 10 minutes on average</p>
+            </div>
+            <div class="score-row">
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span style="font-size:13px; color:var(--text);">Booking Consistency</span>
+                <span style="font-size:13px; font-weight:600; color:#7C3AED;">Active · 20pts</span>
+              </div>
+              <div class="score-bar-bg"><div class="score-bar-fill" style="width:80%; background:#7C3AED;"></div></div>
+              <p style="font-size:11px; color:var(--text3); margin-top:3px;">19 bookings completed this month</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- HOW TO IMPROVE -->
+        <div style="background:var(--accent-light); border-radius:16px; padding:16px; border:1px solid rgba(245,158,11,0.3);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:10px; color:var(--text);">💡 How to improve your score</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px; flex-shrink:0;">✓</span>
+              <p style="font-size:13px; color:var(--text2);">Always show up for your bookings — show-up rate is worth 25 points</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px; flex-shrink:0;">✓</span>
+              <p style="font-size:13px; color:var(--text2);">Encourage customers to leave reviews after every service</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px; flex-shrink:0;">✓</span>
+              <p style="font-size:13px; color:var(--text2);">Reply to chat messages quickly — response time affects your score</p>
+            </div>
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px; flex-shrink:0;">✓</span>
+              <p style="font-size:13px; color:var(--text2);">Stay active — providers with 10+ bookings per month score higher</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- MONTHLY LEADERBOARD -->
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+            <p style="font-size:14px; font-weight:600; color:var(--text);">🏆 Abuja Leaderboard</p>
+            <span style="font-size:11px; color:var(--text3);">April 2026</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="leaderboard-row gold">
+              <span class="lb-rank">🥇</span>
+              <div class="lb-avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);">KJ</div>
+              <div style="flex:1;"><p style="font-size:13px; font-weight:600;">Kingsley James</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2</p></div>
+              <div class="lb-score">98</div>
+            </div>
+            <div class="leaderboard-row silver">
+              <span class="lb-rank">🥈</span>
+              <div class="lb-avatar" style="background:linear-gradient(135deg,#9CA3AF,#6B7280);">LA</div>
+              <div style="flex:1;"><p style="font-size:13px; font-weight:600;">Lash Queen Ada</p><p style="font-size:11px; color:var(--text3);">Lash Tech · Maitama</p></div>
+              <div class="lb-score">96</div>
+            </div>
+            <div class="leaderboard-row bronze">
+              <span class="lb-rank">🥉</span>
+              <div class="lb-avatar" style="background:linear-gradient(135deg,#D97706,#B45309);">GT</div>
+              <div style="flex:1;"><p style="font-size:13px; font-weight:600;">Glam Nails Temi</p><p style="font-size:11px; color:var(--text3);">Nail Tech · Garki</p></div>
+              <div class="lb-score">94</div>
+            </div>
+            <div class="leaderboard-row active-row">
+              <span class="lb-rank" style="font-size:13px; font-weight:600; color:var(--primary);">#4</span>
+              <div class="lb-avatar" style="background:var(--primary);">KB</div>
+              <div style="flex:1;"><p style="font-size:13px; font-weight:600; color:var(--primary);">Kings Barbershop</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2</p></div>
+              <div class="lb-score" style="color:var(--primary);">92</div>
+            </div>
+            <div class="leaderboard-row">
+              <span class="lb-rank">#5</span>
+              <div class="lb-avatar" style="background:#7C3AED;">ZH</div>
+              <div style="flex:1;"><p style="font-size:13px; font-weight:600;">Zara Hair Studio</p><p style="font-size:11px; color:var(--text3);">Hair · Gwarinpa</p></div>
+              <div class="lb-score">89</div>
+            </div>
+          </div>
+          <div style="margin-top:14px; padding-top:12px; border-top:1px solid var(--border); text-align:center;">
+            <p style="font-size:12px; color:var(--text3);">Top 3 providers get featured on the home screen every month</p>
+          </div>
+        </div>
+
+        <!-- ELITE BADGE INFO -->
+        <div style="background:var(--primary-light); border-radius:16px; padding:16px; border:1.5px solid rgba(232,84,122,0.2);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:8px; color:var(--primary);">🏅 What Preen Elite gets you</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:10px;"><span>⭐</span><p style="font-size:13px; color:var(--text2);">Featured placement at the top of search results</p></div>
+            <div style="display:flex; gap:10px;"><span>📌</span><p style="font-size:13px; color:var(--text2);">Elite badge on your profile visible to all customers</p></div>
+            <div style="display:flex; gap:10px;"><span>💰</span><p style="font-size:13px; color:var(--text2);">Reduced platform fee — 8% instead of 10%</p></div>
+            <div style="display:flex; gap:10px;"><span>📣</span><p style="font-size:13px; color:var(--text2);">Featured in Preen's social media posts monthly</p></div>
+          </div>
+          <p style="font-size:11px; color:var(--text3); margin-top:12px;">Maintain a score of 90+ to keep your Elite status</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER LEADERBOARD SCREEN -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>🏆 Top Providers</h3>
+      </div>
+      <div style="padding:0 20px 100px; display:flex; flex-direction:column; gap:12px;">
+        <div style="background:var(--primary-light); border-radius:14px; padding:12px 16px; border:1px solid rgba(232,84,122,0.2); text-align:center;">
+          <p style="font-size:13px; color:var(--primary); font-weight:500;">Top rated providers in Abuja this month</p>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px;" id="leaderboard-list">
+          <div class="leaderboard-row gold" onclick="showScreen('screen-provider')">
+            <span class="lb-rank">🥇</span>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);">KJ</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Kingsley James</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2 · ★ 4.9</p></div>
+            <div style="text-align:right;"><div class="lb-score">98</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+          <div class="leaderboard-row silver" onclick="showScreen('screen-provider')">
+            <span class="lb-rank">🥈</span>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#9CA3AF,#6B7280);">LA</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Lash Queen Ada</p><p style="font-size:11px; color:var(--text3);">Lash Tech · Maitama · ★ 5.0</p></div>
+            <div style="text-align:right;"><div class="lb-score">96</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+          <div class="leaderboard-row bronze" onclick="showScreen('screen-provider')">
+            <span class="lb-rank">🥉</span>
+            <div class="lb-avatar" style="background:linear-gradient(135deg,#D97706,#B45309);">GT</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Glam Nails by Temi</p><p style="font-size:11px; color:var(--text3);">Nail Tech · Garki · ★ 4.8</p></div>
+            <div style="text-align:right;"><div class="lb-score">94</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
+            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#4</span>
+            <div class="lb-avatar" style="background:var(--primary);">KB</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Kings Barbershop</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2 · ★ 4.9</p></div>
+            <div style="text-align:right;"><div class="lb-score">92</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
+            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#5</span>
+            <div class="lb-avatar" style="background:#7C3AED;">ZH</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Zara Hair Studio</p><p style="font-size:11px; color:var(--text3);">Hair · Gwarinpa · ★ 4.7</p></div>
+            <div style="text-align:right;"><div class="lb-score">89</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
+            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#6</span>
+            <div class="lb-avatar" style="background:var(--success);">SS</div>
+            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Serenity Spa</p><p style="font-size:11px; color:var(--text3);">Massage · Asokoro · ★ 4.9</p></div>
+            <div style="text-align:right;"><div class="lb-score">87</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Bookings</span></div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- WITHDRAWAL SCREEN -->
+  <div class="screen" id="screen-withdrawal">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Withdraw Funds</h3>
+      </div>
+      <div style="padding:0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
+
+        <!-- BALANCE CARD -->
+        <div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:20px; padding:24px; text-align:center;">
+          <p style="font-size:13px; color:rgba(255,255,255,0.7); margin-bottom:6px;">Available Balance</p>
+          <p style="font-size:42px; font-weight:700; color:#fff;">₦47,500</p>
+          <p style="font-size:12px; color:rgba(255,255,255,0.6); margin-top:4px;">From 19 completed bookings</p>
+          <div style="display:flex; justify-content:center; gap:20px; margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.2);">
+            <div><p style="font-size:14px; font-weight:600; color:#fff;">₦183,000</p><p style="font-size:11px; color:rgba(255,255,255,0.6);">Total Earned</p></div>
+            <div><p style="font-size:14px; font-weight:600; color:#fff;">₦135,500</p><p style="font-size:11px; color:rgba(255,255,255,0.6);">Already Withdrawn</p></div>
+          </div>
+        </div>
+
+        <!-- WITHDRAWAL METHOD -->
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:14px;">Withdrawal Method</p>
+          <div style="display:flex; flex-direction:column; gap:10px;" id="withdrawal-methods">
+            <div class="withdrawal-option selected-method" onclick="selectWithdrawalMethod(this,'bank')" id="method-bank">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:var(--primary-light); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">🏦</div>
+                <div style="flex:1;">
+                  <p style="font-size:13px; font-weight:500; color:var(--text);">Bank Transfer</p>
+                  <p style="font-size:11px; color:var(--text3); margin-top:2px;">Arrives in 1 to 2 business days</p>
+                </div>
+                <div class="method-check" style="width:20px; height:20px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px;">✓</div>
+              </div>
+            </div>
+            <div class="withdrawal-option" onclick="selectWithdrawalMethod(this,'opay')" id="method-opay">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:#E8F5E9; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">📱</div>
+                <div style="flex:1;">
+                  <p style="font-size:13px; font-weight:500; color:var(--text);">OPay</p>
+                  <p style="font-size:11px; color:var(--text3); margin-top:2px;">Instant transfer</p>
+                </div>
+                <div class="method-check" style="width:20px; height:20px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; color:transparent; font-size:12px;">✓</div>
+              </div>
+            </div>
+            <div class="withdrawal-option" onclick="selectWithdrawalMethod(this,'palmpay')" id="method-palmpay">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div style="width:40px; height:40px; background:#E3F2FD; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;">💙</div>
+                <div style="flex:1;">
+                  <p style="font-size:13px; font-weight:500; color:var(--text);">PalmPay</p>
+                  <p style="font-size:11px; color:var(--text3); margin-top:2px;">Instant transfer</p>
+                </div>
+                <div class="method-check" style="width:20px; height:20px; border-radius:50%; background:var(--border); display:flex; align-items:center; justify-content:center; color:transparent; font-size:12px;">✓</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BANK DETAILS (shown for bank transfer) -->
+        <div id="bank-details-section" style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:14px;">Bank Details</p>
+          <div class="form-group">
+            <label>Bank Name</label>
+            <select id="bank-name">
+              <option>Access Bank</option>
+              <option>GTBank</option>
+              <option>Zenith Bank</option>
+              <option>First Bank</option>
+              <option>UBA</option>
+              <option>Fidelity Bank</option>
+              <option>Sterling Bank</option>
+              <option>Wema Bank</option>
+              <option>Kuda Bank</option>
+              <option>Opay</option>
+              <option>PalmPay</option>
+              <option>Moniepoint</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Account Number</label>
+            <input type="number" id="account-number" placeholder="Enter 10-digit account number" maxlength="10"/>
+          </div>
+          <div class="form-group">
+            <label>Account Name</label>
+            <input type="text" id="account-name" placeholder="Will auto-fill after verification"/>
+          </div>
+          <button class="btn-secondary" onclick="verifyAccountNumber()" style="margin-top:4px;">Verify Account Number</button>
+        </div>
+
+        <!-- WALLET DETAILS (shown for opay/palmpay) -->
+        <div id="wallet-details-section" style="display:none; background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:14px;" id="wallet-title">OPay Details</p>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="wallet-phone" placeholder="Phone number linked to your wallet"/>
+          </div>
+          <div class="form-group">
+            <label>Account Name</label>
+            <input type="text" id="wallet-name" placeholder="Name on the wallet"/>
+          </div>
+        </div>
+
+        <!-- WITHDRAWAL AMOUNT -->
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:14px;">Withdrawal Amount</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+            <div class="tip-option" onclick="setWithdrawAmount(this, 5000)">₦5,000</div>
+            <div class="tip-option" onclick="setWithdrawAmount(this, 10000)">₦10,000</div>
+            <div class="tip-option" onclick="setWithdrawAmount(this, 20000)">₦20,000</div>
+            <div class="tip-option" onclick="setWithdrawAmount(this, 47500)">All ₦47,500</div>
+          </div>
+          <div class="form-group">
+            <label>Or enter custom amount</label>
+            <input type="number" id="withdraw-amount-input" placeholder="Enter amount in Naira" oninput="setCustomWithdrawAmount(this.value)"/>
+          </div>
+          <div id="withdraw-summary" style="display:none; margin-top:12px; padding-top:12px; border-top:1px solid var(--border);">
+            <div class="service-item"><span>Withdrawal amount</span><span class="service-price" id="withdraw-amount-display">₦0</span></div>
+            <div class="service-item"><span style="color:var(--text3);">Processing fee</span><span style="color:var(--text3);">Free</span></div>
+            <div class="service-item" style="border-top:1px solid var(--border); padding-top:10px; margin-top:2px;"><span style="font-weight:600;">You receive</span><span class="service-price" style="font-size:18px;" id="withdraw-receive-display">₦0</span></div>
+          </div>
+        </div>
+
+        <div class="booking-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Withdrawals are processed within 1 to 2 business days. Minimum withdrawal is ₦1,000. No processing fees.
+        </div>
+
+        <button class="btn-primary" onclick="requestWithdrawal()">Request Withdrawal 💸</button>
+
+        <!-- WITHDRAWAL HISTORY -->
+        <div class="section-title" style="padding:4px 0;">Withdrawal History</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="background:var(--bg2); border-radius:12px; padding:14px; border:1.5px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <div><p style="font-size:13px; font-weight:500;">Bank Transfer — GTBank</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">28 Mar 2026</p></div>
+            <div style="text-align:right;"><p style="font-size:14px; font-weight:600; color:var(--success);">₦50,000</p><span class="status completed">Completed</span></div>
+          </div>
+          <div style="background:var(--bg2); border-radius:12px; padding:14px; border:1.5px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+            <div><p style="font-size:13px; font-weight:500;">Bank Transfer — GTBank</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">15 Mar 2026</p></div>
+            <div style="text-align:right;"><p style="font-size:14px; font-weight:600; color:var(--success);">₦85,500</p><span class="status completed">Completed</span></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
