@@ -471,3 +471,111 @@ body {
 }
 .withdrawal-option:hover { border-color: var(--primary); }
 .withdrawal-option.selected-method { border-color: var(--primary); background: var(--primary-light); }
+
+/* AMENITY BUTTONS */
+.amenity-btn {
+  background: transparent;
+  border: 1.5px solid #444;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #ccc;
+  cursor: pointer;
+  font-family: Poppins, sans-serif;
+  transition: all 0.2s;
+}
+.amenity-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+
+
+/* REQUEST CARD */
+.request-card {
+  background: var(--bg2);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1.5px solid var(--border);
+  margin-bottom: 12px;
+}
+.request-card.accepted { border-color: var(--success); }
+.request-card.declined { opacity: 0.6; }
+.req-accept-btn {
+  flex: 2;
+  background: var(--success);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: Poppins, sans-serif;
+  cursor: pointer;
+}
+.req-decline-btn {
+  flex: 1;
+  background: transparent;
+  color: var(--error);
+  border: 1.5px solid var(--error);
+  border-radius: 12px;
+  padding: 13px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: Poppins, sans-serif;
+  cursor: pointer;
+}
+.req-accept-btn:disabled, .req-decline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* LIST VIEW */
+.providers-list.list-view .provider-card-new {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px;
+}
+.providers-list.list-view .provider-card-new .provider-img-wrap {
+  width: 70px !important;
+  height: 70px !important;
+  flex-shrink: 0;
+}
+
+/* WAITING SCREEN */
+#waiting-ring {
+  stroke-dasharray: 502;
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 1s linear;
+}
+
+/* PLACEHOLDER CARDS */
+.h-card-placeholder {
+  width: 120px;
+  min-width: 120px;
+  height: 150px;
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.h-card-wide-placeholder {
+  width: 200px;
+  min-width: 200px;
+  height: 160px;
+  background: linear-gradient(90deg, var(--bg2) 25%, var(--border) 50%, var(--bg2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

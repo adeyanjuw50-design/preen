@@ -72,7 +72,17 @@
       </div>
       <div class="form-group">
         <label>Phone Number</label>
-        <input type="tel" id="signup-phone" placeholder="+234 800 000 0000"/>
+        <input type="tel" id="signup-phone" placeholder="+234 800 000 0000" oninput="syncWhatsApp()"/>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp Number</label>
+        <input type="tel" id="signup-whatsapp" placeholder="+234 800 000 0000"/>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;" onclick="toggleSameWhatsApp()">
+          <div id="same-wa-check" style="width:18px;height:18px;border:2px solid var(--primary);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--primary);">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <p style="font-size:12px;color:var(--text2);">Same as phone number</p>
+        </div>
       </div>
       <div class="form-group">
         <label>Email</label>
@@ -82,7 +92,11 @@
         <label>Password</label>
         <input type="password" id="signup-password" placeholder="Create a password"/>
       </div>
-      <button class="btn-primary" onclick="handleSignup()">Create Account</button>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer;" onclick="toggleTermsCheck('cust-terms-check')">
+          <div id="cust-terms-check" style="width:20px;height:20px;border:2px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.2s;"></div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;">I agree to Preen's <span onclick="event.stopPropagation();showScreen('screen-terms')" style="color:var(--primary);font-weight:600;cursor:pointer;">Terms & Conditions</span> and <span onclick="event.stopPropagation();showScreen('screen-privacy')" style="color:var(--primary);font-weight:600;cursor:pointer;">Privacy Policy</span></p>
+        </div>
+        <button class="btn-primary" id="cust-signup-btn" onclick="handleSignup()" style="opacity:0.5;pointer-events:none;" disabled>Create Account</button>
       <p class="auth-switch">Already have an account? <span onclick="showScreen('screen-login')">Log In</span></p>
     </div>
   </div>
@@ -104,7 +118,7 @@
         <label>Password</label>
         <input type="password" id="login-password" placeholder="Enter your password"/>
       </div>
-      <p class="forgot-link">Forgot password?</p>
+      <p class="forgot-link" onclick="showScreen('screen-forgot-password')">Forgot password?</p>
       <button class="btn-primary" onclick="handleLogin()">Log In</button>
       <p class="auth-switch">Don't have an account? <span onclick="showScreen('screen-signup')">Sign Up</span></p>
       <div class="divider">or</div>
@@ -134,158 +148,91 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
 
-      <div class="search-bar" onclick="showScreen('screen-search')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <span>Search venues, professionals...</span>
+      <div style="display:flex; gap:8px; align-items:center; margin:0 20px 14px;">
+        <div class="search-bar" onclick="showScreen('screen-search')" style="flex:1; margin:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span>Search venues, professionals...</span>
+        </div>
+        <div onclick="getNearbyProviders()" style="background:var(--primary); border-radius:12px; width:46px; height:46px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; box-shadow:0 4px 12px rgba(232,84,122,0.3);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
       </div>
       <!-- TOP PROVIDERS BANNER -->
-      <div onclick="showScreen('screen-leaderboard')" style="margin:0 20px 16px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer;">
-        <span style="font-size:28px;">🏆</span>
-        <div style="flex:1;">
-          <p style="font-size:13px; font-weight:600; color:#fff;">Top Providers This Month</p>
-          <p style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:1px;">See who's leading the Abuja leaderboard</p>
+      <div onclick="showScreen('screen-leaderboard')" style="margin:0 20px 16px; background:linear-gradient(135deg,var(--primary),var(--primary-dark)); border-radius:14px; padding:14px 16px; display:flex; align-items:center; gap:12px; cursor:pointer; overflow:hidden;">
+        <span style="font-size:24px; flex-shrink:0;">🏆</span>
+        <div style="flex:1; min-width:0;">
+          <p style="font-size:13px; font-weight:600; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Top Providers This Month</p>
+          <p style="font-size:11px; color:rgba(255,255,255,0.75); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">See who's leading the Abuja leaderboard</p>
         </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2" style="flex-shrink:0;"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
 
       <!-- EXPLORE SECTION -->
       <div class="section-header"><span class="section-title">Explore</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
-      <div class="explore-grid">
-        <div class="explore-card" onclick="showCategory('Hair')" style="background-image:url('https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Hair salons</span></div>
+            <div class="explore-grid">
+        <div class="explore-card" onclick="showCategory('Hair')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/v1778983776/guilherme-petri-PtOfbGkU3uI-unsplash_tabwja.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Hair</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Barber')" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Barbers</span></div>
+        <div class="explore-card" onclick="showCategory('Barber')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/v1778984144/joshua-lawrence-dU6eE_j2My8-unsplash_ng6lsk.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Barber</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Nails')" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Nails</span></div>
+        <div class="explore-card" onclick="showCategory('Nails')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779187595/7f15d23b58901cd1ed7a1c09ed4013d5_1_fgktii.jpg');background-size:cover;background-position:bottom;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Nails</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Massage')" style="background-image:url('https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Massage</span></div>
+        <div class="explore-card" onclick="showCategory('Makeup')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779187353/47fb8976bbdfb0d65ab38604c70f37ea_bsbwec.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Makeup</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Makeup')" style="background-image:url('https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Makeup</span></div>
+        <div class="explore-card" onclick="showCategory('Massage')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779128034/536d38fcd4e72d474fdd1c0f7452c2f7_et4scu.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Massage</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Lash')" style="background-image:url('https://images.unsplash.com/photo-1583001931096-959e9a1a6223?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Lash</span></div>
+        <div class="explore-card" onclick="showCategory('Lash')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779127862/bfcc0620b883b485b320d4e2692784ed_ro982z.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Lash</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Wig Stylist')" style="background-image:url('https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Wig Stylist</span></div>
+        <div class="explore-card" onclick="showCategory('Wig Stylist')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779186891/b7d7fb37094a5c30d7956c14fa78a572_1_zrd1jk.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Wig Stylist</span></div>
         </div>
-        <div class="explore-card" onclick="showCategory('Gele Tying')" style="background-image:url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80'); background-size:cover; background-position:center; position:relative; overflow:hidden;">
-          <div style="background:linear-gradient(to top, rgba(0,0,0,0.7), transparent); position:absolute; bottom:0; left:0; right:0; padding:12px; border-radius:0 0 14px 14px;"><span>Gele Tying</span></div>
-        </div>
-      </div>
-
-      <!-- RECENTLY VIEWED -->
-      <div class="section-header"><span class="section-title">Recently Viewed</span><span class="see-all">See all</span></div>
-      <div class="h-scroll">
-        <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80'); background-size:cover; background-position:center;"></div>
-          <p class="h-card-name">Kings Barbershop</p>
-          <p class="h-card-meta">★ 4.9 · Wuse 2</p>
-        </div>
-        <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80'); background-size:cover; background-position:center;"></div>
-          <p class="h-card-name">Glam Nails by Temi</p>
-          <p class="h-card-meta">★ 4.8 · Garki</p>
-        </div>
-        <div class="h-card" onclick="showScreen('screen-provider')">
-          <div class="h-card-img" style="background-image:url('https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80'); background-size:cover; background-position:center;"></div>
-          <p class="h-card-name">Lash Queen Ada</p>
-          <p class="h-card-meta">★ 5.0 · Maitama</p>
+        <div class="explore-card" onclick="showCategory('Gele Tying')" style="background-image:url('https://res.cloudinary.com/dwyss58sr/image/upload/q_auto/f_auto/v1779128398/31258fc0e267615e959cee440e93ec86_pltpce.jpg');background-size:cover;background-position:center;position:relative;overflow:hidden;">
+          <div style="background:linear-gradient(to top,rgba(0,0,0,0.7),transparent);position:absolute;bottom:0;left:0;right:0;padding:12px;text-align:center;"><span style="color:#fff;font-size:13px;font-weight:600;">Gele Tying</span></div>
         </div>
       </div>
 
-      <!-- RECOMMENDED -->
-      <div class="section-header"><span class="section-title">Recommended for You</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
-      <div class="h-scroll">
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge">★ 4.9</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Kings Barbershop</p>
-            <p class="h-card-meta">Wuse 2, Abuja · 0.8km</p>
-            <p class="h-card-price">From ₦1,000</p>
-          </div>
-        </div>
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1562322140-8baeececf3df?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge">★ 4.7</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Zara Hair Studio</p>
-            <p class="h-card-meta">Gwarinpa, Abuja · 3.4km</p>
-            <p class="h-card-price">From ₦8,000</p>
-          </div>
-        </div>
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge">★ 4.8</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Glam Nails by Temi</p>
-            <p class="h-card-meta">Garki, Abuja · 1.2km</p>
-            <p class="h-card-price">From ₦5,000</p>
-          </div>
+      <!-- RECENTLY VIEWED - hidden until user views providers -->
+      <div id="section-recently-viewed">
+        <div class="section-header"><span class="section-title">Recently Viewed</span><span class="see-all" onclick="showSectionResults('recent')">See all</span></div>
+        <div class="h-scroll" id="recently-viewed">
+          <div class="h-card-placeholder"></div>
+          <div class="h-card-placeholder"></div>
+          <div class="h-card-placeholder"></div>
         </div>
       </div>
 
-      <!-- NEW TO PREEN -->
-      <div class="section-header"><span class="section-title">New to Preen</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
-      <div class="h-scroll">
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge new">New</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Serenity Spa</p>
-            <p class="h-card-meta">Asokoro, Abuja · 4.1km</p>
-            <p class="h-card-price">From ₦15,000</p>
-          </div>
-        </div>
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge new">New</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Glow Makeup Studio</p>
-            <p class="h-card-meta">Wuse 2, Abuja · 1.5km</p>
-            <p class="h-card-price">From ₦10,000</p>
-          </div>
+      <!-- RECOMMENDED - hidden until user has browse history -->
+      <div id="section-recommended-providers">
+        <div class="section-header"><span class="section-title">Recommended for You</span><span class="see-all" onclick="showSectionResults('recommended')">See all</span></div>
+        <div class="h-scroll" id="recommended-providers">
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
         </div>
       </div>
 
-      <!-- TRENDING -->
-      <div class="section-header"><span class="section-title">Trending</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
-      <div class="h-scroll" style="padding-bottom: 100px;">
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge trending">🔥 Hot</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Lash Queen Ada</p>
-            <p class="h-card-meta">Maitama, Abuja · 2.1km</p>
-            <p class="h-card-price">From ₦8,000</p>
-          </div>
+      <!-- NEW TO PREEN - hidden until providers exist -->
+      <div id="section-new-providers">
+        <div class="section-header"><span class="section-title">New to Preen</span><span class="see-all" onclick="showSectionResults('new')">See all</span></div>
+        <div class="h-scroll" id="new-providers">
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
         </div>
-        <div class="h-card-wide" onclick="showScreen('screen-provider')">
-          <div class="h-card-wide-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
-            
-            <div class="h-card-wide-badge trending">🔥 Hot</div>
-          </div>
-          <div class="h-card-wide-info">
-            <p class="h-card-name">Kings Barbershop</p>
-            <p class="h-card-meta">Wuse 2, Abuja · 0.8km</p>
-            <p class="h-card-price">From ₦1,000</p>
-          </div>
+      </div>
+
+      <!-- TRENDING - hidden until providers exist -->
+      <div id="section-trending-providers">
+        <div class="section-header"><span class="section-title">Trending in Your City</span><span class="see-all" onclick="showScreen('screen-search')">See all</span></div>
+        <div class="h-scroll" id="trending-providers" style="padding-bottom:100px;">
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
+          <div class="h-card-wide-placeholder"></div>
         </div>
       </div>
 
@@ -319,7 +266,7 @@
           <input type="text" id="search-input" placeholder="All treatments" oninput="filterProviders(this.value)"/>
           <span style="font-size:11px; color:#888;">Current location</span>
         </div>
-        <div class="search-list-btn" onclick="toggleSearchView()">☰</div>
+        <div class="search-list-btn" onclick="toggleListView(this)" style="cursor:pointer;">☰</div>
       </div>
 
       <div class="search-filters">
@@ -329,14 +276,57 @@
         <div class="filter-pill" onclick="toggleSortDropdown()">
           Best match <span>▾</span>
         </div>
-        <div class="filter-pill" onclick="setSearchFilter(this, 'amenities')">
+        <div class="filter-pill" onclick="toggleAmenitiesDropdown()">
           Amenities <span>▾</span>
         </div>
-        <div class="filter-pill" onclick="setSearchFilter(this, 'price')">
+        <div class="filter-pill" onclick="togglePriceDropdown()">
           Price <span>▾</span>
         </div>
-        <div class="filter-pill" onclick="setSearchFilter(this, 'verified')">
+        <div class="filter-pill" onclick="filterVerifiedOnly(this)">
           ✓ Only verified
+        </div>
+      </div>
+
+      <!-- AMENITIES DROPDOWN -->
+      <div id="amenities-dropdown" style="display:none; margin:0 20px 12px; background:#1a1a1a; border-radius:14px; border:1px solid #333; padding:16px;">
+        <p style="font-size:12px; color:#888; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px;">Filter by Amenities</p>
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;">
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Home Visits')">Home Visits</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Walk-in')">Walk-in</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Verified Only')">Verified Only</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Available Now')">Available Now</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Accepts Card')">Accepts Card</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Elite Only')">Elite Only</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Weekends')">Weekends</button>
+          <button class="amenity-btn" onclick="toggleAmenity(this,'Late Night')">Late Night</button>
+        </div>
+        <button onclick="applyAmenityFilter()" style="width:100%; background:var(--primary); color:#fff; border:none; border-radius:10px; padding:13px; font-size:14px; font-weight:600; font-family:Poppins,sans-serif; cursor:pointer;">Apply</button>
+      </div>
+
+      <!-- PRICE DROPDOWN -->
+      <div id="price-dropdown" style="display:none; margin:0 20px 12px; background:#1a1a1a; border-radius:14px; border:1px solid #333; padding:20px;">
+        <p style="font-size:12px; color:#888; margin-bottom:16px; text-transform:uppercase; letter-spacing:0.5px;">Set Your Budget</p>
+        <div style="display:flex; gap:12px; margin-bottom:16px;">
+          <div style="flex:1;">
+            <p style="font-size:11px; color:#888; margin-bottom:6px;">Min Price (₦)</p>
+            <input type="number" id="price-min-input" placeholder="e.g. 5000"
+              style="width:100%; background:#222; border:1.5px solid #444; border-radius:10px; padding:12px; font-size:14px; font-family:Poppins,sans-serif; color:#fff; outline:none;"
+              oninput="updatePriceInputs()" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#444'"/>
+          </div>
+          <div style="display:flex; align-items:flex-end; padding-bottom:12px; color:#666; font-size:18px;">—</div>
+          <div style="flex:1;">
+            <p style="font-size:11px; color:#888; margin-bottom:6px;">Max Price (₦)</p>
+            <input type="number" id="price-max-input" placeholder="e.g. 50000"
+              style="width:100%; background:#222; border:1.5px solid #444; border-radius:10px; padding:12px; font-size:14px; font-family:Poppins,sans-serif; color:#fff; outline:none;"
+              oninput="updatePriceInputs()" onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#444'"/>
+          </div>
+        </div>
+        <div id="price-preview" style="display:none; background:#222; border-radius:10px; padding:10px 14px; margin-bottom:14px; text-align:center;">
+          <p style="font-size:13px; color:#fff;" id="price-preview-text"></p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button onclick="clearPriceFilter()" style="flex:1; background:transparent; border:1.5px solid #444; border-radius:10px; padding:12px; font-size:13px; font-weight:600; color:#888; font-family:Poppins,sans-serif; cursor:pointer;">Clear</button>
+          <button onclick="applyPriceFilter()" style="flex:2; background:var(--primary); color:#fff; border:none; border-radius:10px; padding:12px; font-size:13px; font-weight:600; font-family:Poppins,sans-serif; cursor:pointer;">Show Results</button>
         </div>
       </div>
 
@@ -390,7 +380,7 @@
 
       <div id="search-results" class="providers-list" style="padding-bottom: 100px;">
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;">
+          <div class="provider-card-img" style="background:linear-gradient(135deg,#E8F4FD,#BFDBFE); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.9</div>
           </div>
           <div class="provider-card-body">
@@ -407,7 +397,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1604654894610-df63bc536371?w=300&q=80); background-size:cover; background-position:center;">
+          <div class="provider-card-img" style="background:linear-gradient(135deg,#FEF3C7,#FDE68A); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.8</div>
           </div>
           <div class="provider-card-body">
@@ -424,7 +414,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1560869713-7d0a29430803?w=300&q=80); background-size:cover; background-position:center;">
+          <div class="provider-card-img" style="background:linear-gradient(135deg,#EDE9FE,#C8B8FC); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 5.0</div>
           </div>
           <div class="provider-card-body">
@@ -441,7 +431,7 @@
         </div>
 
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1562322140-8baeececf3df?w=300&q=80); background-size:cover; background-position:center;">
+          <div class="provider-card-img" style="background:linear-gradient(135deg,#ECFDF5,#A7F3D0); background-size:cover; background-position:center;">
             <div class="provider-card-rating-badge">★ 4.7</div>
           </div>
           <div class="provider-card-body">
@@ -483,7 +473,7 @@
   <div class="screen" id="screen-provider">
     <div class="app-screen">
       <!-- COVER -->
-      <div class="provider-cover-new" style="background-image:url('https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80'); background-size:cover; background-position:center;">
+      <div class="provider-cover-new" style="background-image:linear-gradient(135deg, var(--primary-light), #FCB8CB); background-size:cover; background-position:center;">
         <div style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.3);"></div>
         <div class="provider-cover-actions" style="z-index:2;">
           <div class="back-btn light" onclick="goBack()">&#8592;</div>
@@ -536,20 +526,20 @@
         <div class="tab" onclick="switchTab(this, 'tab-team')">Team</div>
         <div class="tab" onclick="switchTab(this, 'tab-reviews')">Reviews</div>
         <div class="tab" onclick="switchTab(this, 'tab-about')">About</div>
+        <div class="tab" onclick="openReportBlock()" style="color:var(--text3);">• • •</div>
       </div>
 
             <!-- TAB: PHOTOS -->
       <div class="tab-content active" id="tab-photos">
-        <div class="photos-grid">
-          <div class="photo-item" onclick="openGallery(0)" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80); background-size:cover; background-position:center; grid-column: span 2; cursor:pointer;"></div>
-          <div class="photo-item" onclick="openGallery(1)" style="background-image:url(https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
-          <div class="photo-item" onclick="openGallery(2)" style="background-image:url(https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
-          <div class="photo-item" onclick="openGallery(3)" style="background-image:url(https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
-          <div class="photo-item" onclick="openGallery(4)" style="background-image:url(https://images.unsplash.com/photo-1581591524425-c7e0978865fc?w=400&q=80); background-size:cover; background-position:center; cursor:pointer;"></div>
+        <div id="provider-photos-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:16px;">
+          <!-- Photos loaded from provider profile -->
+        </div>
+        <div id="provider-photos-empty" style="text-align:center;padding:60px 20px;">
+          <p style="font-size:40px;margin-bottom:12px;">📷</p>
+          <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px;">No photos yet</p>
+          <p style="font-size:13px;color:var(--text3);">This provider hasn't uploaded their work photos yet</p>
         </div>
       </div>
-
-      <!-- TAB: SERVICES -->
       <div class="tab-content" id="tab-services">
         <div style="padding: 16px 20px;">
           <p style="font-size:13px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Haircuts</p>
@@ -588,7 +578,7 @@
           <div class="service-row" onclick="showScreen('screen-booking')">
             <div>
               <p style="font-size:14px; font-weight:500;">Beard Trim & Shape</p>
-              <p style="font-size:12px; color:#888; margin-top:2px;">30 min</p>
+              <p style="font-size:12px; color:#888; margin-top:2px;">15 min</p>
             </div>
             <div style="text-align:right;">
               <p style="font-size:14px; font-weight:600; color:#F59E0B;">₦1,500</p>
@@ -740,11 +730,14 @@
         <div class="back-btn" onclick="goBack()">&#8592;</div>
         <h3>Select Location</h3>
       </div>
-      <div class="search-bar" style="margin: 1rem;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Search state..." oninput="filterStates(this.value)" style="background:transparent;border:none;outline:none;color:#F9FAFB;font-size:14px;width:100%;"/>
+      <div style="padding:16px 20px;">
+        <div style="background:var(--bg2);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search your state..." oninput="filterStates(this.value)"
+            style="background:transparent;border:none;outline:none;color:var(--text);font-size:14px;width:100%;font-family:Poppins,sans-serif;"/>
+        </div>
       </div>
-      <div class="states-list" id="states-list"></div>
+      <div style="padding:0 20px 100px;" id="states-list"></div>
     </div>
   </div>
 
@@ -783,7 +776,7 @@
               <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦2,500</span><div class="service-check">✓</div></div>
             </div>
             <div class="service-select-item" onclick="toggleService(this, 'Beard Trim & Shape', 1500)">
-              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Beard Trim & Shape</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">30 min</p></div>
+              <div><p style="font-size:13px; font-weight:500; color:var(--text);">Beard Trim & Shape</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">15 min</p></div>
               <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦1,500</span><div class="service-check">✓</div></div>
             </div>
             <div class="service-select-item" onclick="toggleService(this, 'Full Cut + Beard', 3500)">
@@ -976,6 +969,7 @@
         <div><p class="profile-name" id="profile-name">Kayode A.</p><p class="profile-email" id="profile-email">kayode@email.com</p></div>
       </div>
       <div class="profile-menu">
+        <div class="menu-item" onclick="loadEditProfile()"><span>✏️ Edit Profile</span><span>›</span></div>
         <div class="menu-item" onclick="showScreen('screen-bookings')"><span>📅 My Bookings</span><span>›</span></div>
         <div class="menu-item" onclick="showScreen('screen-saved')"><span>❤️ Saved Providers</span><span>›</span></div>
         <div class="menu-item" onclick="showScreen('screen-payment')"><span>💳 Payment Methods</span><span>›</span></div>
@@ -983,6 +977,8 @@
         <div class="menu-item" onclick="showScreen('screen-loyalty')"><span>⭐ Loyalty Points</span><span>›</span></div>
         <div class="menu-item" onclick="showScreen('screen-notifications')"><span>🔔 Notifications</span><span>›</span></div>
         <div class="menu-item" onclick="showScreen('screen-terms')"><span>📋 Terms & Conditions</span><span>›</span></div>
+        <div class="menu-item" onclick="showScreen('screen-privacy')"><span>🔒 Privacy Policy</span><span>›</span></div>
+        <div class="menu-item danger" onclick="showScreen('screen-close-account')"><span>❌ Close Account</span><span>›</span></div>
         <div class="menu-item danger" onclick="showScreen('screen-welcome')"><span>🚪 Sign Out</span><span>›</span></div>
       </div>
       <div class="bottom-nav">
@@ -1000,7 +996,7 @@
       <div class="inner-header"><div class="back-btn" onclick="goBack()">&#8592;</div><h3>Saved Providers</h3></div>
       <div class="providers-list">
         <div class="provider-card-new" onclick="showScreen('screen-provider')">
-          <div class="provider-card-img" style="background-image:url(https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&q=80); background-size:cover; background-position:center;"><div class="provider-card-rating-badge">★ 4.9</div></div>
+          <div class="provider-card-img" style="background:linear-gradient(135deg,#FDF2F8,#FBCFE8); background-size:cover; background-position:center;"><div class="provider-card-rating-badge">★ 4.9</div></div>
           <div class="provider-card-body"><div class="provider-card-top"><p class="provider-name">Kings Barbershop <span class="verified-dot">✓</span></p><p style="font-size:11px; color:#888;">0.8km · Wuse 2, Abuja</p></div><div class="provider-service-preview"><span>Signature Fade</span><span class="service-price-sm">₦2,500</span></div></div>
         </div>
       </div>
@@ -1089,11 +1085,39 @@
       <h2>Join as Provider</h2>
       <p class="auth-sub">Start accepting bookings today</p>
       <div class="form-group"><label>Full Name</label><input type="text" id="prov-name" placeholder="Your name or business name"/></div>
-      <div class="form-group"><label>Service Category</label><select id="prov-category"><option>Barber</option><option>Hair Stylist</option><option>Nail Tech</option><option>Lash Tech</option><option>Makeup Artist</option><option>Massage Therapist</option><option>Spa</option></select></div>
-      <div class="form-group"><label>Phone Number</label><input type="tel" id="prov-phone" placeholder="+234 800 000 0000"/></div>
+      <div class="form-group"><label>Service Category</label><select id="prov-category">
+            <option value="">Select your category</option>
+            <option>Barber</option>
+            <option>Hair Stylist</option>
+            <option>Nail Tech</option>
+            <option>Lash Tech</option>
+            <option>Makeup Artist</option>
+            <option>Massage Therapist</option>
+            <option>Wig Stylist</option>
+            <option>Gele Tying</option>
+            <option>Skincare Specialist</option>
+            <option>Spa / Sauna</option>
+            <option>MedSpa</option>
+            <option>Other</option>
+          </select></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="prov-phone" placeholder="+234 800 000 0000" oninput="syncProviderWhatsApp()"/></div>
+      <div class="form-group">
+        <label>WhatsApp Number</label>
+        <input type="tel" id="prov-whatsapp" placeholder="+234 800 000 0000"/>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:6px;cursor:pointer;" onclick="toggleProviderSameWhatsApp()">
+          <div id="prov-same-wa-check" style="width:18px;height:18px;border:2px solid var(--primary);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--primary);">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <p style="font-size:12px;color:var(--text2);">Same as phone number</p>
+        </div>
+      </div>
       <div class="form-group"><label>Email</label><input type="email" id="prov-email-signup" placeholder="Enter your email"/></div>
       <div class="form-group"><label>Password</label><input type="password" id="prov-password" placeholder="Create a password"/></div>
-      <button class="btn-primary" onclick="handleProviderSignup()">Create Provider Account</button>
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;cursor:pointer;" onclick="toggleTermsCheck('prov-terms-check')">
+          <div id="prov-terms-check" style="width:20px;height:20px;border:2px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all 0.2s;"></div>
+          <p style="font-size:12px;color:var(--text2);line-height:1.6;">I agree to Preen's <span onclick="event.stopPropagation();showScreen('screen-terms')" style="color:var(--primary);font-weight:600;cursor:pointer;">Terms & Conditions</span> and <span onclick="event.stopPropagation();showScreen('screen-privacy')" style="color:var(--primary);font-weight:600;cursor:pointer;">Privacy Policy</span></p>
+        </div>
+        <button class="btn-primary" id="prov-signup-btn" onclick="handleProviderSignup()" style="opacity:0.5;pointer-events:none;" disabled>Create Provider Account</button>
     </div>
   </div>
 
@@ -1171,6 +1195,10 @@
           <span style="font-size:24px;">📸</span>
           <p>Upload Skills</p>
         </div>
+        <div class="quick-action" onclick="loadProviderEditProfile()">
+          <span style="font-size:24px;">✏️</span>
+          <p>Edit Profile</p>
+        </div>
         <div class="quick-action" onclick="showScreen('screen-provider-earnings')">
           <span style="font-size:24px;">💰</span>
           <p>View Earnings</p>
@@ -1191,6 +1219,11 @@
           <span style="font-size:24px;">📅</span>
           <p>Calendar</p>
         </div>
+        <div class="quick-action" onclick="showScreen('screen-booking-requests')" style="position:relative;">
+          <span style="font-size:24px;">🔔</span>
+          <p>Requests</p>
+          <div style="position:absolute; top:10px; right:10px; background:var(--primary); color:#fff; border-radius:50%; width:18px; height:18px; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700;">3</div>
+        </div>
         <div class="quick-action" onclick="showScreen('screen-provider-notifications')">
           <span style="font-size:24px;">🔔</span>
           <p>Notifications</p>
@@ -1206,7 +1239,7 @@
       </div>
 
       <!-- TODAY'S BOOKINGS -->
-      <div class="section-header"><span class="section-title">Today's Bookings</span><span class="see-all" onclick="showScreen('screen-provider-all-bookings')">See all</span></div>
+      <div class="section-header"><span class="section-title">Today's Bookings</span><span class="see-all" onclick="showScreen('screen-booking-requests')">See all</span></div>
       <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
         <div class="prov-booking-card">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -1250,7 +1283,7 @@
       </div>
 
       <!-- UPCOMING -->
-      <div class="section-header"><span class="section-title">Upcoming This Week</span><span class="see-all" onclick="showScreen('screen-provider-all-bookings')">See all</span></div>
+      <div class="section-header"><span class="section-title">Upcoming This Week</span><span class="see-all" onclick="showScreen('screen-booking-requests')">See all</span></div>
       <div style="padding: 0 20px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 100px;">
         <div class="prov-booking-card">
           <div style="display:flex; align-items:center; gap:12px;">
@@ -1289,7 +1322,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           <span>Earnings</span>
         </div>
-        <div class="nav-item" onclick="showScreen('screen-provider-all-bookings')">
+        <div class="nav-item" onclick="showScreen('screen-booking-requests')">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
           <span>Bookings</span>
         </div>
@@ -1374,10 +1407,31 @@
         <div class="booking-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Providers with photos and videos get 3x more bookings.</div>
         <div class="form-group"><label>Skill Name</label><input type="text" id="skill-name" placeholder="e.g. Signature Fade, Gel Nails"/></div>
         <div class="form-group">
+          <label>Price for this skill (₦)</label>
+          <input type="number" id="skill-price" placeholder="e.g. 10000" min="0"/>
+        </div>
+        <div class="form-group">
+          <label>How long does this take?</label>
+          <select id="skill-duration">
+            <option value="">Select duration</option>
+            <option value="15 mins">15 minutes</option>
+            <option value="30 mins">30 minutes</option>
+            <option value="45 mins">45 minutes</option>
+            <option value="1 hour">1 hour</option>
+            <option value="1.5 hours">1.5 hours</option>
+            <option value="2 hours">2 hours</option>
+            <option value="2.5 hours">2.5 hours</option>
+            <option value="3 hours">3 hours</option>
+            <option value="3.5 hours">3.5 hours</option>
+            <option value="4 hours">4 hours</option>
+            <option value="4+ hours">4+ hours</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label>Upload a Photo of your work</label>
-          <label for="skill-photo-input" class="upload-box" id="photo-upload-box" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:140px;">
+          <label for="skill-photo-input" class="upload-box" id="photo-upload-box" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:140px; overflow:hidden; position:relative;">
             <input type="file" id="skill-photo-input" accept="image/*" style="display:none;" onchange="handleSkillPhoto(this)"/>
-            <div id="photo-preview" style="display:none; width:100%; height:140px; border-radius:10px; background-size:cover; background-position:center;"></div>
+            <img id="photo-preview" style="display:none; width:100%; height:160px; object-fit:cover; border-radius:10px;" src=""/>
             <div id="photo-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
               <p style="font-size:14px; color:var(--primary); font-weight:600;">Tap to upload photo</p>
@@ -1389,13 +1443,14 @@
           <label>Upload a Video (max 60 seconds)</label>
           <label for="skill-video-input" class="upload-box" id="video-upload-box" style="cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:140px;">
             <input type="file" id="skill-video-input" accept="video/*" style="display:none;" onchange="handleSkillVideo(this)"/>
-            <div id="video-preview" style="display:none; width:100%;"></div>
+            <video id="video-preview" style="display:none; width:100%; border-radius:10px; max-height:200px;" controls></video>
             <div id="video-placeholder" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
               <p style="font-size:14px; color:var(--text2); font-weight:600;">Tap to upload video</p>
-              <p style="font-size:12px; color:var(--primary); font-weight:500;">Gets you a Verified badge ✓</p>
+              <p style="font-size:12px; color:var(--primary); font-weight:500;">Speeds up your verification review ✓</p>
             </div>
           </label>
+          <p id="video-upload-progress" style="display:none; font-size:12px; color:var(--primary); margin-top:6px; text-align:center;"></p>
         </div>
         <div id="skill-list" style="display:flex; flex-direction:column; gap:10px;"></div>
         <button class="btn-primary" onclick="addSkill()">+ Add This Skill</button>
@@ -1407,9 +1462,9 @@
   <!-- VERIFIED -->
   <div class="screen" id="screen-verified">
     <div class="app-screen center">
-      <div style="font-size:64px;">🏅</div>
-      <h2>You're Verified!</h2>
-      <p class="success-sub">Your profile now shows a Verified badge.</p>
+      <div style="font-size:64px;">📋</div>
+      <h2>Skills Submitted!</h2>
+      <p class="success-sub">Our team will review and verify you within 24 hours.</p>
       <div class="success-card">
         <div class="success-row"><span>Status</span><span style="color:#22c55e;">✓ Verified Provider</span></div>
         <div class="success-row"><span>Skills Added</span><span id="skills-count">0</span></div>
@@ -2175,42 +2230,7 @@
           <p style="font-size:13px; color:var(--primary); font-weight:500;">Top rated providers in Abuja this month</p>
         </div>
         <div style="display:flex; flex-direction:column; gap:10px;" id="leaderboard-list">
-          <div class="leaderboard-row gold" onclick="showScreen('screen-provider')">
-            <span class="lb-rank">🥇</span>
-            <div class="lb-avatar" style="background:linear-gradient(135deg,#F59E0B,#D97706);">KJ</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Kingsley James</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2 · ★ 4.9</p></div>
-            <div style="text-align:right;"><div class="lb-score">98</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
-          <div class="leaderboard-row silver" onclick="showScreen('screen-provider')">
-            <span class="lb-rank">🥈</span>
-            <div class="lb-avatar" style="background:linear-gradient(135deg,#9CA3AF,#6B7280);">LA</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Lash Queen Ada</p><p style="font-size:11px; color:var(--text3);">Lash Tech · Maitama · ★ 5.0</p></div>
-            <div style="text-align:right;"><div class="lb-score">96</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
-          <div class="leaderboard-row bronze" onclick="showScreen('screen-provider')">
-            <span class="lb-rank">🥉</span>
-            <div class="lb-avatar" style="background:linear-gradient(135deg,#D97706,#B45309);">GT</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Glam Nails by Temi</p><p style="font-size:11px; color:var(--text3);">Nail Tech · Garki · ★ 4.8</p></div>
-            <div style="text-align:right;"><div class="lb-score">94</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
-          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
-            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#4</span>
-            <div class="lb-avatar" style="background:var(--primary);">KB</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Kings Barbershop</p><p style="font-size:11px; color:var(--text3);">Barber · Wuse 2 · ★ 4.9</p></div>
-            <div style="text-align:right;"><div class="lb-score">92</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
-          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
-            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#5</span>
-            <div class="lb-avatar" style="background:#7C3AED;">ZH</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Zara Hair Studio</p><p style="font-size:11px; color:var(--text3);">Hair · Gwarinpa · ★ 4.7</p></div>
-            <div style="text-align:right;"><div class="lb-score">89</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
-          <div class="leaderboard-row" onclick="showScreen('screen-provider')">
-            <span class="lb-rank" style="font-size:14px; font-weight:700; color:var(--text2);">#6</span>
-            <div class="lb-avatar" style="background:var(--success);">SS</div>
-            <div style="flex:1;"><p style="font-size:14px; font-weight:600;">Serenity Spa</p><p style="font-size:11px; color:var(--text3);">Massage · Asokoro · ★ 4.9</p></div>
-            <div style="text-align:right;"><div class="lb-score">87</div><p style="font-size:9px; color:var(--text3);">Preen Score</p></div>
-          </div>
+          <!-- Loaded from Supabase -->
         </div>
       </div>
       <div class="bottom-nav">
@@ -2364,6 +2384,542 @@
           </div>
         </div>
 
+      </div>
+    </div>
+  </div>
+
+
+  <!-- FORGOT PASSWORD SCREEN -->
+  <div class="screen" id="screen-forgot-password">
+    <div class="auth-screen">
+      <div class="auth-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <div class="logo-text small">Preen</div>
+      </div>
+      <h2>Reset Password</h2>
+      <p class="auth-sub">Enter your email and we will send you a reset link</p>
+      <div id="forgot-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="forgot-email" placeholder="Enter your email"/>
+        </div>
+        <button class="btn-primary" onclick="sendResetEmail()">Send Reset Link</button>
+        <button class="btn-secondary" style="margin-top:10px;" onclick="goBack()">Back to Login</button>
+      </div>
+      <div id="forgot-success" style="display:none; text-align:center; padding:20px 0;">
+        <div style="font-size:56px; margin-bottom:16px;">📧</div>
+        <h3 style="font-size:18px; font-weight:700; margin-bottom:8px;">Check your email</h3>
+        <p style="font-size:13px; color:var(--text3); line-height:1.7; margin-bottom:20px;">We sent a password reset link to <strong id="forgot-sent-to"></strong>. Check your inbox and follow the link.</p>
+        <button class="btn-primary" onclick="showScreen('screen-login')">Back to Login</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PROFILE SCREEN -->
+  <div class="screen" id="screen-edit-profile">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Edit Profile</h3>
+      </div>
+      <div style="padding:0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
+        
+        <!-- Profile Photo -->
+        <div style="display:flex; flex-direction:column; align-items:center; padding:20px 0;">
+          <div id="edit-profile-avatar" onclick="uploadEditProfilePhoto()" style="width:90px; height:90px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:700; color:#fff; cursor:pointer; position:relative; overflow:hidden;">
+            AK
+          </div>
+          <p onclick="uploadEditProfilePhoto()" style="font-size:12px; color:var(--primary); margin-top:8px; cursor:pointer; font-weight:500;">Change Photo</p>
+          <input type="file" id="edit-photo-input" accept="image/*" style="display:none;" onchange="handleEditProfilePhoto(this)"/>
+        </div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="edit-full-name" placeholder="Your full name"/>
+        </div>
+        <div class="form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="edit-phone" placeholder="+234 800 000 0000"/>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="edit-email" placeholder="Your email"/>
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" id="edit-location" placeholder="Your city e.g. Wuse 2, Abuja" onclick="showScreen('screen-location')"/>
+        </div>
+
+        <div style="background:var(--bg2); border-radius:14px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:14px;">Change Password</p>
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="current-password" placeholder="Enter current password"/>
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="new-password" placeholder="Enter new password"/>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm new password"/>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="saveEditProfile()">Save Changes</button>
+        <button class="btn-secondary" onclick="goBack()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOSE ACCOUNT SCREEN -->
+  <div class="screen" id="screen-close-account">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Close Account</h3>
+      </div>
+      <div style="padding:0 20px; display:flex; flex-direction:column; gap:16px; padding-bottom:40px;">
+        <div style="background:#FEF2F2; border-radius:16px; padding:20px; border:1.5px solid #FECACA; text-align:center;">
+          <div style="font-size:48px; margin-bottom:12px;">⚠️</div>
+          <p style="font-size:16px; font-weight:700; color:var(--error); margin-bottom:8px;">Are you sure?</p>
+          <p style="font-size:13px; color:var(--text2); line-height:1.7;">Closing your account is permanent. All your bookings, reviews and data will be deleted and cannot be recovered.</p>
+        </div>
+        <div style="background:var(--bg2); border-radius:14px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:13px; font-weight:500; margin-bottom:12px;">Before you go — tell us why:</p>
+          <div style="display:flex; flex-direction:column; gap:8px;" id="close-reasons">
+            <div class="service-select-item" onclick="selectCloseReason(this)"><span style="font-size:13px;">I found a better alternative</span><div class="service-check">✓</div></div>
+            <div class="service-select-item" onclick="selectCloseReason(this)"><span style="font-size:13px;">I no longer need this service</span><div class="service-check">✓</div></div>
+            <div class="service-select-item" onclick="selectCloseReason(this)"><span style="font-size:13px;">Privacy concerns</span><div class="service-check">✓</div></div>
+            <div class="service-select-item" onclick="selectCloseReason(this)"><span style="font-size:13px;">Too many notifications</span><div class="service-check">✓</div></div>
+            <div class="service-select-item" onclick="selectCloseReason(this)"><span style="font-size:13px;">Other reason</span><div class="service-check">✓</div></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Type DELETE to confirm</label>
+          <input type="text" id="delete-confirm" placeholder="Type DELETE here"/>
+        </div>
+        <button class="btn-primary" style="background:var(--error); box-shadow:0 4px 15px rgba(239,68,68,0.3);" onclick="closeAccount()">Close My Account Permanently</button>
+        <button class="btn-secondary" onclick="goBack()">Keep My Account</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- FORGOT PASSWORD SCREEN -->
+
+  <!-- EDIT PROFILE SCREEN (Customer) -->
+
+  <!-- CLOSE ACCOUNT SCREEN -->
+
+  <!-- PRIVACY POLICY SCREEN -->
+  <div class="screen" id="screen-privacy">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Privacy Policy</h3>
+      </div>
+      <div style="padding:0 20px 40px; display:flex; flex-direction:column; gap:16px;">
+        <p style="font-size:12px; color:var(--text3);">Last updated: May 2026</p>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">1. Information We Collect</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">We collect information you provide when creating an account including your name, email address, phone number and location. We also collect booking information and payment details processed through our secure payment provider Paystack.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">2. How We Use Your Information</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">We use your information to process bookings, send appointment reminders, improve our services and communicate important updates. We never sell your personal data to third parties.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">3. Location Data</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">We request access to your location to show you nearby service providers. You can disable location access at any time in your phone settings. Location data is not stored permanently on our servers.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">4. Data Security</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">Your data is stored securely on Supabase servers with encryption at rest and in transit. Payment information is processed by Paystack and never stored on Preen servers.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">5. Your Rights</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">You have the right to access, correct or delete your personal data at any time. You can close your account from your profile settings which will permanently delete all your data within 30 days.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">6. Cookies</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">We use essential cookies to keep you logged in and remember your preferences. We do not use tracking or advertising cookies.</p></div>
+        <div><p style="font-size:14px; font-weight:600; margin-bottom:6px;">7. Contact Us</p><p style="font-size:13px; color:var(--text2); line-height:1.7;">For any privacy related questions contact us at privacy@preen.ng</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GPS NEARBY SCREEN -->
+  <div class="screen" id="screen-nearby">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>📍 Near You</h3>
+      </div>
+      <div id="nearby-loading" style="text-align:center; padding:60px 20px;">
+        <div class="ai-spinner" style="margin:0 auto 16px;"></div>
+        <p style="font-size:14px; color:var(--text2);">Finding providers near you...</p>
+      </div>
+      <div id="nearby-results" class="providers-list" style="display:none; padding-bottom:100px;"></div>
+      <div id="nearby-denied" style="display:none; text-align:center; padding:60px 20px;">
+        <div style="font-size:48px; margin-bottom:16px;">📍</div>
+        <p style="font-size:16px; font-weight:600; margin-bottom:8px;">Location access needed</p>
+        <p style="font-size:13px; color:var(--text3); line-height:1.7; margin-bottom:20px;">To show providers near you we need access to your location. Please enable location in your phone settings.</p>
+        <button class="btn-primary" onclick="getNearbyProviders()">Try Again</button>
+        <button class="btn-secondary" style="margin-top:10px;" onclick="showScreen('screen-search')">Browse All Providers</button>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Search</span></div>
+        <div class="nav-item" onclick="showScreen('screen-bookings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Bookings</span></div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- PROVIDER BOOKING REQUESTS SCREEN -->
+  <div class="screen" id="screen-booking-requests">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Booking Requests</h3>
+        <div id="requests-badge" style="background:var(--primary); color:#fff; border-radius:20px; padding:2px 10px; font-size:12px; font-weight:600; margin-left:4px;">3</div>
+      </div>
+
+      <div style="padding:0 20px; display:flex; flex-direction:column; gap:12px; padding-bottom:100px;">
+
+        <div class="booking-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          You have 15 minutes to accept or decline each request. After 15 minutes the booking auto-declines and the customer is refunded automatically.
+        </div>
+
+        <!-- PENDING REQUESTS -->
+        <p style="font-size:13px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Pending — 3</p>
+
+        <div class="request-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">AO</div>
+              <div>
+                <p style="font-size:14px; font-weight:600;">Adebayo O.</p>
+                <p style="font-size:11px; color:var(--text3);">New customer · ★ No reviews yet</p>
+              </div>
+            </div>
+            <div style="background:var(--accent-light); border-radius:8px; padding:4px 10px; text-align:center;">
+              <p style="font-size:11px; color:var(--accent); font-weight:600;">15:00</p>
+              <p style="font-size:9px; color:var(--text3);">remaining</p>
+            </div>
+          </div>
+          <div style="background:var(--bg3); border-radius:10px; padding:12px; margin-bottom:12px;">
+            <div class="service-item" style="padding:6px 0;"><span style="font-size:12px;">Service</span><span style="font-size:12px; font-weight:600;">Signature Fade</span></div>
+            <div class="service-item" style="padding:6px 0;"><span style="font-size:12px;">Date</span><span style="font-size:12px; font-weight:600;">Saturday 10 May · 10:00 AM</span></div>
+            <div class="service-item" style="padding:6px 0; border:none;"><span style="font-size:12px;">Amount</span><span style="font-size:13px; font-weight:700; color:var(--primary);">₦2,500</span></div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-secondary" style="flex:1; padding:12px; font-size:13px; color:var(--error); border-color:var(--error);" onclick="declineBookingRequest(this, 'Adebayo O.')">✗ Decline</button>
+            <button class="btn-primary" style="flex:1; padding:12px; font-size:13px;" onclick="acceptBookingRequest(this, 'Adebayo O.')">✓ Accept</button>
+          </div>
+        </div>
+
+        <div class="request-card">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">CU</div>
+              <div>
+                <p style="font-size:14px; font-weight:600;">Chidi U.</p>
+                <p style="font-size:11px; color:var(--text3);">Returning customer · ★ 5.0</p>
+              </div>
+            </div>
+            <div style="background:var(--accent-light); border-radius:8px; padding:4px 10px; text-align:center;">
+              <p style="font-size:11px; color:var(--accent); font-weight:600;">15:00</p>
+              <p style="font-size:9px; color:var(--text3);">remaining</p>
+            </div>
+          </div>
+          <div style="background:var(--bg3); border-radius:10px; padding:12px; margin-bottom:12px;">
+            <div class="service-item" style="padding:6px 0;"><span style="font-size:12px;">Service</span><span style="font-size:12px; font-weight:600;">Beard Trim</span></div>
+            <div class="service-item" style="padding:6px 0;"><span style="font-size:12px;">Date</span><span style="font-size:12px; font-weight:600;">Saturday 10 May · 12:00 PM</span></div>
+            <div class="service-item" style="padding:6px 0; border:none;"><span style="font-size:12px;">Amount</span><span style="font-size:13px; font-weight:700; color:var(--primary);">₦1,500</span></div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn-secondary" style="flex:1; padding:12px; font-size:13px; color:var(--error); border-color:var(--error);" onclick="declineBookingRequest(this, 'Chidi U.')">✗ Decline</button>
+            <button class="btn-primary" style="flex:1; padding:12px; font-size:13px;" onclick="acceptBookingRequest(this, 'Chidi U.')">✓ Accept</button>
+          </div>
+        </div>
+
+        <!-- ACCEPTED -->
+        <p style="font-size:13px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px; margin-top:8px;">Accepted Today</p>
+
+        <div class="request-card" style="opacity:0.7;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">TA</div>
+            <div style="flex:1;">
+              <p style="font-size:14px; font-weight:600;">Tunde A.</p>
+              <p style="font-size:11px; color:var(--text3);">Full Cut + Beard · Today 3:00 PM · ₦3,500</p>
+            </div>
+            <span class="status completed">Accepted</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-provider-dashboard')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Dashboard</span></div>
+        <div class="nav-item" onclick="showScreen('screen-provider-earnings')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>Earnings</span></div>
+        <div class="nav-item active"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/></svg><span>Requests</span></div>
+        <div class="nav-item" onclick="showScreen('screen-welcome')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span>Sign Out</span></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- WAITING FOR PROVIDER SCREEN -->
+  <div class="screen" id="screen-waiting-provider">
+    <div class="app-screen" style="background:var(--bg);">
+      <div style="display:flex; flex-direction:column; height:100vh;">
+
+        <!-- TOP BAR -->
+        <div style="padding:16px 20px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:var(--card);">
+          <div>
+            <p style="font-size:13px; color:var(--text3);">Waiting for confirmation</p>
+            <p style="font-size:15px; font-weight:700; color:var(--text);" id="waiting-provider-name">Kings Barbershop</p>
+          </div>
+          <div style="text-align:center;">
+            <p style="font-size:10px; color:var(--text3); margin-bottom:2px;">Auto-cancels in</p>
+            <p style="font-size:18px; font-weight:700; color:var(--primary);" id="waiting-countdown">15:00</p>
+          </div>
+        </div>
+
+        <!-- COUNTDOWN RING -->
+        <div style="padding:24px 20px 16px; display:flex; flex-direction:column; align-items:center;">
+          <div style="position:relative; width:180px; height:180px; margin-bottom:16px;">
+            <svg width="180" height="180" viewBox="0 0 180 180" style="transform:rotate(-90deg);">
+              <circle cx="90" cy="90" r="80" fill="none" stroke="var(--border)" stroke-width="10"/>
+              <circle cx="90" cy="90" r="80" fill="none" stroke="var(--primary)" stroke-width="10"
+                stroke-dasharray="502" id="waiting-ring"
+                stroke-linecap="round"
+                style="transition:stroke-dashoffset 1s linear;"/>
+            </svg>
+            <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+              <div style="font-size:32px; margin-bottom:4px;">⏳</div>
+              <p style="font-size:13px; font-weight:600; color:var(--text);">Waiting...</p>
+            </div>
+          </div>
+          <p style="font-size:14px; font-weight:600; color:var(--text); margin-bottom:4px;" id="waiting-service-label">Signature Fade · ₦2,500</p>
+          <p style="font-size:12px; color:var(--text3); text-align:center; line-height:1.6;">The provider has 15 minutes to accept your booking. You will not be charged until they confirm.</p>
+        </div>
+
+        <!-- CHAT SECTION -->
+        <div style="flex:1; display:flex; flex-direction:column; border-top:1px solid var(--border); overflow:hidden;">
+          <div style="padding:10px 16px; background:var(--bg2); border-bottom:1px solid var(--border);">
+            <p style="font-size:12px; font-weight:600; color:var(--text);">💬 Message the provider while you wait</p>
+            <p style="font-size:11px; color:var(--text3);">Let them know any special requests</p>
+          </div>
+
+          <!-- CHAT MESSAGES -->
+          <div id="waiting-chat-messages" style="flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:8px; max-height:200px;">
+            <div style="display:flex; justify-content:flex-start;">
+              <div style="background:var(--bg2); border-radius:12px 12px 12px 0; padding:10px 14px; max-width:75%; border:1px solid var(--border);">
+                <p style="font-size:12px; color:var(--text);">Hi! I just received your booking request. Will confirm shortly 🙏</p>
+                <p style="font-size:10px; color:var(--text3); margin-top:4px;">Provider · just now</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHAT INPUT -->
+          <div style="padding:10px 16px; border-top:1px solid var(--border); background:var(--card); display:flex; gap:8px; align-items:center;">
+            <input type="text" id="waiting-chat-input" placeholder="Send a message..."
+              style="flex:1; background:var(--bg2); border:1.5px solid var(--border); border-radius:20px; padding:10px 14px; font-size:13px; font-family:Poppins,sans-serif; outline:none; color:var(--text);"
+              onkeypress="if(event.key==='Enter') sendWaitingMessage()"/>
+            <button onclick="sendWaitingMessage()" style="width:38px; height:38px; background:var(--primary); border:none; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- CANCEL BUTTON -->
+        <div style="padding:12px 20px 24px; background:var(--card); border-top:1px solid var(--border);">
+          <button onclick="cancelWaitingBooking()" style="width:100%; background:transparent; border:1.5px solid var(--border); border-radius:12px; padding:13px; font-size:14px; font-weight:600; color:var(--text2); font-family:Poppins,sans-serif; cursor:pointer;">Cancel Booking Request</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT WARNING SCREEN -->
+  <div class="screen" id="screen-payment-warning">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Booking Confirmed 🎉</h3>
+      </div>
+      <div style="padding:0 20px 40px; display:flex; flex-direction:column; gap:16px;">
+
+        <!-- SUCCESS BADGE -->
+        <div style="background:linear-gradient(135deg,var(--success),#059669); border-radius:20px; padding:24px; text-align:center;">
+          <div style="font-size:48px; margin-bottom:12px;">✅</div>
+          <p style="font-size:18px; font-weight:700; color:#fff; margin-bottom:4px;">Provider Accepted!</p>
+          <p style="font-size:13px; color:rgba(255,255,255,0.8);" id="payment-provider-accepted-name">Kings Barbershop has confirmed your booking</p>
+        </div>
+
+        <!-- PAYMENT URGENCY WARNING -->
+        <div style="background:#FEF3C7; border-radius:16px; padding:16px; border:1.5px solid #FDE68A; display:flex; gap:12px; align-items:flex-start;">
+          <span style="font-size:24px; flex-shrink:0;">⚠️</span>
+          <div>
+            <p style="font-size:14px; font-weight:700; color:#D97706; margin-bottom:4px;">Your slot expires in <span id="payment-countdown" style="color:var(--error);">10:00</span></p>
+            <p style="font-size:12px; color:#92400E; line-height:1.6;">Complete payment now to secure your booking. After 10 minutes your slot will be released to other customers and you will need to book again.</p>
+          </div>
+        </div>
+
+        <!-- BOOKING SUMMARY -->
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:12px;">Booking Summary</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Provider</span><span style="font-size:13px; font-weight:600;" id="pw-provider">Kings Barbershop</span></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Service</span><span style="font-size:13px; font-weight:600;" id="pw-service">Signature Fade</span></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Date</span><span style="font-size:13px; font-weight:600;" id="pw-date">Saturday 17 May</span></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Time</span><span style="font-size:13px; font-weight:600;" id="pw-time">10:00 AM</span></div>
+            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Service fee</span><span style="font-size:13px; font-weight:600;" id="pw-service-fee">₦2,500</span></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:13px; color:var(--text2);">Platform protection</span><span style="font-size:13px; color:var(--success);">Free</span></div>
+            <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+            <div style="display:flex; justify-content:space-between;"><span style="font-size:14px; font-weight:700;">Total</span><span style="font-size:16px; font-weight:700; color:var(--primary);" id="pw-total">₦2,500</span></div>
+          </div>
+        </div>
+
+        <!-- PLATFORM PROTECTION NOTE -->
+        <div style="background:var(--primary-light); border-radius:12px; padding:14px; border:1px solid rgba(232,84,122,0.2); display:flex; gap:10px;">
+          <span style="font-size:18px; flex-shrink:0;">🛡️</span>
+          <p style="font-size:12px; color:var(--text2); line-height:1.6;">Your payment is protected by Preen. If the provider does not show up you get a full refund automatically. No questions asked.</p>
+        </div>
+
+        <button onclick="proceedToPayment()" style="width:100%; background:var(--primary); color:#fff; border:none; border-radius:14px; padding:16px; font-size:16px; font-weight:700; font-family:Poppins,sans-serif; cursor:pointer; box-shadow:0 4px 15px rgba(232,84,122,0.3);">
+          Pay Now — Secure My Slot 🔒
+        </button>
+
+        <button onclick="cancelWaitingBooking()" style="width:100%; background:transparent; border:1.5px solid var(--border); border-radius:12px; padding:13px; font-size:13px; font-weight:600; color:var(--text2); font-family:Poppins,sans-serif; cursor:pointer;">
+          Cancel Booking
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PROVIDER DECLINED SCREEN -->
+  <div class="screen" id="screen-provider-declined">
+    <div class="app-screen">
+      <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; padding:40px 20px; text-align:center;">
+        <div style="font-size:64px; margin-bottom:20px;">😔</div>
+        <h2 style="font-size:22px; font-weight:700; margin-bottom:8px;">Provider Unavailable</h2>
+        <p style="font-size:14px; color:var(--text3); line-height:1.7; margin-bottom:28px;" id="declined-message">Kings Barbershop is unable to take your booking at this time. You have not been charged.</p>
+
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border); width:100%; margin-bottom:20px;">
+          <p style="font-size:13px; font-weight:600; margin-bottom:10px;">What would you like to do?</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button onclick="showScreen('screen-search')" style="width:100%; background:var(--primary); color:#fff; border:none; border-radius:12px; padding:13px; font-size:14px; font-weight:600; font-family:Poppins,sans-serif; cursor:pointer;">Find Another Provider</button>
+            <button onclick="showScreen('screen-home')" style="width:100%; background:transparent; border:1.5px solid var(--border); border-radius:12px; padding:13px; font-size:14px; font-weight:600; color:var(--text2); font-family:Poppins,sans-serif; cursor:pointer;">Go Back Home</button>
+          </div>
+        </div>
+
+        <p style="font-size:12px; color:var(--text3);">No charge was made to your account</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- REPORT USER/PROVIDER SCREEN -->
+  <div class="screen" id="screen-report">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Report</h3>
+      </div>
+      <div style="padding:0 20px 40px; display:flex; flex-direction:column; gap:16px;">
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:14px; font-weight:600; margin-bottom:4px;" id="report-target-name">Kings Barbershop</p>
+          <p style="font-size:12px; color:var(--text3);" id="report-target-type">Provider</p>
+        </div>
+
+        <p style="font-size:14px; font-weight:600;">Why are you reporting this account?</p>
+        <div style="display:flex; flex-direction:column; gap:8px;" id="report-reasons">
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Fake or misleading profile</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Did not show up for booking</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Inappropriate behaviour</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Work looks nothing like photos</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Charged more than listed price</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Harassment or threatening behaviour</span>
+            <div class="service-check">✓</div>
+          </div>
+          <div class="service-select-item" onclick="selectReportReason(this)">
+            <span style="font-size:13px;">Other reason</span>
+            <div class="service-check">✓</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Additional details (optional)</label>
+          <textarea id="report-details" placeholder="Tell us more about what happened..."
+            style="width:100%; background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:14px; font-size:13px; font-family:Poppins,sans-serif; outline:none; color:var(--text); resize:none; height:100px;"></textarea>
+        </div>
+
+        <button onclick="submitReport()" class="btn-primary" style="background:var(--error); box-shadow:none;">Submit Report</button>
+        <p style="font-size:11px; color:var(--text3); text-align:center; line-height:1.6;">Reports are reviewed by our team within 24 hours. We take all reports seriously and will take action where necessary.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- BLOCK CONFIRMATION SCREEN -->
+  <div class="screen" id="screen-block">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3>Block</h3>
+      </div>
+      <div style="padding:0 20px 40px; display:flex; flex-direction:column; gap:16px;">
+        <div style="background:#FEF2F2; border-radius:16px; padding:20px; border:1.5px solid #FECACA; text-align:center;">
+          <div style="font-size:48px; margin-bottom:12px;">🚫</div>
+          <p style="font-size:16px; font-weight:700; color:var(--error); margin-bottom:8px;">Block <span id="block-target-name">Kings Barbershop</span>?</p>
+          <p style="font-size:13px; color:var(--text2); line-height:1.7;">They will not be able to see your profile or contact you. They will not know you have blocked them.</p>
+        </div>
+
+        <div style="background:var(--bg2); border-radius:16px; padding:16px; border:1.5px solid var(--border);">
+          <p style="font-size:13px; font-weight:600; margin-bottom:10px;">What blocking does:</p>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="display:flex; gap:10px;"><span>🚫</span><p style="font-size:13px; color:var(--text2);">They will no longer appear in your search results</p></div>
+            <div style="display:flex; gap:10px;"><span>💬</span><p style="font-size:13px; color:var(--text2);">They cannot message you or see your profile</p></div>
+            <div style="display:flex; gap:10px;"><span>📅</span><p style="font-size:13px; color:var(--text2);">Any pending bookings with them will be cancelled</p></div>
+            <div style="display:flex; gap:10px;"><span>🔄</span><p style="font-size:13px; color:var(--text2);">You can unblock them anytime from your profile settings</p></div>
+          </div>
+        </div>
+
+        <button onclick="confirmBlock()" class="btn-primary" style="background:var(--error); box-shadow:none;">Block This Account</button>
+        <button onclick="goBack()" class="btn-secondary">Cancel</button>
+
+        <div style="text-align:center;">
+          <p style="font-size:13px; color:var(--primary); cursor:pointer;" onclick="showScreen('screen-report')">Also report this account →</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- REPORT SCREEN -->
+
+  <!-- BLOCK SCREEN -->
+
+  <!-- WAITING FOR PROVIDER SCREEN -->
+
+  <!-- PAYMENT WARNING SCREEN -->
+
+  <!-- PROVIDER DECLINED SCREEN -->
+
+
+  <!-- SECTION RESULTS SCREEN -->
+  <div class="screen" id="screen-category-results">
+    <div class="app-screen">
+      <div class="inner-header">
+        <div class="back-btn" onclick="goBack()">&#8592;</div>
+        <h3 id="category-results-title">Providers</h3>
+      </div>
+      <div class="providers-list" id="category-results-list" style="padding:0 20px 100px;">
       </div>
     </div>
   </div>

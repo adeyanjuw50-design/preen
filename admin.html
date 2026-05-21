@@ -543,9 +543,151 @@
               <div class="toggle-sw" onclick="this.classList.toggle('on');"></div>
             </div>
             <button class="topbar-btn" style="margin-top:16px;width:100%;" onclick="saveSettings()">Save All Settings ✓</button>
+        </div>
+
+        <!-- CHANGE PASSWORD -->
+        <div class="card" style="padding:20px;margin-top:14px;">
+          <div class="card-title" style="margin-bottom:4px;">Change Admin Password</div>
+          <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Update your login credentials.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Email Address</label>
+            <input type="email" id="new-admin-email" class="modal-inp" placeholder="admin@preen.ng"/></div>
+            <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Current Password</label>
+            <input type="password" id="current-admin-pass" class="modal-inp" placeholder="Current password"/></div>
+            <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">New Password</label>
+            <input type="password" id="new-admin-pass" class="modal-inp" placeholder="New password (min 8 chars)"/></div>
+            <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Confirm New Password</label>
+            <input type="password" id="confirm-admin-pass" class="modal-inp" placeholder="Confirm new password"/></div>
+            <button onclick="changeAdminPassword()" class="topbar-btn" style="width:100%;margin-top:6px;">Update Password</button>
           </div>
         </div>
 
+        <!-- LAUNCH MODE -->
+        <div style="background:#FEF2F2;border-radius:20px;padding:24px;border:1.5px solid #FECACA;margin-top:14px;">
+          <p style="font-size:16px;font-weight:700;color:var(--error);margin-bottom:6px;">🚀 Launch Mode</p>
+          <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Permanently deletes ALL test data. Only use when ready to go live. Cannot be undone.</p>
+          <div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid #FECACA;">
+            <p style="font-size:12px;font-weight:600;color:var(--error);margin-bottom:8px;">This will delete:</p>
+            <p style="font-size:12px;color:var(--text2);">• All bookings</p>
+            <p style="font-size:12px;color:var(--text2);">• All users and providers</p>
+            <p style="font-size:12px;color:var(--text2);">• All reviews</p>
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Type LAUNCH to confirm</label>
+            <input type="text" id="launch-confirm" class="search-inp" placeholder="Type LAUNCH" style="width:100%;"/>
+          </div>
+          <button onclick="activateLaunchMode()" style="width:100%;background:var(--error);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;">🚀 Wipe All Test Data</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- PROVIDER PROFILE REVIEW MODAL -->
+<div class="modal-overlay" id="provider-review-modal">
+  <div class="modal" style="max-width:580px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+      <div>
+        <div class="modal-title" id="prm-name">Provider Name</div>
+        <div style="font-size:13px;color:var(--text2);" id="prm-category">Category · Location</div>
+      </div>
+      <button onclick="closeModal('provider-review-modal')" style="background:var(--bg);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;color:var(--text2);">✕</button>
+    </div>
+
+    <!-- TABS -->
+    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid var(--border);">
+      <button class="prm-tab active" onclick="switchPrmTab('details')" id="prm-tab-details" style="flex:1;background:none;border:none;padding:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--p);border-bottom:2px solid var(--p);margin-bottom:-2px;font-family:Poppins,sans-serif;">Details</button>
+      <button class="prm-tab" onclick="switchPrmTab('portfolio')" id="prm-tab-portfolio" style="flex:1;background:none;border:none;padding:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:Poppins,sans-serif;">Portfolio</button>
+      <button class="prm-tab" onclick="switchPrmTab('checklist')" id="prm-tab-checklist" style="flex:1;background:none;border:none;padding:10px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-2px;font-family:Poppins,sans-serif;">Checklist</button>
+    </div>
+
+    <!-- DETAILS TAB -->
+    <div id="prm-section-details">
+      <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Submitted Details</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Full Name</span><span style="font-size:12px;font-weight:600;" id="prm-phone-val">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Phone</span><span style="font-size:12px;font-weight:600;" id="prm-phone">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">WhatsApp</span><span style="font-size:12px;font-weight:600;" id="prm-whatsapp">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Email</span><span style="font-size:12px;font-weight:600;" id="prm-email">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Category</span><span style="font-size:12px;font-weight:600;" id="prm-cat-val">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Location</span><span style="font-size:12px;font-weight:600;" id="prm-location">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Instagram</span><span style="font-size:12px;font-weight:600;" id="prm-instagram">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">TikTok</span><span style="font-size:12px;font-weight:600;" id="prm-tiktok">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);"><span style="font-size:12px;color:var(--text2);">Signed up</span><span style="font-size:12px;font-weight:600;" id="prm-date">—</span></div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;"><span style="font-size:12px;color:var(--text2);">Rating</span><span style="font-size:12px;font-weight:600;" id="prm-rating">—</span></div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:14px;padding:16px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:8px;">Bio / Description</p>
+        <p style="font-size:13px;color:var(--text2);line-height:1.7;" id="prm-bio">No bio submitted yet.</p>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO TAB -->
+    <div id="prm-section-portfolio" style="display:none;">
+      <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Profile Photo</p>
+        <div id="prm-profile-photo" style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text3);">👤</div>
+      </div>
+      <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Work Photos</p>
+        <div id="prm-work-photos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
+        </div>
+        <p style="font-size:11px;color:var(--text3);margin-top:8px;" id="prm-photos-status">No work photos submitted yet</p>
+      </div>
+      <div style="background:var(--bg);border-radius:14px;padding:16px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Skill Video</p>
+        <div id="prm-video-wrap" style="background:var(--border);border-radius:10px;height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+          <span style="font-size:32px;">🎥</span>
+          <p style="font-size:12px;color:var(--text3);" id="prm-video-status">No skill video submitted yet</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST TAB -->
+    <div id="prm-section-checklist" style="display:none;">
+      <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Verification Checklist</p>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Full Name</span><span class="badge" id="chk-name">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Phone Number</span><span class="badge" id="chk-phone">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Email Address</span><span class="badge" id="chk-email">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Service Category</span><span class="badge" id="chk-category">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Location</span><span class="badge" id="chk-location">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Profile Photo</span><span class="badge" id="chk-photo">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;">Work Photos</span><span class="badge" id="chk-portfolio">—</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;"><span style="font-size:13px;">Skill Video</span><span class="badge" id="chk-video">—</span></div>
+        </div>
+      </div>
+      <div id="prm-missing-box" style="background:#FEF3C7;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #FDE68A;display:none;">
+        <p style="font-size:12px;font-weight:600;color:#D97706;margin-bottom:4px;">⚠️ Missing items</p>
+        <p style="font-size:12px;color:#92400E;" id="prm-missing-text"></p>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="contactProviderWhatsApp()" style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          WhatsApp
+        </button>
+        <button onclick="contactProviderEmail()" style="background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+          ✉️ Email
+        </button>
+      </div>
+      <button onclick="requestMoreInfo()" style="width:100%;background:var(--accent);color:#1A1A1A;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;">
+        📋 Request Missing Info (WhatsApp + Email)
+      </button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="rejectProvider()" style="flex:1;background:transparent;border:1.5px solid var(--error);border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;color:var(--error);">✗ Reject</button>
+        <button onclick="verifyProviderFromModal()" id="verify-modal-btn" style="flex:2;background:var(--success);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;">✓ Verify Provider</button>
       </div>
     </div>
   </div>
@@ -610,13 +752,125 @@
 </div>
 
 <script>
+// ===== CHANGE ADMIN PASSWORD =====
+function changeAdminPassword() {
+  const newEmail = document.getElementById('new-admin-email').value.trim();
+  const currentPass = document.getElementById('current-admin-pass').value.trim();
+  const newPass = document.getElementById('new-admin-pass').value.trim();
+  const confirmPass = document.getElementById('confirm-admin-pass').value.trim();
+
+  if (!newEmail || !currentPass || !newPass || !confirmPass) {
+    showToast('Please fill in all fields', 'error');
+    return;
+  }
+
+  // Verify current password
+  const creds = getAdminCredentials();
+  if (currentPass !== creds.password) {
+    showToast('Current password is incorrect', 'error');
+    return;
+  }
+
+  if (newPass.length < 8) {
+    showToast('New password must be at least 8 characters', 'error');
+    return;
+  }
+
+  if (newPass !== confirmPass) {
+    showToast('New passwords do not match', 'error');
+    return;
+  }
+
+  // Save new credentials
+  saveAdminCredentials(newEmail, newPass, creds.name);
+
+  // Clear fields
+  document.getElementById('new-admin-email').value = '';
+  document.getElementById('current-admin-pass').value = '';
+  document.getElementById('new-admin-pass').value = '';
+  document.getElementById('confirm-admin-pass').value = '';
+
+  showToast('Password updated successfully. Use new credentials next login.', 'success');
+  logActivity(currentUser.name, 'Changed admin password', 'staff');
+}
+
+
+// ===== LAUNCH MODE =====
+function checkLaunchInput(input) {
+  const btn = document.getElementById('launch-mode-btn');
+  if (!btn) return;
+  if (input.value.trim() === 'LAUNCH') {
+    btn.disabled = false;
+    btn.style.background = 'var(--error)';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.background = '#ccc';
+    btn.style.cursor = 'not-allowed';
+  }
+}
+
+
+// ===== LAUNCH MODE =====
+async function activateLaunchMode() {
+  const input = document.getElementById('launch-confirm-input');
+  if (!input || input.value.trim() !== 'LAUNCH') {
+    showToast('Please type LAUNCH to confirm', 'error');
+    return;
+  }
+  if (!confirm('⚠️ FINAL WARNING\n\nThis will permanently delete ALL test data from your Supabase database.\n\nBookings, users, providers and reviews will all be wiped.\n\nThis CANNOT be undone.\n\nAre you absolutely sure?')) return;
+
+  const btn = document.getElementById('launch-mode-btn');
+  btn.textContent = 'Wiping data...';
+  btn.disabled = true;
+
+  try {
+    // Delete all test data in order (respecting foreign keys)
+    await db.from('reviews').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('providers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    await db.from('user').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+    // Clear staff logs
+    localStorage.removeItem('preen_activity_log');
+    staffActivityLog = [];
+
+    showToast('✅ All test data wiped. Preen is ready for launch!', 'success');
+    btn.textContent = '✅ Launch Mode Active';
+    btn.style.background = 'var(--success)';
+
+    // Reload all data
+    await loadAll();
+    logActivity(currentUser.name, '🚀 LAUNCH MODE ACTIVATED — all test data wiped', 'staff');
+
+  } catch(e) {
+    showToast('Error wiping data: ' + e.message, 'error');
+    btn.textContent = '🚀 Wipe Test Data and Launch';
+    btn.disabled = false;
+  }
+}
+
+
 const SURL='https://noucyqailmqgaujgzxay.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdWN5cWFpbG1xZ2F1amd6eGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgwMjksImV4cCI6MjA5MTA4NDAyOX0.5PQ5_pIyu-loK3PM9s813SEDI3cywrqtmEPZi7MOI8Y';
 
-// CREDENTIALS
-const ACCOUNTS = {
-  'admin@preen.ng': { password: 'Preen@Admin2026', role: 'super_admin', name: 'Preen Admin' }
-};
+// CREDENTIALS - stored in localStorage, not hardcoded
+// Default password set on first load only
+const DEFAULT_EMAIL = 'admin@preen.ng';
+const DEFAULT_PASS = 'Preen@Admin2026';
+
+function getAdminCredentials() {
+  const stored = localStorage.getItem('preen_admin_creds');
+  if (stored) return JSON.parse(stored);
+  // First time - set defaults
+  const defaults = { email: DEFAULT_EMAIL, password: DEFAULT_PASS, name: 'Preen Admin' };
+  localStorage.setItem('preen_admin_creds', JSON.stringify(defaults));
+  return defaults;
+}
+
+function saveAdminCredentials(email, password, name) {
+  localStorage.setItem('preen_admin_creds', JSON.stringify({ email, password, name }));
+}
 
 // STAFF stored in localStorage
 let staffMembers = JSON.parse(localStorage.getItem('preen_staff') || '[]');
@@ -642,9 +896,10 @@ function doLogin(){
   const email = document.getElementById('admin-email').value.trim().toLowerCase();
   const pass = document.getElementById('admin-pass').value.trim();
 
-  // Check super admin
-  if(ACCOUNTS[email] && ACCOUNTS[email].password === pass){
-    currentUser = { email, role: 'super_admin', name: ACCOUNTS[email].name };
+  // Check super admin using stored credentials
+  const adminCreds = getAdminCredentials();
+  if(email === adminCreds.email && pass === adminCreds.password){
+    currentUser = { email, role: 'super_admin', name: adminCreds.name || 'Preen Admin' };
     loginSuccess();
     return;
   }
@@ -818,7 +1073,7 @@ function renderRecentBookingsTable(data){
 }
 
 function renderRecentUsersTable(data){
-  const el=document.getElementById('ov-recent-users');
+  el=document.getElementById('ov-recent-users');
   if(!data||data.length===0){el.innerHTML='<div class="empty">No users yet</div>';return;}
   el.innerHTML='<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Joined</th></tr></thead><tbody>'+
     data.map(u=>'<tr><td>'+n(u.full_name)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td>'+new Date(u.created_at).toLocaleDateString()+'</td></tr>').join('')+'</tbody></table></div>';
@@ -826,11 +1081,11 @@ function renderRecentUsersTable(data){
 
 // TODAY
 function renderToday(){
-  const today=new Date();today.setHours(0,0,0,0);
+  today=new Date();today.setHours(0,0,0,0);
   const tB=allBookings.filter(i=>new Date(i.created_at)>=today);
   const tU=allUsers.filter(i=>new Date(i.created_at)>=today);
   const tP=allProviders.filter(i=>new Date(i.created_at)>=today);
-  const fee=settingsData.platform_fee||10;
+  fee=settingsData.platform_fee||10;
   document.getElementById('today-bookings').textContent=tB.length;
   document.getElementById('today-revenue').textContent=fmt(Math.round(tB.length*35000*(fee/100)));
   document.getElementById('today-users').textContent=tU.length;
@@ -850,7 +1105,7 @@ function renderToday(){
 
 // BOOKINGS
 function renderBookings(data){
-  const el=document.getElementById('pg-bookings-content');
+  el=document.getElementById('pg-bookings-content');
   if(!data||data.length===0){el.innerHTML='<div class="empty">No bookings yet</div>';return;}
   el.innerHTML='<table id="bookings-tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Provider</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
     data.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.booking_date).substring(0,12)+'</td><td>'+n(b.booking_time)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td style="white-space:nowrap;"><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)">✓</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)">✗</button></td></tr>').join('')+'</tbody></table>';
@@ -866,10 +1121,16 @@ function renderUsers(data){
   const el=document.getElementById('pg-users-content');
   if(!data||data.length===0){el.innerHTML='<div class="empty">No users yet</div>';return;}
   const canSuspend = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('suspend_users');
-  el.innerHTML='<table id="users-tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>'+
-    data.map(u=>'<tr><td>'+n(u.full_name)+'</td><td>'+n(u.email)+'</td><td>'+n(u.phone)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td><span class="badge '+(u.is_suspended?'suspended':'completed')+'">'+(u.is_suspended?'Suspended':'Active')+'</span></td><td>'+new Date(u.created_at).toLocaleDateString()+'</td><td>'+
-    (canSuspend?'<button class="act-btn red" onclick="openSuspendModal(\'user\',\''+u.id+'\',\''+n(u.full_name)+'\')">'+(u.is_suspended?'Unsuspend':'Suspend')+'</button>':'<span style="color:var(--text3);font-size:12px;">No access</span>')+
-    '</td></tr>').join('')+'</tbody></table>';
+  window._userTableData = data;
+  let rows = '';
+  data.forEach((u,i) => {
+    const suspended = !!u.is_suspended;
+    const suspendBtn = canSuspend
+      ? '<button class="act-btn ' + (suspended?'green':'red') + '" onclick="toggleSuspendUser(\''+u.id+'\','+suspended+',\''+i+'\')">'+(suspended?'\u2713 Unsuspend':'Suspend')+'</button>'
+      : '<span style="color:var(--text3);font-size:12px;">No access</span>';
+    rows += '<tr><td style="font-weight:500;">'+n(u.full_name)+'</td><td>'+n(u.email)+'</td><td>'+n(u.phone)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td><span class="badge '+(suspended?'suspended':'completed')+'">'+(suspended?'Suspended':'Active')+'</span></td><td>'+new Date(u.created_at).toLocaleDateString()+'</td><td>'+suspendBtn+'</td></tr>';
+  });
+  el.innerHTML='<table id="users-tbl"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 function filterUserTime(tf,btn){
@@ -883,16 +1144,29 @@ function renderProviders(data){
   if(!data||data.length===0){el.innerHTML='<div class="empty">No providers yet</div>';return;}
   const canVerify = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('verify_providers');
   const canSuspend = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('suspend_users');
-  el.innerHTML='<table id="prov-tbl"><thead><tr><th>Name</th><th>Category</th><th>Email</th><th>Phone</th><th>State</th><th>Verified</th><th>Available</th><th>Actions</th></tr></thead><tbody>'+
-    data.map(p=>'<tr><td>'+n(p.full_name)+'</td><td>'+n(p.category)+'</td><td>'+n(p.email)+'</td><td>'+n(p.phone)+'</td><td>'+n(p.location)+'</td><td><span class="badge '+(p.is_verified?'verified':'pending')+'">'+(p.is_verified?'✓ Verified':'Pending')+'</span></td><td><span class="badge '+(p.is_available?'completed':'cancelled')+'">'+(p.is_available?'Yes':'No')+'</span></td><td style="white-space:nowrap;">'+
-    (canVerify&&!p.is_verified?'<button class="act-btn green" onclick="verifyProvider(\''+p.id+'\',this)">✓ Verify</button>':'')+
-    (canSuspend?'<button class="act-btn red" onclick="openSuspendModal(\'provider\',\''+p.id+'\',\''+n(p.full_name)+'\')">Suspend</button>':'')+
-    '</td></tr>').join('')+'</tbody></table>';
+  window._providerTableData = data;
+  let rows = '';
+  data.forEach((p,i) => {
+    const available = !!p.is_available;
+    const reviewBtn = canVerify ? '<button class="act-btn blue" onclick="openProviderReview('+i+')">\ud83d\udc41 Review</button>' : '';
+    const suspendBtn = canSuspend ? '<button class="act-btn '+(available?'red':'green')+'" onclick="toggleSuspendProvider(\''+p.id+'\','+available+',\''+i+'\')">'+( available?'Suspend':'\u2713 Unsuspend')+'</button>' : '';
+    rows += '<tr>'+
+      '<td style="font-weight:500;">'+n(p.full_name)+'</td>'+
+      '<td>'+n(p.category)+'</td>'+
+      '<td>'+n(p.email)+'</td>'+
+      '<td>'+n(p.phone)+'</td>'+
+      '<td>'+n(p.location)+'</td>'+
+      '<td><span class="badge '+(p.is_verified?'verified':'pending')+'">'+(p.is_verified?'\u2713 Verified':'Pending')+'</span></td>'+
+      '<td><span class="badge '+(available?'completed':'suspended')+'">'+(available?'Active':'Suspended')+'</span></td>'+
+      '<td style="white-space:nowrap;">'+reviewBtn+suspendBtn+'</td>'+
+      '</tr>';
+  });
+  el.innerHTML='<table id="prov-tbl"><thead><tr><th>Name</th><th>Category</th><th>Email</th><th>Phone</th><th>State</th><th>Verified</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 // REVIEWS
 function renderReviews(data){
-  const el=document.getElementById('pg-reviews-content');
+  el=document.getElementById('pg-reviews-content');
   if(!data||data.length===0){el.innerHTML='<div class="empty">No reviews yet</div>';return;}
   const canRemove = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('manage_reviews');
   el.innerHTML='<table id="rev-tbl"><thead><tr><th>Provider</th><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
@@ -903,16 +1177,16 @@ function renderReviews(data){
 
 // FINANCE
 function renderFinance(data){
-  const fee=settingsData.platform_fee||10;
+  fee=settingsData.platform_fee||10;
   const total=data.length*35000;
-  const fees=Math.round(total*(fee/100));
+  fees=Math.round(total*(fee/100));
   const payouts=total-fees;
   const avg=data.length>0?Math.round(total/data.length):0;
   document.getElementById('fin-total').textContent=fmt(total);
   document.getElementById('fin-fees').textContent=fmt(fees);
   document.getElementById('fin-payouts').textContent=fmt(payouts);
   document.getElementById('fin-avg').textContent=fmt(avg);
-  const el=document.getElementById('fin-table');
+  el=document.getElementById('fin-table');
   if(data.length===0){el.innerHTML='<div class="empty">No transactions yet</div>';return;}
   el.innerHTML='<table><thead><tr><th>Customer</th><th>Provider</th><th>Service</th><th>Gross</th><th>Fee ('+fee+'%)</th><th>Provider Gets</th><th>Date</th></tr></thead><tbody>'+
     data.map(b=>{const a=35000,f=Math.round(a*(fee/100));return'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+fmt(a)+'</td><td style="color:var(--p);">'+fmt(f)+'</td><td style="color:var(--success);">'+fmt(a-f)+'</td><td>'+new Date(b.created_at).toLocaleDateString()+'</td></tr>';}).join('')+'</tbody></table>';
@@ -1014,13 +1288,13 @@ function updateNotifPreview(){
 }
 
 function sendNotif(){
-  const title=document.getElementById('notif-title').value.trim();
-  const msg=document.getElementById('notif-msg').value.trim();
+  title=document.getElementById('notif-title').value.trim();
+  msg=document.getElementById('notif-msg').value.trim();
   const target=document.getElementById('notif-target').value;
   const schedule=document.getElementById('notif-schedule').value;
   if(!title||!msg){showToast('Please fill in title and message','error');return;}
   const tbody=document.getElementById('notif-history');
-  const row=document.createElement('tr');
+  row=document.createElement('tr');
   const dateStr=schedule?new Date(schedule).toLocaleDateString():new Date().toLocaleDateString();
   row.innerHTML='<td>'+title+'</td><td>'+msg.substring(0,40)+'...</td><td>'+target+'</td><td>'+currentUser.name+'</td><td>'+dateStr+'</td><td><span class="badge completed">'+(schedule?'Scheduled':'Sent')+'</span></td>';
   tbody.insertBefore(row,tbody.firstChild);
@@ -1038,8 +1312,8 @@ function createPromo(){
   const disc=document.getElementById('promo-discount').value.trim();
   const exp=document.getElementById('promo-expiry').value;
   if(!code||!disc){showToast('Please fill in code and discount','error');return;}
-  const tbody=document.getElementById('promos-body');
-  const row=document.createElement('tr');
+  tbody=document.getElementById('promos-body');
+  row=document.createElement('tr');
   row.innerHTML='<td>'+code+'</td><td>'+disc+'</td><td>0</td><td>'+(exp||'No expiry')+'</td><td><span class="badge completed">Active</span></td><td><button class="act-btn red" onclick="disablePromo(this)">Disable</button></td>';
   tbody.insertBefore(row,tbody.firstChild);
   document.getElementById('promo-code').value='';document.getElementById('promo-discount').value='';document.getElementById('promo-expiry').value='';
@@ -1047,8 +1321,8 @@ function createPromo(){
 }
 
 function disablePromo(btn){
-  const row=btn.closest('tr');
-  const statusCell=row.querySelector('.badge');
+  row=btn.closest('tr');
+  statusCell=row.querySelector('.badge');
   statusCell.textContent='Disabled';statusCell.className='badge cancelled';
   btn.textContent='Enable';btn.classList.remove('red');
   showToast('Promo code disabled','success');
@@ -1102,7 +1376,7 @@ function updatePermissionsByRole(){
 document.addEventListener('click',function(e){
   const item=e.target.closest('.permission-item');
   if(item&&item.closest('#permission-grid')){
-    const checkbox=item.querySelector('input');
+    checkbox=item.querySelector('input');
     checkbox.checked=!checkbox.checked;
     item.classList.toggle('selected',checkbox.checked);
   }
@@ -1110,9 +1384,9 @@ document.addEventListener('click',function(e){
 
 function addStaff(){
   const name=document.getElementById('staff-name').value.trim();
-  const email=document.getElementById('staff-email').value.trim();
+  email=document.getElementById('staff-email').value.trim();
   const password=document.getElementById('staff-password').value.trim();
-  const role=document.getElementById('staff-role').value;
+  role=document.getElementById('staff-role').value;
   if(!name||!email||!password){showToast('Please fill in all fields','error');return;}
   if(staffMembers.find(s=>s.email.toLowerCase()===email.toLowerCase())){showToast('This email is already a staff member','error');return;}
   const permissions=[];
@@ -1133,7 +1407,7 @@ function addStaff(){
 
 function renderStaff(){
   document.getElementById('staff-count').textContent=staffMembers.filter(s=>s.active).length+' members';
-  const tbody=document.getElementById('staff-table');
+  tbody=document.getElementById('staff-table');
   if(staffMembers.length===0){
     tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:30px;">No staff added yet. Click + Add Staff to get started.</td></tr>';
   } else {
@@ -1150,9 +1424,9 @@ function editStaff(id){
   document.getElementById('staff-password').value=staff.password;
   document.getElementById('staff-role').value=staff.role;
   document.querySelectorAll('#permission-grid .permission-item').forEach(item=>{
-    const perm=item.dataset.perm;
-    const checkbox=item.querySelector('input');
-    const isSelected=staff.permissions.includes(perm);
+    perm=item.dataset.perm;
+    checkbox=item.querySelector('input');
+    isSelected=staff.permissions.includes(perm);
     checkbox.checked=isSelected;
     item.classList.toggle('selected',isSelected);
   });
@@ -1163,7 +1437,7 @@ function editStaff(id){
 }
 
 function removeStaff(id){
-  const staff=staffMembers.find(s=>s.id===id);
+  staff=staffMembers.find(s=>s.id===id);
   if(!staff||!confirm('Remove '+staff.name+' from staff?')) return;
   staffMembers=staffMembers.filter(s=>s.id!==id);
   localStorage.setItem('preen_staff',JSON.stringify(staffMembers));
@@ -1180,14 +1454,14 @@ function logActivity(staffName, action, type){
   localStorage.setItem('preen_activity_log',JSON.stringify(staffActivityLog));
   // Update last login if login
   if(type==='login'){
-    const staff=staffMembers.find(s=>s.name===staffName);
+    staff=staffMembers.find(s=>s.name===staffName);
     if(staff){staff.lastLogin=new Date().toISOString();localStorage.setItem('preen_staff',JSON.stringify(staffMembers));}
   }
   renderActivityLog();
 }
 
 function renderActivityLog(){
-  const el=document.getElementById('staff-activity-log');
+  el=document.getElementById('staff-activity-log');
   if(!el) return;
   if(staffActivityLog.length===0){el.innerHTML='<div class="empty">No activity yet</div>';return;}
   const colors={login:'var(--success)',logout:'var(--text3)',booking:'var(--p)',suspend:'var(--error)',verify:'var(--success)',notification:'var(--accent)',staff:'#7C3AED',page:'var(--border)',review:'var(--p)'};
@@ -1202,9 +1476,9 @@ function buildCharts(bookings,users){
     labels.push(d.toLocaleDateString('en',{weekday:'short'}));
     const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate());
     const de=new Date(ds);de.setDate(ds.getDate()+1);
-    const fee=settingsData.platform_fee||10;
+    fee=settingsData.platform_fee||10;
     revData.push(bookings.filter(b=>{const t=new Date(b.created_at);return t>=ds&&t<de;}).length*35000*(fee/100));
-    userGrowth.push(users.filter(u=>{const t=new Date(u.created_at);return t>=ds&&t<de;}).length);
+    userGrowth.push(users.filter(u=>{t=new Date(u.created_at);return t>=ds&&t<de;}).length);
   }
   if(charts.rev)charts.rev.destroy();
   charts.rev=new Chart(document.getElementById('revenue-chart').getContext('2d'),{type:'line',data:{labels,datasets:[{label:'Fees (₦)',data:revData,borderColor:'#E8547A',backgroundColor:'rgba(232,84,122,0.1)',fill:true,tension:0.4,pointBackgroundColor:'#E8547A',pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'}},x:{grid:{display:false}}}}});
@@ -1222,13 +1496,13 @@ function buildCharts(bookings,users){
 }
 
 function buildFinChart(bookings){
-  const days=30;const labels=[];const data=[];const fee=settingsData.platform_fee||10;
-  for(let i=days-1;i>=0;i--){
-    const d=new Date();d.setDate(d.getDate()-i);
+  days=30;labels=[];const data=[];fee=settingsData.platform_fee||10;
+  for(i=days-1;i>=0;i--){
+    d=new Date();d.setDate(d.getDate()-i);
     labels.push(d.getDate()+'/'+(d.getMonth()+1));
-    const ds=new Date(d.getFullYear(),d.getMonth(),d.getDate());
-    const de=new Date(ds);de.setDate(ds.getDate()+1);
-    data.push(bookings.filter(b=>{const t=new Date(b.created_at);return t>=ds&&t<de;}).length*35000*(fee/100));
+    ds=new Date(d.getFullYear(),d.getMonth(),d.getDate());
+    de=new Date(ds);de.setDate(ds.getDate()+1);
+    data.push(bookings.filter(b=>{t=new Date(b.created_at);return t>=ds&&t<de;}).length*35000*(fee/100));
   }
   if(charts.fin)charts.fin.destroy();
   charts.fin=new Chart(document.getElementById('fin-chart').getContext('2d'),{type:'bar',data:{labels,datasets:[{label:'Platform Fees (₦)',data,backgroundColor:'rgba(232,84,122,0.7)',borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'}},x:{grid:{display:false},ticks:{maxTicksLimit:10}}}}});
@@ -1236,12 +1510,12 @@ function buildFinChart(bookings){
 
 // HELPERS
 function searchTable(tblId,q){
-  const tbl=document.getElementById(tblId);if(!tbl)return;
+  tbl=document.getElementById(tblId);if(!tbl)return;
   tbl.querySelectorAll('tbody tr').forEach(r=>{r.style.display=r.textContent.toLowerCase().includes(q.toLowerCase())?'':'none';});
 }
 
 function filterCol(tblId,colIdx,val){
-  const tbl=document.getElementById(tblId);if(!tbl)return;
+  tbl=document.getElementById(tblId);if(!tbl)return;
   tbl.querySelectorAll('tbody tr').forEach(r=>{
     if(!val){r.style.display='';return;}
     const cell=r.cells[colIdx];
@@ -1259,6 +1533,235 @@ function showToast(msg,type='success'){
   toast.classList.add('show');
   setTimeout(()=>toast.classList.remove('show'),3500);
 }
+
+
+// ===== UNSUSPEND TOGGLE - USERS =====
+async function toggleSuspendUser(id, isSuspended, nameOrIdx) {
+  const u = window._userTableData && !isNaN(nameOrIdx) ? window._userTableData[parseInt(nameOrIdx)] : null;
+  const displayName = u ? u.full_name : nameOrIdx;
+  const action = isSuspended ? 'unsuspend' : 'suspend';
+  if (!confirm((isSuspended ? 'Unsuspend' : 'Suspend') + ' ' + displayName + '?')) return;
+  const name = displayName;
+  try {
+    await db.from('user').update({is_suspended: !isSuspended}).eq('id', id);
+    showToast(name + ' has been ' + action + 'd', 'success');
+    if (currentUser.role !== 'super_admin') logActivity(currentUser.name, action.charAt(0).toUpperCase()+action.slice(1)+'d user: '+name, 'suspend');
+    await loadAll();
+    renderUsers(allUsers);
+  } catch(e) { showToast('Failed to ' + action + ' user', 'error'); }
+}
+
+// ===== UNSUSPEND TOGGLE - PROVIDERS =====
+async function toggleSuspendProvider(id, isAvailable, name) {
+  action = isAvailable ? 'suspend' : 'unsuspend';
+  if (!confirm((isAvailable ? 'Suspend' : 'Unsuspend') + ' ' + name + '?')) return;
+  try {
+    await db.from('providers').update({is_available: !isAvailable}).eq('id', id);
+    showToast(name + ' has been ' + action + 'd', 'success');
+    if (currentUser.role !== 'super_admin') logActivity(currentUser.name, action.charAt(0).toUpperCase()+action.slice(1)+'d provider: '+name, 'suspend');
+    await loadAll();
+    renderProviders(allProviders);
+  } catch(e) { showToast('Failed to ' + action + ' provider', 'error'); }
+}
+
+// ===== PROVIDER REVIEW MODAL =====
+let currentReviewProvider = null;
+
+async function openProviderReview(idx) {
+  const p = (window._providerTableData || allProviders)[idx];
+  if (!p) { showToast('Provider not found', 'error'); return; }
+  currentReviewProvider = p;
+
+  // DETAILS TAB
+  document.getElementById('prm-name').textContent = p.full_name || '—';
+  document.getElementById('prm-category').textContent = (p.category||'—') + ' · ' + (p.location||'—');
+  document.getElementById('prm-phone-val').textContent = p.full_name || '—';
+  document.getElementById('prm-phone').textContent = p.phone || '—';
+  document.getElementById('prm-whatsapp').textContent = p.whatsapp || p.phone || '—';
+  document.getElementById('prm-email').textContent = p.email || '—';
+  document.getElementById('prm-cat-val').textContent = p.category || '—';
+  document.getElementById('prm-location').textContent = p.location || '—';
+  document.getElementById('prm-date').textContent = new Date(p.created_at).toLocaleDateString();
+  document.getElementById('prm-rating').textContent = p.rating > 0 ? '★ ' + p.rating : 'No ratings yet';
+
+  // Parse bio for social links
+  const bio = p.bio || '';
+  const igMatch = bio.match(/instagram[:\s]*@?([^\s·—,]+)/i);
+  const ttMatch = bio.match(/tiktok[:\s]*@?([^\s·—,]+)/i);
+  document.getElementById('prm-instagram').textContent = igMatch ? '@'+igMatch[1] : (p.instagram || '—');
+  document.getElementById('prm-tiktok').textContent = ttMatch ? '@'+ttMatch[1] : (p.tiktok || '—');
+  document.getElementById('prm-bio').textContent = bio || 'No bio submitted yet.';
+
+  // PORTFOLIO TAB
+  const photoEl = document.getElementById('prm-profile-photo');
+  if (p.profile_photo) {
+    photoEl.innerHTML = '<img src="'+p.profile_photo+'" style="width:80px;height:80px;border-radius:14px;object-fit:cover;"/>';
+  } else {
+    photoEl.innerHTML = '<div style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>';
+  }
+
+  const photosStatus = document.getElementById('prm-photos-status');
+  const workPhotos = document.getElementById('prm-work-photos');
+  if (p.work_photos && p.work_photos.length > 0) {
+    workPhotos.innerHTML = p.work_photos.map(url =>
+      '<img src="'+url+'" style="aspect-ratio:1;border-radius:10px;object-fit:cover;width:100%;"/>'
+    ).join('');
+    photosStatus.textContent = p.work_photos.length + ' photos submitted';
+  } else {
+    photosStatus.textContent = 'No work photos submitted yet';
+  }
+
+  const videoWrap = document.getElementById('prm-video-wrap');
+  const videoStatus = document.getElementById('prm-video-status');
+  if (p.skill_video) {
+    videoWrap.innerHTML = '<video src="'+p.skill_video+'" controls style="width:100%;border-radius:10px;max-height:200px;"></video>';
+  } else {
+    videoStatus.textContent = 'No skill video submitted yet';
+  }
+
+  // CHECKLIST TAB
+  const missing = [];
+  updateCheck('chk-name', !!p.full_name, missing, 'Full name');
+  updateCheck('chk-phone', !!p.phone, missing, 'Phone number');
+  updateCheck('chk-email', !!p.email, missing, 'Email address');
+  updateCheck('chk-category', !!p.category, missing, 'Service category');
+  updateCheck('chk-location', !!p.location, missing, 'Location');
+  updateCheck('chk-photo', !!p.profile_photo, missing, 'Profile photo');
+  updateCheck('chk-portfolio', !!(p.work_photos && p.work_photos.length > 0), missing, 'Work photos');
+  updateCheck('chk-video', !!p.skill_video, missing, 'Skill video');
+
+  const missingBox = document.getElementById('prm-missing-box');
+  const missingText = document.getElementById('prm-missing-text');
+  if (missing.length > 0) {
+    missingBox.style.display = 'block';
+    missingText.textContent = 'Missing: ' + missing.join(', ');
+  } else {
+    missingBox.style.display = 'none';
+  }
+
+  // Update verify button
+  const verifyBtn = document.getElementById('verify-modal-btn');
+  if (p.is_verified) {
+    verifyBtn.textContent = '✓ Already Verified';
+    verifyBtn.style.background = 'var(--text3)';
+    verifyBtn.disabled = true;
+  } else {
+    verifyBtn.textContent = '✓ Verify Provider';
+    verifyBtn.style.background = 'var(--success)';
+    verifyBtn.disabled = false;
+  }
+
+  // Reset to details tab
+  switchPrmTab('details');
+  document.getElementById('provider-review-modal').classList.add('show');
+}
+
+function switchPrmTab(tab) {
+  ['details','portfolio','checklist'].forEach(t => {
+    const section = document.getElementById('prm-section-'+t);
+    const btn = document.getElementById('prm-tab-'+t);
+    if (section) section.style.display = t===tab ? 'block' : 'none';
+    if (btn) {
+      btn.style.color = t===tab ? 'var(--p)' : 'var(--text2)';
+      btn.style.borderBottomColor = t===tab ? 'var(--p)' : 'transparent';
+      btn.style.fontWeight = t===tab ? '700' : '500';
+    }
+  });
+}
+
+function updateCheck(elId, isComplete, missingArr, label) {
+  el = document.getElementById(elId);
+  if (!el) return;
+  if (isComplete) {
+    el.textContent = '✓ Complete';
+    el.className = 'badge completed';
+  } else {
+    el.textContent = '✗ Missing';
+    el.className = 'badge cancelled';
+    missingArr.push(label);
+  }
+}
+
+async function verifyProviderFromModal() {
+  if (!currentReviewProvider) return;
+  try {
+    await db.from('providers').update({is_verified: true}).eq('id', currentReviewProvider.id);
+    showToast(currentReviewProvider.full_name + ' verified successfully!', 'success');
+    if (currentUser.role !== 'super_admin') logActivity(currentUser.name, 'Verified provider: ' + currentReviewProvider.full_name, 'verify');
+    closeModal('provider-review-modal');
+    await loadAll();
+    renderProviders(allProviders);
+  } catch(e) { showToast('Failed to verify provider', 'error'); }
+}
+
+async function rejectProvider() {
+  if (!currentReviewProvider) return;
+  if (!confirm('Reject ' + currentReviewProvider.full_name + '? This will mark them as unavailable.')) return;
+  try {
+    await db.from('providers').update({is_available: false}).eq('id', currentReviewProvider.id);
+    showToast(currentReviewProvider.full_name + ' has been rejected', 'success');
+    closeModal('provider-review-modal');
+    await loadAll();
+    renderProviders(allProviders);
+  } catch(e) { showToast('Failed to reject provider', 'error'); }
+}
+
+function contactProviderWhatsApp() {
+  if (!currentReviewProvider) return;
+  const phone = (currentReviewProvider.phone || '').replace(/[^0-9]/g, '');
+  const intlPhone = phone.startsWith('0') ? '234' + phone.slice(1) : phone;
+  missing = document.getElementById('prm-missing-text').textContent;
+  name = currentReviewProvider.full_name;
+  let message;
+  if (missing && missing.length > 3) {
+    message = 'Hi ' + name + ', this is Preen. We reviewed your provider application and you are almost there! To complete your verification we still need: ' + missing.replace('Missing: ','') + '. Please update your profile on the app and we will verify you right away. Thank you!';
+  } else {
+    message = 'Hi ' + name + ', this is Preen. We received your provider application and are reviewing it now. We will be in touch shortly. Thank you for joining Preen!';
+  }
+  window.open('https://wa.me/' + intlPhone + '?text=' + encodeURIComponent(message), '_blank');
+  logActivity(currentUser.name, 'Contacted provider on WhatsApp: ' + name, 'staff');
+}
+
+function contactProviderEmail() {
+  if (!currentReviewProvider) return;
+  const email = currentReviewProvider.email;
+  if (!email || email === '—') { showToast('No email address found for this provider', 'error'); return; }
+  const name = currentReviewProvider.full_name;
+  const missing = document.getElementById('prm-missing-text') ? document.getElementById('prm-missing-text').textContent : '';
+  let subject, body;
+  if (missing && missing.length > 3) {
+    subject = 'Complete your Preen provider verification';
+    body = 'Hi ' + name + ',\n\nThank you for signing up as a provider on Preen.\n\nTo complete your verification we still need the following:\n' + missing.replace('Missing: ','') + '\n\nPlease log into the Preen app and update your profile. Once submitted we will verify you within 24 hours.\n\nThank you,\nThe Preen Team';
+  } else {
+    subject = 'Welcome to Preen!';
+    body = 'Hi ' + name + ',\n\nThank you for signing up as a provider on Preen. We received your application and are reviewing it now.\n\nWe will be in touch shortly.\n\nThe Preen Team';
+  }
+  window.open('mailto:'+email+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body));
+  logActivity(currentUser.name, 'Emailed provider: '+name, 'staff');
+}
+
+function requestMoreInfo() {
+  if (!currentReviewProvider) return;
+  const missingEl = document.getElementById('prm-missing-text');
+  const missing = missingEl ? missingEl.textContent.replace('Missing: ','') : '';
+  if (!missing) { showToast('No missing items — profile looks complete', 'success'); return; }
+  const name = currentReviewProvider.full_name;
+  const msgText = 'Hi ' + name + ', this is Preen. To complete your provider verification we need: ' + missing + '. Please log into the Preen app and update your profile. Once done we will verify you within 24 hours. Thank you!';
+  const phone = (currentReviewProvider.phone || '').replace(/[^0-9]/g, '');
+  const intlPhone = phone.startsWith('0') ? '234' + phone.slice(1) : phone;
+  window.open('https://wa.me/' + intlPhone + '?text=' + encodeURIComponent(msgText), '_blank');
+  setTimeout(function() {
+    const email = currentReviewProvider.email;
+    if (email) {
+      const subj = 'Complete your Preen verification';
+      const bodyLines = ['Hi ' + name + ',', '', 'To complete your Preen provider verification we still need:', '', missing, '', 'Please log into the Preen app and update your profile. Once done we will verify you within 24 hours.', '', 'Thank you,', 'The Preen Team'];
+      window.open('mailto:'+email+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(bodyLines.join('\n')));
+    }
+  }, 1500);
+  showToast('WhatsApp and email both opened', 'success');
+  logActivity(currentUser.name, 'Requested missing info from: ' + name, 'staff');
+}
+
 
 document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal('add-staff-modal');closeModal('suspend-modal');}});
