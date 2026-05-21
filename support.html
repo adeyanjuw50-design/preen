@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Support — Preen</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+    body{background:#FDF8F3;color:#1A1A1A;}
+    .header{background:linear-gradient(135deg,#E8547A,#C43A60);padding:40px 24px 30px;text-align:center;}
+    .logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:16px;}
+    .logo-icon{width:40px;height:40px;background:#F59E0B;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+    .logo-text{font-size:24px;font-weight:700;color:#fff;}
+    .header h1{font-size:22px;font-weight:700;color:#fff;margin-bottom:6px;}
+    .header p{font-size:13px;color:rgba(255,255,255,0.8);}
+    .content{max-width:700px;margin:0 auto;padding:24px 20px 80px;}
+    .contact-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px;}
+    .contact-card{background:#fff;border-radius:16px;padding:20px;text-align:center;border:1px solid #EDE0D4;cursor:pointer;text-decoration:none;display:block;}
+    .contact-card:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+    .contact-icon{font-size:32px;margin-bottom:10px;}
+    .contact-title{font-size:14px;font-weight:700;color:#1A1A1A;margin-bottom:4px;}
+    .contact-sub{font-size:12px;color:#888;}
+    .section{background:#fff;border-radius:16px;padding:20px;margin-bottom:16px;border:1px solid #EDE0D4;}
+    .section-title{font-size:15px;font-weight:700;color:#E8547A;margin-bottom:14px;}
+    .faq-item{border-bottom:1px solid #F3EBE4;padding:14px 0;cursor:pointer;}
+    .faq-item:last-child{border-bottom:none;padding-bottom:0;}
+    .faq-q{font-size:14px;font-weight:600;color:#1A1A1A;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+    .faq-a{font-size:13px;color:#666;line-height:1.7;margin-top:10px;display:none;}
+    .faq-item.open .faq-a{display:block;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);}
+    .faq-arrow{transition:transform 0.2s;flex-shrink:0;font-size:12px;color:#888;}
+    .footer{text-align:center;padding:20px;background:#1A1A2E;}
+    .footer p{font-size:12px;color:rgba(255,255,255,0.4);}
+    @media(max-width:480px){.contact-cards{grid-template-columns:1fr 1fr;}}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="20" height="20" viewBox="0 0 64 64" fill="none">
+        <path d="M14 10 C14 10 14 30 14 38" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+        <path d="M14 10 C14 10 36 10 36 20 C36 30 14 30 14 30" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round" fill="none"/>
+        <circle cx="44" cy="38" r="6" fill="#1A1A1A"/>
+      </svg>
+    </div>
+    <div class="logo-text">Preen</div>
+  </div>
+  <h1>How can we help you?</h1>
+  <p>We typically respond within 2 hours</p>
+</div>
+
+<div class="content">
+
+  <!-- CONTACT OPTIONS -->
+  <div class="contact-cards">
+    <a href="https://wa.me/2348000000000?text=Hi Preen Support, I need help with:" class="contact-card" target="_blank">
+      <div class="contact-icon">💬</div>
+      <div class="contact-title">WhatsApp</div>
+      <div class="contact-sub">Fastest response</div>
+    </a>
+    <a href="mailto:support@preen.ng?subject=Support Request" class="contact-card" target="_blank">
+      <div class="contact-icon">✉️</div>
+      <div class="contact-title">Email Us</div>
+      <div class="contact-sub">support@preen.ng</div>
+    </a>
+  </div>
+
+  <!-- CUSTOMER FAQ -->
+  <div class="section">
+    <div class="section-title">👤 Customer FAQ</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I book a service? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Search for a provider, tap their profile, choose a service, pick a date and time, and confirm your booking. The provider has 15 minutes to accept. Once accepted you will be prompted to pay to secure your slot.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What happens if a provider does not show up? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">You are fully protected. If a provider no-shows you get a full automatic refund. No questions asked. Report the provider through the app so we can take action.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I cancel a booking? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes. Go to My Bookings and tap Cancel on your booking. Cancellations made more than 2 hours before the appointment are fully refunded. Late cancellations may incur a small fee.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What is the late penalty? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">If you arrive more than 15 minutes late to your appointment a 50% late fee applies. This protects providers who have blocked out time for you.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I leave a review? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">After your service is marked as completed go to My Bookings and tap Leave Review. You can leave an anonymous review if you prefer.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is my payment safe? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes. All payments are processed by Paystack — Nigeria's most trusted payment provider. Preen never stores your card details. Your money is held securely and only released to the provider after your service is completed.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I block or report a provider? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Go to the provider's profile, tap the ••• button in the tabs, and choose Report or Block. Reports are reviewed by our team within 24 hours.</div>
+    </div>
+  </div>
+
+  <!-- PROVIDER FAQ -->
+  <div class="section">
+    <div class="section-title">💼 Provider FAQ</div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I get verified? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Sign up, complete your profile, and upload at least one skill with a photo. Adding a skill video speeds up verification. Our team reviews and verifies you within 24 hours.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How long do I have to accept a booking? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">You have 15 minutes to accept or decline each booking request. After 15 minutes the booking auto-declines and the customer is notified. We recommend turning on WhatsApp notifications so you never miss a request.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How does payment work for providers? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">When a customer pays for a booking the money is held securely by Preen. After the service is completed the payment is released to your withdrawal account minus Preen's 10% platform fee. You can withdraw anytime your balance is above ₦1,000.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What is the Preen Score? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Your Preen Score is calculated from your ratings, booking completion rate, response time and how long you have been on the platform. A higher score means better visibility in search results and the leaderboard.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I offer house calls? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes. Enable house calls from your profile settings. Customers can request you come to their location. You set your travel fee and decide which requests to accept.</div>
+    </div>
+
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What happens if a customer is late? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">If a customer is more than 15 minutes late a 50% late fee is automatically charged to them. This protects your time. You can still choose to cancel the appointment if they are too late.</div>
+    </div>
+  </div>
+
+  <!-- CONTACT FORM -->
+  <div class="section">
+    <div class="section-title">📝 Send us a message</div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Your Name</label>
+        <input type="text" id="support-name" placeholder="Enter your name" style="width:100%;background:#FDF8F3;border:1.5px solid #EDE0D4;border-radius:10px;padding:12px;font-size:14px;font-family:Poppins,sans-serif;outline:none;"/>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Email or Phone</label>
+        <input type="text" id="support-contact" placeholder="How can we reach you?" style="width:100%;background:#FDF8F3;border:1.5px solid #EDE0D4;border-radius:10px;padding:12px;font-size:14px;font-family:Poppins,sans-serif;outline:none;"/>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">What do you need help with?</label>
+        <select id="support-topic" style="width:100%;background:#FDF8F3;border:1.5px solid #EDE0D4;border-radius:10px;padding:12px;font-size:14px;font-family:Poppins,sans-serif;outline:none;">
+          <option value="">Select a topic</option>
+          <option>Booking issue</option>
+          <option>Payment problem</option>
+          <option>Provider verification</option>
+          <option>Account access</option>
+          <option>Refund request</option>
+          <option>Report a provider</option>
+          <option>Technical bug</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:12px;color:#888;display:block;margin-bottom:4px;">Message</label>
+        <textarea id="support-message" placeholder="Tell us more about your issue..." style="width:100%;background:#FDF8F3;border:1.5px solid #EDE0D4;border-radius:10px;padding:12px;font-size:14px;font-family:Poppins,sans-serif;outline:none;resize:none;height:100px;"></textarea>
+      </div>
+      <button onclick="submitSupportTicket()" style="width:100%;background:#E8547A;color:#fff;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;">Send Message</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer"><p>© 2026 Preen Technologies Limited · support@preen.ng</p></div>
+
+<script>
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+
+function submitSupportTicket() {
+  const name = document.getElementById('support-name').value.trim();
+  const contact = document.getElementById('support-contact').value.trim();
+  const topic = document.getElementById('support-topic').value;
+  const message = document.getElementById('support-message').value.trim();
+
+  if (!name || !contact || !topic || !message) {
+    alert('Please fill in all fields.');
+    return;
+  }
+
+  // Open WhatsApp with pre-filled message
+  const text = 'Support Request from ' + name + '\nContact: ' + contact + '\nTopic: ' + topic + '\nMessage: ' + message;
+  window.open('https://wa.me/2348000000000?text=' + encodeURIComponent(text), '_blank');
+
+  // Clear form
+  document.getElementById('support-name').value = '';
+  document.getElementById('support-contact').value = '';
+  document.getElementById('support-topic').value = '';
+  document.getElementById('support-message').value = '';
+
+  alert('Message sent! We will get back to you within 2 hours.');
+}
+</script>
+</body>
+</html>
