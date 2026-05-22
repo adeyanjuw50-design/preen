@@ -2310,6 +2310,18 @@ function initSplash() {
     splash.style.transition = 'opacity 0.5s ease';
     setTimeout(() => {
       splash.style.display = 'none';
+      // Check if already logged in
+      const provName = localStorage.getItem('preen_provider_name');
+      const userName = localStorage.getItem('preen_user_name');
+      if (provName) {
+        showScreen('screen-provider-dashboard');
+      } else if (userName) {
+        showScreen('screen-home');
+      } else {
+        // Guest - go straight to home
+        showScreen('screen-home');
+        setTimeout(updateHomeForGuest, 100);
+      }
     }, 500);
   }, 2500);
 }
@@ -3520,3 +3532,66 @@ async function submitReport() {
 
 
 // ===== WAITING FOR PROVIDER =====
+// ===== GUEST MODE =====
+function isGuest() {
+  return !localStorage.getItem('preen_user_name') && !localStorage.getItem('preen_provider_name');
+}
+
+function requireAuth(action) {
+  if (isGuest()) {
+    showGuestSignup(action);
+    return false;
+  }
+  return true;
+}
+
+function showGuestSignup(action) {
+  const existing = document.getElementById('guest-signup-sheet');
+  if (existing) existing.remove();
+  const existingOv = document.getElementById('guest-signup-overlay');
+  if (existingOv) existingOv.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'guest-signup-overlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;';
+  overlay.onclick = closeGuestSheet;
+
+  const sheet = document.createElement('div');
+  sheet.id = 'guest-signup-sheet';
+  sheet.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;z-index:1000;overflow:hidden;transition:transform 0.3s ease;';
+
+  const actionText = action ? 'to ' + action : 'to continue';
+
+  sheet.innerHTML =
+    '<div style="padding:24px 20px;text-align:center;">' +
+    '<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>' +
+    '<div style="font-size:44px;margin-bottom:12px;">✨</div>' +
+    '<p style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Join Preen ' + actionText + '</p>' +
+    '<p style="font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6;">Book top beauty professionals near you. Fast, easy and secure.</p>' +
+    '<button onclick="closeGuestSheet();showScreen(\'screen-signup\')" style="width:100%;background:var(--primary);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:10px;">Create Free Account</button>' +
+    '<button onclick="closeGuestSheet();showScreen(\'screen-login\')" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:16px;">I already have an account</button>' +
+    '<p onclick="closeGuestSheet()" style="font-size:12px;color:var(--text3);cursor:pointer;">Maybe later</p>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(sheet);
+  setTimeout(() => { sheet.style.transform = 'translateX(-50%) translateY(0)'; }, 10);
+}
+
+function closeGuestSheet() {
+  const sheet = document.getElementById('guest-signup-sheet');
+  const overlay = document.getElementById('guest-signup-overlay');
+  if (sheet) { sheet.style.transform = 'translateX(-50%) translateY(100%)'; setTimeout(() => { if (sheet.parentNode) sheet.remove(); }, 300); }
+  if (overlay) overlay.remove();
+}
+
+function updateHomeForGuest() {
+  const guest = isGuest();
+  const signinBtn = document.getElementById('signin-btn-home');
+  const greeting = document.getElementById('home-greeting');
+  if (signinBtn) signinBtn.style.display = guest ? 'flex' : 'none';
+  if (greeting) {
+    const name = localStorage.getItem('preen_user_name');
+    greeting.textContent = name ? 'Hey ' + name.split(' ')[0] + ' 👋' : 'Good day 👋';
+  }
+}
