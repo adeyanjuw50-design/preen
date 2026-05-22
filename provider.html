@@ -258,6 +258,15 @@ async function submitProvider(){
   if(!email){alert('Please enter your email.');return;}
   if(!category){alert('Please select your service category.');return;}
   if(!state){alert('Please select your state.');return;}
+  // Check for duplicate business name
+  try {
+    const { data: existingProv } = await db.from('providers').select('id').ilike('full_name', name).single();
+    if (existingProv) {
+      alert('A provider named "' + name + '" already exists on Preen. Please choose a different business name.');
+      return;
+    }
+  } catch(e) { /* no duplicate, continue */ }
+
   const btn=document.getElementById('submit-btn');
   btn.disabled=true;btn.textContent='Securing your spot...';
   try{

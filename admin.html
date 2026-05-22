@@ -569,14 +569,18 @@
           <div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid #FECACA;">
             <p style="font-size:12px;font-weight:600;color:var(--error);margin-bottom:8px;">This will delete:</p>
             <p style="font-size:12px;color:var(--text2);">• All bookings</p>
-            <p style="font-size:12px;color:var(--text2);">• All users and providers</p>
+            <p style="font-size:12px;color:var(--text2);">• All users</p>
+            <p style="font-size:12px;color:var(--text2);">• All providers</p>
             <p style="font-size:12px;color:var(--text2);">• All reviews</p>
           </div>
           <div style="margin-bottom:12px;">
-            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Type LAUNCH to confirm</label>
-            <input type="text" id="launch-confirm" class="search-inp" placeholder="Type LAUNCH" style="width:100%;"/>
+            <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:6px;">Type <strong>LAUNCH</strong> to confirm</label>
+            <input type="text" id="launch-confirm" class="modal-inp" placeholder="Type LAUNCH here"
+              style="width:100%;letter-spacing:2px;font-weight:700;text-transform:uppercase;"/>
           </div>
-          <button onclick="activateLaunchMode()" style="width:100%;background:var(--error);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;">🚀 Wipe All Test Data</button>
+          <button onclick="activateLaunchMode()" style="width:100%;background:var(--error);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;">
+            🚀 Wipe All Test Data and Launch
+          </button>
         </div>
 
       </div>
@@ -796,57 +800,39 @@ function changeAdminPassword() {
 
 
 // ===== LAUNCH MODE =====
-function checkLaunchInput(input) {
-  const btn = document.getElementById('launch-mode-btn');
-  if (!btn) return;
-  if (input.value.trim() === 'LAUNCH') {
-    btn.disabled = false;
-    btn.style.background = 'var(--error)';
-    btn.style.cursor = 'pointer';
-  } else {
-    btn.disabled = true;
-    btn.style.background = '#ccc';
-    btn.style.cursor = 'not-allowed';
-  }
-}
+function checkLaunchInput(input) { /* handled by activateLaunchMode */ }
 
 
 // ===== LAUNCH MODE =====
 async function activateLaunchMode() {
-  const input = document.getElementById('launch-confirm-input');
-  if (!input || input.value.trim() !== 'LAUNCH') {
-    showToast('Please type LAUNCH to confirm', 'error');
+  const input = document.getElementById('launch-confirm');
+  if (!input) { showToast('Input not found', 'error'); return; }
+  
+  const val = input.value.trim().toUpperCase();
+  if (val !== 'LAUNCH') {
+    showToast('Please type LAUNCH in the box to confirm', 'error');
     return;
   }
-  if (!confirm('⚠️ FINAL WARNING\n\nThis will permanently delete ALL test data from your Supabase database.\n\nBookings, users, providers and reviews will all be wiped.\n\nThis CANNOT be undone.\n\nAre you absolutely sure?')) return;
 
-  const btn = document.getElementById('launch-mode-btn');
-  btn.textContent = 'Wiping data...';
-  btn.disabled = true;
+  if (!confirm('FINAL WARNING\n\nThis will permanently delete ALL test data from Supabase.\n\nBookings, users, providers and reviews will all be wiped.\n\nThis CANNOT be undone.\n\nAre you sure?')) return;
+
+  const btn = document.querySelector('[onclick="activateLaunchMode()"]');
+  if (btn) { btn.textContent = 'Wiping data...'; btn.disabled = true; }
 
   try {
-    // Delete all test data in order (respecting foreign keys)
     await db.from('reviews').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await db.from('bookings').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await db.from('providers').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     await db.from('user').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-    // Clear staff logs
     localStorage.removeItem('preen_activity_log');
     staffActivityLog = [];
-
     showToast('✅ All test data wiped. Preen is ready for launch!', 'success');
-    btn.textContent = '✅ Launch Mode Active';
-    btn.style.background = 'var(--success)';
-
-    // Reload all data
+    if (btn) { btn.textContent = '✅ Launch Mode Active'; btn.style.background = 'var(--success)'; }
+    input.value = '';
     await loadAll();
-    logActivity(currentUser.name, '🚀 LAUNCH MODE ACTIVATED — all test data wiped', 'staff');
-
   } catch(e) {
-    showToast('Error wiping data: ' + e.message, 'error');
-    btn.textContent = '🚀 Wipe Test Data and Launch';
-    btn.disabled = false;
+    showToast('Error: ' + e.message, 'error');
+    if (btn) { btn.textContent = '🚀 Wipe All Test Data and Launch'; btn.disabled = false; }
   }
 }
 

@@ -2310,15 +2310,13 @@ function initSplash() {
     splash.style.transition = 'opacity 0.5s ease';
     setTimeout(() => {
       splash.style.display = 'none';
-      // Check if already logged in
-      const provName = localStorage.getItem('preen_provider_name');
-      const userName = localStorage.getItem('preen_user_name');
-      if (provName) {
+      const savedRole = localStorage.getItem('preen_role');
+      if (savedRole === 'provider' && localStorage.getItem('preen_provider_name')) {
         showScreen('screen-provider-dashboard');
-      } else if (userName) {
+      } else if (savedRole === 'customer' && localStorage.getItem('preen_user_name')) {
         showScreen('screen-home');
+        setTimeout(updateHomeForGuest, 100);
       } else {
-        // Guest - go straight to home
         showScreen('screen-home');
         setTimeout(updateHomeForGuest, 100);
       }
@@ -2942,16 +2940,67 @@ function handleProviderLogin() {
   showScreen('screen-provider-dashboard');
 }
 
-function handleProviderSignup() {
+async function handleProviderSignup() {
   const name = document.getElementById('prov-name').value.trim();
   const phone = document.getElementById('prov-phone').value.trim();
+  const whatsapp = document.getElementById('prov-whatsapp') ? document.getElementById('prov-whatsapp').value.trim() : phone;
   const email = document.getElementById('prov-email-signup').value.trim();
-  const password = document.getElementById('prov-password').value.trim();
+  const password = document.getElementById('prov-password') ? document.getElementById('prov-password').value.trim() : '';
   const category = document.getElementById('prov-category').value;
-  if (!name || !phone || !email || !password) { alert('Please fill in all fields.'); return; }
-  saveUser(name, email, phone, 'provider');
-  saveProvider(name, email, phone, category);
-  document.getElementById('prov-dashboard-name').textContent = name;
+  const location = document.getElementById('prov-location') ? document.getElementById('prov-location').value : '';
+
+  if (!name) { alert('Please enter your business or stage name.'); return; }
+  if (!phone) { alert('Please enter your phone number.'); return; }
+  if (!email) { alert('Please enter your email address.'); return; }
+  if (!category) { alert('Please select your service category.'); return; }
+
+  // Check for duplicate business name
+  if (db) {
+    const { data: existing } = await db
+      .from('providers')
+      .select('id')
+      .ilike('full_name', name)
+      .single();
+
+    if (existing) {
+      alert('A provider with the name "' + name + '" already exists on Preen. Please choose a different business name.');
+      return;
+    }
+  }
+
+  // Save to Supabase
+  if (db) {
+    try {
+      await db.from('providers').insert([{
+        full_name: name,
+        phone: phone,
+        whatsapp: whatsapp || phone,
+        email: email,
+        category: category,
+        location: location,
+        is_verified: false,
+        is_available: true,
+        rating: 0
+      }]);
+
+      await db.from('user').insert([{
+        full_name: name,
+        phone: phone,
+        email: email,
+        role: 'provider'
+      }]);
+    } catch(e) {
+      console.log('Provider signup error:', e);
+    }
+  }
+
+  // Save to localStorage
+  localStorage.setItem('preen_role', 'provider');
+  localStorage.setItem('preen_provider_name', name);
+  localStorage.setItem('preen_provider_email', email);
+  localStorage.setItem('preen_provider_phone', phone);
+  localStorage.setItem('preen_provider_category', category);
+
   showScreen('screen-provider-dashboard');
 }
 
@@ -3532,16 +3581,44 @@ async function submitReport() {
 
 
 // ===== WAITING FOR PROVIDER =====
+// ===== ROLE-BASED LOGIN =====
+function switchLoginTab(role) {
+  localStorage.setItem('preen_login_role', role);
+  const custTab = document.getElementById('login-tab-customer');
+  const provTab = document.getElementById('login-tab-provider');
+  const btn = document.getElementById('login-btn');
+  const switchText = document.getElementById('login-switch-text');
+  if (role === 'provider') {
+    if (custTab) { custTab.style.background = 'transparent'; custTab.style.color = 'var(--text2)'; }
+    if (provTab) { provTab.style.background = 'var(--primary)'; provTab.style.color = '#fff'; }
+    if (btn) btn.textContent = 'Log In as Provider';
+    if (switchText) switchText.innerHTML = "Don't have a provider account? <span onclick='showProviderJoin()' style='color:var(--primary);cursor:pointer;font-weight:600;'>Join as Provider</span>";
+  } else {
+    if (provTab) { provTab.style.background = 'transparent'; provTab.style.color = 'var(--text2)'; }
+    if (custTab) { custTab.style.background = 'var(--primary)'; custTab.style.color = '#fff'; }
+    if (btn) btn.textContent = 'Log In as Customer';
+    if (switchText) switchText.innerHTML = "Don't have an account? <span onclick=\"showScreen('screen-signup')\" style='color:var(--primary);cursor:pointer;font-weight:600;'>Sign Up</span>";
+  }
+}
+
+function showProviderJoin() {
+  showScreen('screen-provider-signup');
+}
+
+function updateProviderBanner() {
+  const banner = document.getElementById('provider-join-banner');
+  if (!banner) return;
+  const role = localStorage.getItem('preen_role');
+  banner.style.display = (role === 'provider') ? 'none' : 'flex';
+}
+
 // ===== GUEST MODE =====
 function isGuest() {
   return !localStorage.getItem('preen_user_name') && !localStorage.getItem('preen_provider_name');
 }
 
 function requireAuth(action) {
-  if (isGuest()) {
-    showGuestSignup(action);
-    return false;
-  }
+  if (isGuest()) { showGuestSignup(action); return false; }
   return true;
 }
 
@@ -3550,29 +3627,25 @@ function showGuestSignup(action) {
   if (existing) existing.remove();
   const existingOv = document.getElementById('guest-signup-overlay');
   if (existingOv) existingOv.remove();
-
   const overlay = document.createElement('div');
   overlay.id = 'guest-signup-overlay';
   overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:999;';
   overlay.onclick = closeGuestSheet;
-
   const sheet = document.createElement('div');
   sheet.id = 'guest-signup-sheet';
   sheet.style.cssText = 'position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:480px;background:var(--bg);border-radius:24px 24px 0 0;z-index:1000;overflow:hidden;transition:transform 0.3s ease;';
-
   const actionText = action ? 'to ' + action : 'to continue';
-
   sheet.innerHTML =
     '<div style="padding:24px 20px;text-align:center;">' +
     '<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>' +
     '<div style="font-size:44px;margin-bottom:12px;">✨</div>' +
     '<p style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Join Preen ' + actionText + '</p>' +
-    '<p style="font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6;">Book top beauty professionals near you. Fast, easy and secure.</p>' +
+    '<p style="font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6;">Book top beauty professionals near you.</p>' +
     '<button onclick="closeGuestSheet();showScreen(\'screen-signup\')" style="width:100%;background:var(--primary);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:10px;">Create Free Account</button>' +
-    '<button onclick="closeGuestSheet();showScreen(\'screen-login\')" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:16px;">I already have an account</button>' +
+    '<button onclick="closeGuestSheet();showScreen(\'screen-login\')" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:10px;">I already have an account</button>' +
+    '<button onclick="closeGuestSheet();showProviderJoin()" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:16px;">💼 Join as a Provider</button>' +
     '<p onclick="closeGuestSheet()" style="font-size:12px;color:var(--text3);cursor:pointer;">Maybe later</p>' +
     '</div>';
-
   document.body.appendChild(overlay);
   document.body.appendChild(sheet);
   setTimeout(() => { sheet.style.transform = 'translateX(-50%) translateY(0)'; }, 10);
@@ -3586,12 +3659,62 @@ function closeGuestSheet() {
 }
 
 function updateHomeForGuest() {
-  const guest = isGuest();
+  updateProviderBanner();
   const signinBtn = document.getElementById('signin-btn-home');
   const greeting = document.getElementById('home-greeting');
-  if (signinBtn) signinBtn.style.display = guest ? 'flex' : 'none';
+  if (signinBtn) signinBtn.style.display = isGuest() ? 'flex' : 'none';
   if (greeting) {
-    const name = localStorage.getItem('preen_user_name');
-    greeting.textContent = name ? 'Hey ' + name.split(' ')[0] + ' 👋' : 'Good day 👋';
+    const uname = localStorage.getItem('preen_user_name');
+    greeting.textContent = uname ? 'Hey ' + uname.split(' ')[0] + ' 👋' : 'Good day 👋';
+  }
+}
+
+// Override handleLogin to be role-aware
+const _origHandleLogin = typeof handleLogin !== 'undefined' ? handleLogin : null;
+async function handleLogin() {
+  const loginEmail = document.getElementById('login-email').value.trim();
+  const loginPassword = document.getElementById('login-password').value.trim();
+  if (!loginEmail || !loginPassword) { alert('Please enter your email and password.'); return; }
+  const loginRole = localStorage.getItem('preen_login_role') || 'customer';
+  const loginBtn = document.getElementById('login-btn');
+  if (loginBtn) { loginBtn.textContent = 'Logging in...'; loginBtn.disabled = true; }
+  try {
+    if (loginRole === 'provider') {
+      if (!db) { alert('Connection error. Please try again.'); return; }
+      const { data, error } = await db.from('providers').select('*').eq('email', loginEmail).single();
+      if (error || !data) {
+        if (loginBtn) { loginBtn.textContent = 'Log In as Provider'; loginBtn.disabled = false; }
+        alert('No provider account found. Did you mean to log in as a customer?');
+        return;
+      }
+      localStorage.setItem('preen_role', 'provider');
+      localStorage.setItem('preen_provider_name', data.full_name);
+      localStorage.setItem('preen_provider_email', data.email);
+      localStorage.setItem('preen_provider_phone', data.phone || '');
+      localStorage.setItem('preen_provider_id', data.id);
+      showScreen('screen-provider-dashboard');
+    } else {
+      if (!db) { alert('Connection error. Please try again.'); return; }
+      const { data, error } = await db.from('user').select('*').eq('email', loginEmail).single();
+      if (error || !data) {
+        if (loginBtn) { loginBtn.textContent = 'Log In as Customer'; loginBtn.disabled = false; }
+        alert('No customer account found. Did you mean to log in as a provider?');
+        return;
+      }
+      if (data.is_suspended) {
+        if (loginBtn) { loginBtn.textContent = 'Log In as Customer'; loginBtn.disabled = false; }
+        alert('Your account has been suspended. Contact support.');
+        return;
+      }
+      localStorage.setItem('preen_role', 'customer');
+      localStorage.setItem('preen_user_name', data.full_name);
+      localStorage.setItem('preen_user_email', data.email);
+      localStorage.setItem('preen_user_phone', data.phone || '');
+      showScreen('screen-home');
+      setTimeout(updateHomeForGuest, 100);
+    }
+  } catch(e) {
+    if (loginBtn) { loginBtn.textContent = loginRole === 'provider' ? 'Log In as Provider' : 'Log In as Customer'; loginBtn.disabled = false; }
+    alert('Login failed. Please check your details and try again.');
   }
 }
