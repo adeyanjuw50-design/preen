@@ -248,12 +248,12 @@
     <div class="main">
       <div class="topbar">
         <div style="display:flex;align-items:center;gap:12px;">
-          <button class="hamburger" onclick="openSidebar()">☰</button>
+          <button class="hamburger" onclick="openSidebar()" style="display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
           <div class="page-title" id="topbar-title">Overview</div>
         </div>
         <div class="topbar-right">
           <span style="font-size:11px;color:var(--text2);" id="last-updated"></span>
-          <button class="topbar-btn" onclick="refreshCurrent()">↻ Refresh</button>
+          <button class="topbar-btn" onclick="refreshCurrent()" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg> Refresh</button>
         </div>
       </div>
 
@@ -271,10 +271,10 @@
             <button class="tf-btn" onclick="setTimeframe('custom',this)">Go</button>
           </div>
           <div class="stats-grid">
-            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Total Users</div><div class="stat-value" id="ov-users">-</div><div class="stat-change" id="ov-users-sub">Loading...</div><div class="stat-accent" style="background:var(--p);"></div></div>
-            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Bookings</div><div class="stat-value" id="ov-bookings">-</div><div class="stat-change" id="ov-bookings-sub">Loading...</div><div class="stat-accent" style="background:var(--accent);"></div></div>
-            <div class="stat-card"><div class="stat-icon">✂️</div><div class="stat-label">Providers</div><div class="stat-value" id="ov-providers">-</div><div class="stat-change" id="ov-providers-sub">Loading...</div><div class="stat-accent" style="background:var(--success);"></div></div>
-            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Platform Fees</div><div class="stat-value" id="ov-fees">-</div><div class="stat-change">10% of all bookings</div><div class="stat-accent" style="background:#7C3AED;"></div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="stat-label">Total Users</div><div class="stat-value" id="ov-users">-</div><div class="stat-change" id="ov-users-sub">Loading...</div><div class="stat-accent" style="background:var(--p);"></div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="stat-label">Bookings</div><div class="stat-value" id="ov-bookings">-</div><div class="stat-change" id="ov-bookings-sub">Loading...</div><div class="stat-accent" style="background:var(--accent);"></div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div><div class="stat-label">Providers</div><div class="stat-value" id="ov-providers">-</div><div class="stat-change" id="ov-providers-sub">Loading...</div><div class="stat-accent" style="background:var(--success);"></div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2 3 2 3 .6 3 2-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></div><div class="stat-label">Platform Fees</div><div class="stat-value" id="ov-fees">-</div><div class="stat-change">10% of all bookings</div><div class="stat-accent" style="background:#7C3AED;"></div></div>
           </div>
           <div class="charts-grid">
             <div class="card">
@@ -305,10 +305,10 @@
         <!-- TODAY PAGE -->
         <div class="page" id="pg-today">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px;">
-            <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-label">Bookings Today</div><div class="stat-value" id="today-bookings">-</div></div>
-            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Revenue Today</div><div class="stat-value" id="today-revenue">-</div></div>
-            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">New Users Today</div><div class="stat-value" id="today-users">-</div></div>
-            <div class="stat-card"><div class="stat-icon">✂️</div><div class="stat-label">New Providers Today</div><div class="stat-value" id="today-providers">-</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><div class="stat-label">Bookings Today</div><div class="stat-value" id="today-bookings">-</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2 3 2 3 .6 3 2-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></div><div class="stat-label">Revenue Today</div><div class="stat-value" id="today-revenue">-</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="stat-label">New Users Today</div><div class="stat-value" id="today-users">-</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div><div class="stat-label">New Providers Today</div><div class="stat-value" id="today-providers">-</div></div>
           </div>
           <div class="card"><div class="card-head"><div class="card-title">Today's Bookings</div><span id="today-date-label" style="font-size:12px;color:var(--text2);"></span></div><div id="today-bookings-table"><div class="empty">Loading...</div></div></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;">
@@ -382,10 +382,10 @@
             <button class="tf-btn" onclick="filterFinanceTime('month',this)">This Month</button>
           </div>
           <div class="stats-grid" style="margin-bottom:20px;">
-            <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-label">Gross Volume</div><div class="stat-value" id="fin-total">₦0</div></div>
-            <div class="stat-card"><div class="stat-icon">🏦</div><div class="stat-label">Platform Fees (10%)</div><div class="stat-value" id="fin-fees">₦0</div></div>
-            <div class="stat-card"><div class="stat-icon">💸</div><div class="stat-label">Provider Payouts</div><div class="stat-value" id="fin-payouts">₦0</div></div>
-            <div class="stat-card"><div class="stat-icon">📈</div><div class="stat-label">Avg Booking</div><div class="stat-value" id="fin-avg">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div><div class="stat-label">Gross Volume</div><div class="stat-value" id="fin-total">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21h16M4 10h16M6 21V10M10 21V10M14 21V10M18 21V10M12 2 3 7h18z"/></svg></div><div class="stat-label">Platform Fees (10%)</div><div class="stat-value" id="fin-fees">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2 3 2 3 .6 3 2-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg></div><div class="stat-label">Provider Payouts</div><div class="stat-value" id="fin-payouts">₦0</div></div>
+            <div class="stat-card"><div class="stat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div><div class="stat-label">Avg Booking</div><div class="stat-value" id="fin-avg">₦0</div></div>
           </div>
           <div class="card" style="margin-bottom:14px;"><div class="card-head"><div class="card-title">Revenue Chart</div></div><div class="card-body"><div class="chart-wrap"><canvas id="fin-chart"></canvas></div></div></div>
           <div class="card"><div class="card-head"><div class="card-title">Transaction Log</div></div><div class="table-wrap" id="fin-table"><div class="empty">Loading...</div></div></div>
@@ -428,7 +428,7 @@
                 <div class="notif-preview-title" id="preview-title">Your notification title</div>
                 <div class="notif-preview-msg" id="preview-msg">Your message will appear here...</div>
               </div>
-              <button class="topbar-btn" style="width:fit-content;" onclick="sendNotif()">Send Notification 🚀</button>
+              <button class="topbar-btn" style="width:fit-content;" onclick="sendNotif()" style="display:inline-flex;align-items:center;gap:6px;">Send Notification <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg></button>
             </div>
           </div>
           <div class="card">
@@ -542,7 +542,7 @@
               <div><p style="font-size:14px;font-weight:500;">Provider Auto-Verify</p><p style="font-size:12px;color:var(--text2);">Auto verify all new providers</p></div>
               <div class="toggle-sw" onclick="this.classList.toggle('on');"></div>
             </div>
-            <button class="topbar-btn" style="margin-top:16px;width:100%;" onclick="saveSettings()">Save All Settings ✓</button>
+            <button class="topbar-btn" style="margin-top:16px;width:100%;" onclick="saveSettings()" style="display:inline-flex;align-items:center;gap:6px;">Save All Settings <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></button>
         </div>
 
         <!-- CHANGE PASSWORD -->
@@ -564,7 +564,7 @@
 
         <!-- LAUNCH MODE -->
         <div style="background:#FEF2F2;border-radius:20px;padding:24px;border:1.5px solid #FECACA;margin-top:14px;">
-          <p style="font-size:16px;font-weight:700;color:var(--error);margin-bottom:6px;">🚀 Launch Mode</p>
+          <p style="font-size:16px;font-weight:700;color:var(--error);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Launch Mode</p>
           <p style="font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;">Permanently deletes ALL test data. Only use when ready to go live. Cannot be undone.</p>
           <div style="background:#fff;border-radius:12px;padding:14px;margin-bottom:14px;border:1px solid #FECACA;">
             <p style="font-size:12px;font-weight:600;color:var(--error);margin-bottom:8px;">This will delete:</p>
@@ -579,7 +579,7 @@
               style="width:100%;letter-spacing:2px;font-weight:700;text-transform:uppercase;"/>
           </div>
           <button onclick="activateLaunchMode()" style="width:100%;background:var(--error);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;">
-            🚀 Wipe All Test Data and Launch
+            <span style="display:inline-flex;align-items:center;gap:6px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Wipe All Test Data and Launch</span>
           </button>
         </div>
 
@@ -597,7 +597,7 @@
         <div class="modal-title" id="prm-name">Provider Name</div>
         <div style="font-size:13px;color:var(--text2);" id="prm-category">Category · Location</div>
       </div>
-      <button onclick="closeModal('provider-review-modal')" style="background:var(--bg);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;color:var(--text2);">✕</button>
+      <button onclick="closeModal('provider-review-modal')" style="background:var(--bg);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:18px;color:var(--text2);display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
 
     <!-- TABS -->
@@ -634,21 +634,21 @@
     <div id="prm-section-portfolio" style="display:none;">
       <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
         <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Profile Photo</p>
-        <div id="prm-profile-photo" style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--text3);">👤</div>
+        <div id="prm-profile-photo" style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;color:var(--text3);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
       </div>
       <div style="background:var(--bg);border-radius:14px;padding:16px;margin-bottom:12px;">
         <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Work Photos</p>
         <div id="prm-work-photos" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
-          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
-          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text3);">📷</div>
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text3);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text3);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+          <div style="aspect-ratio:1;background:var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--text3);"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
         </div>
         <p style="font-size:11px;color:var(--text3);margin-top:8px;" id="prm-photos-status">No work photos submitted yet</p>
       </div>
       <div style="background:var(--bg);border-radius:14px;padding:16px;">
         <p style="font-size:13px;font-weight:600;margin-bottom:12px;">Skill Video</p>
         <div id="prm-video-wrap" style="background:var(--border);border-radius:10px;height:120px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
-          <span style="font-size:32px;">🎥</span>
+          <span style="display:flex;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>
           <p style="font-size:12px;color:var(--text3);" id="prm-video-status">No skill video submitted yet</p>
         </div>
       </div>
@@ -670,7 +670,7 @@
         </div>
       </div>
       <div id="prm-missing-box" style="background:#FEF3C7;border-radius:12px;padding:14px;margin-bottom:12px;border:1px solid #FDE68A;display:none;">
-        <p style="font-size:12px;font-weight:600;color:#D97706;margin-bottom:4px;">⚠️ Missing items</p>
+        <p style="font-size:12px;font-weight:600;color:#D97706;margin-bottom:4px;display:flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Missing items</p>
         <p style="font-size:12px;color:#92400E;" id="prm-missing-text"></p>
       </div>
     </div>
@@ -683,15 +683,15 @@
           WhatsApp
         </button>
         <button onclick="contactProviderEmail()" style="background:#3B82F6;color:#fff;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-          ✉️ Email
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 6-10 7L2 6"/></svg> Email
         </button>
       </div>
       <button onclick="requestMoreInfo()" style="width:100%;background:var(--accent);color:#1A1A1A;border:none;border-radius:10px;padding:11px;font-size:12px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;">
-        📋 Request Missing Info (WhatsApp + Email)
+        <span style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><rect x="9" y="1" width="6" height="4" rx="1"/></svg> Request Missing Info (WhatsApp + Email)</span>
       </button>
       <div style="display:flex;gap:8px;">
-        <button onclick="rejectProvider()" style="flex:1;background:transparent;border:1.5px solid var(--error);border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;color:var(--error);">✗ Reject</button>
-        <button onclick="verifyProviderFromModal()" id="verify-modal-btn" style="flex:2;background:var(--success);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;">✓ Verify Provider</button>
+        <button onclick="rejectProvider()" style="flex:1;background:transparent;border:1.5px solid var(--error);border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;color:var(--error);display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject</button>
+        <button onclick="verifyProviderFromModal()" id="verify-modal-btn" style="flex:2;background:var(--success);color:#fff;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verify Provider</button>
       </div>
     </div>
   </div>
@@ -715,18 +715,18 @@
     <div style="margin-bottom:4px;">
       <label style="font-size:13px;font-weight:500;color:var(--text);display:block;margin-bottom:8px;">Permissions</label>
       <div class="permission-grid" id="permission-grid">
-        <div class="permission-item selected" data-perm="view_bookings"><input type="checkbox" id="p-bookings" checked/><label for="p-bookings">📅 View Bookings</label></div>
-        <div class="permission-item selected" data-perm="manage_bookings"><input type="checkbox" id="p-manage-bookings" checked/><label for="p-manage-bookings">✅ Manage Bookings</label></div>
-        <div class="permission-item selected" data-perm="view_users"><input type="checkbox" id="p-users" checked/><label for="p-users">👥 View Users</label></div>
-        <div class="permission-item" data-perm="suspend_users"><input type="checkbox" id="p-suspend"/><label for="p-suspend">🚫 Suspend Users</label></div>
-        <div class="permission-item" data-perm="view_providers"><input type="checkbox" id="p-providers"/><label for="p-providers">✂️ View Providers</label></div>
-        <div class="permission-item" data-perm="verify_providers"><input type="checkbox" id="p-verify"/><label for="p-verify">✓ Verify Providers</label></div>
-        <div class="permission-item" data-perm="send_notifications"><input type="checkbox" id="p-notifs"/><label for="p-notifs">🔔 Send Notifications</label></div>
-        <div class="permission-item" data-perm="view_reviews"><input type="checkbox" id="p-reviews"/><label for="p-reviews">⭐ View Reviews</label></div>
-        <div class="permission-item" data-perm="manage_reviews"><input type="checkbox" id="p-manage-reviews"/><label for="p-manage-reviews">🗑️ Remove Reviews</label></div>
-        <div class="permission-item" data-perm="view_finance"><input type="checkbox" id="p-finance"/><label for="p-finance">💰 View Finance</label></div>
-        <div class="permission-item" data-perm="manage_promos"><input type="checkbox" id="p-promos"/><label for="p-promos">🎁 Manage Promos</label></div>
-        <div class="permission-item" data-perm="today_view"><input type="checkbox" id="p-today" checked/><label for="p-today">📆 Today View</label></div>
+        <div class="permission-item selected" data-perm="view_bookings"><input type="checkbox" id="p-bookings" checked/><label for="p-bookings" style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> View Bookings</label></div>
+        <div class="permission-item selected" data-perm="manage_bookings"><input type="checkbox" id="p-manage-bookings" checked/><label for="p-manage-bookings" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Manage Bookings</label></div>
+        <div class="permission-item selected" data-perm="view_users"><input type="checkbox" id="p-users" checked/><label for="p-users" style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> View Users</label></div>
+        <div class="permission-item" data-perm="suspend_users"><input type="checkbox" id="p-suspend"/><label for="p-suspend" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg> Suspend Users</label></div>
+        <div class="permission-item" data-perm="view_providers"><input type="checkbox" id="p-providers"/><label for="p-providers" style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg> View Providers</label></div>
+        <div class="permission-item" data-perm="verify_providers"><input type="checkbox" id="p-verify"/><label for="p-verify" style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verify Providers</label></div>
+        <div class="permission-item" data-perm="send_notifications"><input type="checkbox" id="p-notifs"/><label for="p-notifs" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg> Send Notifications</label></div>
+        <div class="permission-item" data-perm="view_reviews"><input type="checkbox" id="p-reviews"/><label for="p-reviews" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> View Reviews</label></div>
+        <div class="permission-item" data-perm="manage_reviews"><input type="checkbox" id="p-manage-reviews"/><label for="p-manage-reviews" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Remove Reviews</label></div>
+        <div class="permission-item" data-perm="view_finance"><input type="checkbox" id="p-finance"/><label for="p-finance" style="display:inline-flex;align-items:center;gap:5px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2 3 2 3 .6 3 2-1.3 2.5-3 2.5-3-1.1-3-2.5"/></svg> View Finance</label></div>
+        <div class="permission-item" data-perm="manage_promos"><input type="checkbox" id="p-promos"/><label for="p-promos" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18M12 8c-2 0-4-1-4-3.5S9.5 1 12 4c0-3 4.5-2.5 4.5-.5S14 8 12 8z"/></svg> Manage Promos</label></div>
+        <div class="permission-item" data-perm="today_view"><input type="checkbox" id="p-today" checked/><label for="p-today" style="display:inline-flex;align-items:center;gap:5px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.5" fill="currentColor" stroke="none"/></svg> Today View</label></div>
       </div>
     </div>
     <div class="modal-btns">
@@ -826,13 +826,13 @@ async function activateLaunchMode() {
     await db.from('user').delete().neq('id', '00000000-0000-0000-0000-000000000000');
     localStorage.removeItem('preen_activity_log');
     staffActivityLog = [];
-    showToast('✅ All test data wiped. Preen is ready for launch!', 'success');
-    if (btn) { btn.textContent = '✅ Launch Mode Active'; btn.style.background = 'var(--success)'; }
+    showToast('All test data wiped. Preen is ready for launch!', 'success');
+    if (btn) { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Launch Mode Active'; btn.style.background = 'var(--success)'; }
     input.value = '';
     await loadAll();
   } catch(e) {
     showToast('Error: ' + e.message, 'error');
-    if (btn) { btn.textContent = '🚀 Wipe All Test Data and Launch'; btn.disabled = false; }
+    if (btn) { btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg> Wipe All Test Data and Launch'; btn.disabled = false; }
   }
 }
 
@@ -931,27 +931,28 @@ function setupSidebar(){
   document.getElementById('sidebar-av').textContent = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
 
   const nav = document.getElementById('sidebar-nav');
+  const icon = (path, sw) => '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||2)+'">'+path+'</svg>';
   const items = [
-    { page:'pg-overview', icon:'📊', label:'Overview', always:true },
-    { page:'pg-today', icon:'📆', label:'Today', perm:'today_view', always:isSuperAdmin },
-    { page:'pg-bookings', icon:'📅', label:'Bookings', perm:'view_bookings', always:isSuperAdmin },
-    { page:'pg-users', icon:'👥', label:'Users', perm:'view_users', always:isSuperAdmin },
-    { page:'pg-providers', icon:'✂️', label:'Providers', perm:'view_providers', always:isSuperAdmin },
-    { page:'pg-reviews', icon:'⭐', label:'Reviews', perm:'view_reviews', always:isSuperAdmin },
+    { page:'pg-overview', icon:icon('<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'), label:'Overview', always:true },
+    { page:'pg-today', icon:icon('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.5" fill="currentColor" stroke="none"/>'), label:'Today', perm:'today_view', always:isSuperAdmin },
+    { page:'pg-bookings', icon:icon('<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'), label:'Bookings', perm:'view_bookings', always:isSuperAdmin },
+    { page:'pg-users', icon:icon('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'), label:'Users', perm:'view_users', always:isSuperAdmin },
+    { page:'pg-providers', icon:icon('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>'), label:'Providers', perm:'view_providers', always:isSuperAdmin },
+    { page:'pg-reviews', icon:icon('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'), label:'Reviews', perm:'view_reviews', always:isSuperAdmin },
     { label:'__group__', text:'Finance' },
-    { page:'pg-finance', icon:'💰', label:'Revenue', perm:'view_finance', always:isSuperAdmin },
-    { page:'pg-promos', icon:'🎁', label:'Promo Codes', perm:'manage_promos', always:isSuperAdmin },
+    { page:'pg-finance', icon:icon('<circle cx="12" cy="12" r="10"/><path d="M12 6v12M15 9.5c0-1.4-1.3-2.5-3-2.5s-3 1.1-3 2.5 1.3 2 3 2 3 .6 3 2-1.3 2.5-3 2.5-3-1.1-3-2.5"/>'), label:'Revenue', perm:'view_finance', always:isSuperAdmin },
+    { page:'pg-promos', icon:icon('<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18M12 8c-2 0-4-1-4-3.5S9.5 1 12 4c0-3 4.5-2.5 4.5-.5S14 8 12 8z"/>'), label:'Promo Codes', perm:'manage_promos', always:isSuperAdmin },
     { label:'__group__', text:'Engagement' },
-    { page:'pg-notifs', icon:'🔔', label:'Notifications', perm:'send_notifications', always:isSuperAdmin },
+    { page:'pg-notifs', icon:icon('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'), label:'Notifications', perm:'send_notifications', always:isSuperAdmin },
     { label:'__group__', text:'Admin' },
-    { page:'pg-staff', icon:'👤', label:'Staff', always:isSuperAdmin, superOnly:true },
-    { page:'pg-settings', icon:'⚙️', label:'Settings', always:isSuperAdmin, superOnly:true },
+    { page:'pg-staff', icon:icon('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'), label:'Staff', always:isSuperAdmin, superOnly:true },
+    { page:'pg-settings', icon:icon('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>'), label:'Settings', always:isSuperAdmin, superOnly:true },
     { label:'__logout__' }
   ];
 
   nav.innerHTML = items.map(item => {
     if(item.label === '__group__') return '<div class="nav-grp">'+item.text+'</div>';
-    if(item.label === '__logout__') return '<div class="nav-item" onclick="doLogout()"><span class="nav-icon">🚪</span><span>Sign Out</span></div>';
+    if(item.label === '__logout__') return '<div class="nav-item" onclick="doLogout()"><span class="nav-icon">'+icon('<path d="M3 21h18M6 21V4a1 1 0 0 1 1-1h8l4 3v15M13 12v.01"/>')+'</span><span>Sign Out</span></div>';
     if(item.superOnly && !isSuperAdmin) return '';
     if(!item.always && !isSuperAdmin && !perms.includes(item.perm)) return '';
     return '<div class="nav-item'+(item.page===currentPage?' active':'')+'" onclick="showPage(\''+item.page+'\',this)"><span class="nav-icon">'+item.icon+'</span><span>'+item.label+'</span></div>';
@@ -1080,7 +1081,7 @@ function renderToday(){
   const tbl=document.getElementById('today-bookings-table');
   if(tB.length===0){tbl.innerHTML='<div class="empty">No bookings today yet</div>';return;}
   tbl.innerHTML='<div class="table-wrap"><table><thead><tr><th>Customer</th><th>Phone</th><th>Provider</th><th>Service</th><th>Amount</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
-    tB.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.amount)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)">✓ Complete</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)">✗ Cancel</button></td></tr>').join('')+'</tbody></table></div>';
+    tB.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.amount)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Complete</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Cancel</button></td></tr>').join('')+'</tbody></table></div>';
   const utbl=document.getElementById('today-users-table');
   if(tU.length===0){utbl.innerHTML='<div class="empty">No new users today</div>';}
   else utbl.innerHTML='<div class="table-wrap"><table><thead><tr><th>Name</th><th>Role</th><th>Email</th></tr></thead><tbody>'+tU.map(u=>'<tr><td>'+n(u.full_name)+'</td><td><span class="badge '+(u.role||'customer')+'">'+n(u.role||'customer')+'</span></td><td>'+n(u.email)+'</td></tr>').join('')+'</tbody></table></div>';
@@ -1094,7 +1095,7 @@ function renderBookings(data){
   el=document.getElementById('pg-bookings-content');
   if(!data||data.length===0){el.innerHTML='<div class="empty">No bookings yet</div>';return;}
   el.innerHTML='<table id="bookings-tbl"><thead><tr><th>Customer</th><th>Phone</th><th>Provider</th><th>Service</th><th>Date</th><th>Time</th><th>Status</th><th>Actions</th></tr></thead><tbody>'+
-    data.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.booking_date).substring(0,12)+'</td><td>'+n(b.booking_time)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td style="white-space:nowrap;"><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)">✓</button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)">✗</button></td></tr>').join('')+'</tbody></table>';
+    data.map(b=>'<tr><td>'+n(b.customer_name)+'</td><td>'+n(b.customer_phone)+'</td><td>'+n(b.provider_name)+'</td><td>'+n(b.service).substring(0,20)+'</td><td>'+n(b.booking_date).substring(0,12)+'</td><td>'+n(b.booking_time)+'</td><td><span class="badge '+(b.status||'confirmed')+'">'+n(b.status||'confirmed')+'</span></td><td style="white-space:nowrap;"><button class="act-btn green" onclick="updateBookingStatus(\''+b.id+'\',\'completed\',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></button><button class="act-btn red" onclick="updateBookingStatus(\''+b.id+'\',\'cancelled\',this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></td></tr>').join('')+'</tbody></table>';
 }
 
 function filterBookingTime(tf,btn){
@@ -1156,7 +1157,7 @@ function renderReviews(data){
   if(!data||data.length===0){el.innerHTML='<div class="empty">No reviews yet</div>';return;}
   const canRemove = currentUser.role==='super_admin' || (currentUser.permissions||[]).includes('manage_reviews');
   el.innerHTML='<table id="rev-tbl"><thead><tr><th>Provider</th><th>Customer</th><th>Rating</th><th>Review</th><th>Date</th><th>Actions</th></tr></thead><tbody>'+
-    data.map(r=>'<tr><td>'+n(r.provider_name)+'</td><td>'+n(r.customer_name)+'</td><td style="color:var(--accent);">'+'★'.repeat(r.rating||5)+'</td><td>'+n(r.review_text).substring(0,50)+'...</td><td>'+new Date(r.created_at).toLocaleDateString()+'</td><td>'+
+    data.map(r=>'<tr><td>'+n(r.provider_name)+'</td><td>'+n(r.customer_name)+'</td><td style="color:var(--accent);">'+'<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'.repeat(r.rating||5)+'</td><td>'+n(r.review_text).substring(0,50)+'...</td><td>'+new Date(r.created_at).toLocaleDateString()+'</td><td>'+
     (canRemove?'<button class="act-btn red" onclick="removeReview(\''+r.id+'\',this)">Remove</button>':'<span style="color:var(--text3);font-size:12px;">No access</span>')+
     '</td></tr>').join('')+'</tbody></table>';
 }
@@ -1245,7 +1246,7 @@ async function verifyProvider(id, btn){
     await loadAll();
     renderProviders(allProviders);
   }catch(e){
-    btn.textContent='✓ Verify';btn.disabled=false;
+    btn.innerHTML='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verify';btn.disabled=false;
     showToast('Failed to verify provider','error');
   }
 }
@@ -1284,7 +1285,7 @@ function sendNotif(){
   const dateStr=schedule?new Date(schedule).toLocaleDateString():new Date().toLocaleDateString();
   row.innerHTML='<td>'+title+'</td><td>'+msg.substring(0,40)+'...</td><td>'+target+'</td><td>'+currentUser.name+'</td><td>'+dateStr+'</td><td><span class="badge completed">'+(schedule?'Scheduled':'Sent')+'</span></td>';
   tbody.insertBefore(row,tbody.firstChild);
-  showToast('Notification '+(schedule?'scheduled':'sent')+' to '+target+' ✓','success');
+  showToast('Notification '+(schedule?'scheduled':'sent')+' to '+target+'','success');
   if(currentUser.role!=='super_admin') logActivity(currentUser.name,'Sent notification: '+title,'notification');
   document.getElementById('notif-title').value='';
   document.getElementById('notif-msg').value='';
@@ -1328,7 +1329,7 @@ function saveSettings(){
   settingsData.tip_fee=parseInt(document.getElementById('tip-fee').value)||5;
   if(document.getElementById('elite-fee')) settingsData.elite_fee=parseInt(document.getElementById('elite-fee').value)||8;
   localStorage.setItem('preen_settings',JSON.stringify(settingsData));
-  showToast('Settings saved successfully ✓','success');
+  showToast('Settings saved successfully','success');
   renderOverview();
 }
 
@@ -1568,7 +1569,7 @@ async function openProviderReview(idx) {
   document.getElementById('prm-cat-val').textContent = p.category || '—';
   document.getElementById('prm-location').textContent = p.location || '—';
   document.getElementById('prm-date').textContent = new Date(p.created_at).toLocaleDateString();
-  document.getElementById('prm-rating').textContent = p.rating > 0 ? '★ ' + p.rating : 'No ratings yet';
+  document.getElementById('prm-rating').textContent = p.rating > 0 ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' + p.rating : 'No ratings yet';
 
   // Parse bio for social links
   const bio = p.bio || '';
@@ -1583,7 +1584,7 @@ async function openProviderReview(idx) {
   if (p.profile_photo) {
     photoEl.innerHTML = '<img src="'+p.profile_photo+'" style="width:80px;height:80px;border-radius:14px;object-fit:cover;"/>';
   } else {
-    photoEl.innerHTML = '<div style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:32px;">👤</div>';
+    photoEl.innerHTML = '<div style="width:80px;height:80px;background:var(--border);border-radius:14px;display:flex;align-items:center;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.6"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>';
   }
 
   const photosStatus = document.getElementById('prm-photos-status');
@@ -1628,11 +1629,11 @@ async function openProviderReview(idx) {
   // Update verify button
   const verifyBtn = document.getElementById('verify-modal-btn');
   if (p.is_verified) {
-    verifyBtn.textContent = '✓ Already Verified';
+    verifyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Already Verified';
     verifyBtn.style.background = 'var(--text3)';
     verifyBtn.disabled = true;
   } else {
-    verifyBtn.textContent = '✓ Verify Provider';
+    verifyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Verify Provider';
     verifyBtn.style.background = 'var(--success)';
     verifyBtn.disabled = false;
   }
@@ -1659,10 +1660,10 @@ function updateCheck(elId, isComplete, missingArr, label) {
   el = document.getElementById(elId);
   if (!el) return;
   if (isComplete) {
-    el.textContent = '✓ Complete';
+    el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Complete';
     el.className = 'badge completed';
   } else {
-    el.textContent = '✗ Missing';
+    el.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Missing';
     el.className = 'badge cancelled';
     missingArr.push(label);
   }

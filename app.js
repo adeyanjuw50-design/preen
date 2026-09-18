@@ -55,25 +55,19 @@ async function showSectionResults(type) {
     if (type === 'new') {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      const { data: d } = await db.from('providers').select('*')
-        .ilike('location', '%'+state+'%')
-        .eq('is_available', true)
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .order('created_at', { ascending: false });
+      let nq = db.from('providers').select('*').eq('is_available', true).gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: false });
+      if (state) nq = nq.eq('state', state);
+      const { data: d } = await nq;
       data = d || [];
     } else if (type === 'trending') {
-      const { data: d } = await db.from('providers').select('*')
-        .ilike('location', '%'+state+'%')
-        .eq('is_available', true)
-        .order('rating', { ascending: false })
-        .limit(20);
+      let tq = db.from('providers').select('*').eq('is_available', true).order('rating', { ascending: false }).limit(20);
+      if (state) tq = tq.eq('state', state);
+      const { data: d } = await tq;
       data = d || [];
     } else if (type === 'recommended') {
       const history = getBrowseHistory();
-      let query = db.from('providers').select('*')
-        .ilike('location', '%'+state+'%')
-        .eq('is_available', true)
-        .eq('is_verified', true);
+      let query = db.from('providers').select('*').eq('is_available', true).eq('is_verified', true);
+      if (state) query = query.eq('state', state);
       if (history.length > 0) query = query.in('category', history);
       const { data: d } = await query.order('rating', { ascending: false });
       data = d || [];
@@ -94,7 +88,7 @@ async function showSectionResults(type) {
 function showNoProviders(container) {
   container.innerHTML =
     '<div style="text-align:center;padding:80px 20px;">' +
-    '<p style="font-size:48px;margin-bottom:16px;">📍</p>' +
+    '<div style="margin-bottom:16px;display:flex;justify-content:center;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>' +
     '<p style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px;">No providers near you yet</p>' +
     '<p style="font-size:13px;color:var(--text3);line-height:1.7;margin-bottom:24px;">We are actively onboarding providers in '+getUserState()+'. Check back soon.</p>' +
     '<button onclick="showScreen(\'screen-location\')" style="background:var(--primary);color:#fff;border:none;border-radius:12px;padding:12px 24px;font-size:13px;font-weight:600;font-family:Poppins,sans-serif;cursor:pointer;">Change Location</button>' +
@@ -105,7 +99,7 @@ function showNoProviders(container) {
 // ===== HOME SCREEN SECTIONS — ALL STATE FILTERED =====
 
 function getUserState() {
-  return localStorage.getItem('preen_user_state') || 'Abuja';
+  return localStorage.getItem('preen_user_state') || '';
 }
 
 function getRecentlyViewed() {
@@ -183,12 +177,9 @@ async function loadTrending(state) {
       .map(e => e[0]);
 
     // Fetch those providers filtered by state
-    const { data: providers } = await db
-      .from('providers')
-      .select('*')
-      .in('full_name', topNames)
-      .ilike('location', '%'+state+'%')
-      .eq('is_available', true);
+    let pq = db.from('providers').select('*').in('full_name', topNames).eq('is_available', true);
+    if (state) pq = pq.eq('state', state);
+    const { data: providers } = await pq;
 
     if (!providers || providers.length === 0) {
       loadProvidersByState(container, state, 'rating');
@@ -211,14 +202,9 @@ async function loadNewToPreens(state) {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const { data } = await db
-      .from('providers')
-      .select('*')
-      .ilike('location', '%'+state+'%')
-      .eq('is_available', true)
-      .gte('created_at', thirtyDaysAgo.toISOString())
-      .order('created_at', { ascending: false })
-      .limit(6);
+    let q = db.from('providers').select('*').eq('is_available', true).gte('created_at', thirtyDaysAgo.toISOString()).order('created_at', { ascending: false }).limit(6);
+    if (state) q = q.eq('state', state);
+    const { data } = await q;
 
     if (!data || data.length === 0) {
       loadProvidersByState(container, state, 'created_at');
@@ -240,10 +226,10 @@ async function loadRecommended(state) {
   try {
     const history = getBrowseHistory();
     let query = db.from('providers').select('*')
-      .ilike('location', '%'+state+'%')
       .eq('is_available', true)
       .eq('is_verified', true)
       .limit(6);
+    if (state) query = query.eq('state', state);
 
     // Filter by previously browsed categories if available
     if (history.length > 0) {
@@ -282,13 +268,9 @@ function loadRecentlyViewedSection() {
 async function loadProvidersByState(container, state, sortBy='rating') {
   if (!db) { hideSection(container); return; }
   try {
-    const { data } = await db
-      .from('providers')
-      .select('*')
-      .ilike('location', '%'+state+'%')
-      .eq('is_available', true)
-      .order(sortBy, { ascending: false })
-      .limit(6);
+    let q = db.from('providers').select('*').eq('is_available', true);
+    if (state) q = q.eq('state', state);
+    const { data } = await q.order(sortBy, { ascending: false }).limit(6);
 
     if (!data || data.length === 0) {
       hideSection(container);
@@ -328,13 +310,13 @@ function makeHomeCard(p) {
 
   return '<div class="provider-card-new" onclick="openAndTrackProvider(\''+name+'\',\''+cat+'\',\''+loc+'\','+rating+','+verified+')">' +
     '<div class="provider-img-wrap" style="'+imgStyle+'">' +
-    (!img ? '<span style="font-size:28px;display:flex;align-items:center;justify-content:center;height:100%;">'+getCategoryEmoji(cat)+'</span>' : '') +
-    (verified ? '<div class="verified-badge-small">✓</div>' : '') +
+    (!img ? '<span style="color:var(--primary);display:flex;align-items:center;justify-content:center;height:100%;">'+getCategoryIcon(cat,28)+'</span>' : '') +
+    (verified ? '<div class="verified-badge-small"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></div>' : '') +
     '</div>' +
     '<div style="padding:8px;">' +
     '<p style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+( p.name||p.full_name||'Provider')+'</p>' +
     '<p style="font-size:11px;color:var(--text3);margin-top:2px;">'+cat+'</p>' +
-    (rating > 0 ? '<p style="font-size:11px;color:var(--accent);">★ '+Number(rating).toFixed(1)+'</p>' : '') +
+    (rating > 0 ? '<p style="font-size:11px;color:var(--accent);"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> '+Number(rating).toFixed(1)+'</p>' : '') +
     '</div></div>';
 }
 
@@ -443,13 +425,13 @@ function renderHomeGridProviders(providers) {
   const makeCard = (p) => `
     <div class="provider-card-new" onclick="openProviderProfile('${(p.name||'').replace(/'/g,"\'")}','${p.category||''}','${p.location||''}','${p.rating||0}','${p.verified||false}')">
       <div class="provider-img-wrap" style="${p.image ? 'background-image:url('+p.image+');background-size:cover;background-position:center;' : p.bg}">
-        ${!p.image ? '<span style="font-size:32px;display:flex;align-items:center;justify-content:center;height:100%;">' + (getCategoryEmoji(p.category)||'✂️') + '</span>' : ''}
-        ${p.verified ? '<div class="verified-badge-small">✓</div>' : ''}
+        ${!p.image ? '<span style="color:var(--primary);display:flex;align-items:center;justify-content:center;height:100%;">' + getCategoryIcon(p.category,32) + '</span>' : ''}
+        ${p.verified ? '<div class="verified-badge-small"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
       </div>
       <div style="padding:10px 8px;">
         <p style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name||'Provider'}</p>
         <p style="font-size:11px;color:var(--text3);margin-top:2px;">${p.category||''}</p>
-        ${p.rating > 0 ? '<p style="font-size:11px;color:var(--accent);margin-top:2px;">★ '+Number(p.rating).toFixed(1)+'</p>' : ''}
+        ${p.rating > 0 ? '<p style="font-size:11px;color:var(--accent);margin-top:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> '+Number(p.rating).toFixed(1)+'</p>' : ''}
       </div>
     </div>`;
 
@@ -458,237 +440,27 @@ function renderHomeGridProviders(providers) {
 }
 
 // SEARCH - Load real providers with filter
-async function loadSearchProviders(query='', category='') {
-  if (!db) return;
-  try {
-    let req = db.from('providers').select('*').eq('is_available', true);
-    if (category) req = req.eq('category', category);
-    const { data } = await req.limit(50);
-    if (!data) return;
-
-    let results = data.map(p => ({
-      id: p.id,
-      name: p.full_name,
-      category: p.category,
-      location: p.location || '',
-      rating: p.rating || 0,
-      price: 5000,
-      verified: p.is_verified,
-      image: p.profile_photo || null,
-      service: p.category + ' Services',
-      hours: 'Available',
-      emoji: getCategoryEmoji(p.category),
-      bg: 'linear-gradient(135deg, var(--primary-light), #FCB8CB)',
-      bio: p.bio || ''
-    }));
-
-    if (query) {
-      const q = query.toLowerCase();
-      results = results.filter(p =>
-        (p.name||'').toLowerCase().includes(q) ||
-        (p.category||'').toLowerCase().includes(q) ||
-        (p.location||'').toLowerCase().includes(q)
-      );
-    }
-
-    // State filter
-    if (currentUserState) {
-      results = results.filter(p =>
-        (p.location||'').toLowerCase().includes(currentUserState.toLowerCase().split(',')[0])
-      );
-    }
-
-    allProviders = results;
-    renderSearchResults(results);
-  } catch(e) {
-    console.log('loadSearchProviders error:', e);
-  }
-}
+// (dead duplicate loadSearchProviders removed — searchProviders() below is the
+// one that actually renders, this was always immediately overwritten by it)
 
 // MY BOOKINGS - Load real bookings
-async function loadMyBookings() {
-  const container = document.getElementById('my-bookings-list');
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;"><div class="ai-spinner" style="margin:0 auto 12px;"></div><p style="font-size:13px;color:var(--text3);">Loading your bookings...</p></div>';
+// (dead duplicate loadMyBookings + showEmptyBookings removed — consolidated below)
 
-  if (!db) { showEmptyBookings(container); return; }
 
-  try {
-    const phone = localStorage.getItem('preen_user_phone') || '';
-    const name = localStorage.getItem('preen_user_name') || '';
-    if (!phone && !name) { showEmptyBookings(container); return; }
-
-    let query = db.from('bookings').select('*').order('created_at', { ascending: false });
-    if (phone) query = query.eq('customer_phone', phone);
-    else query = query.ilike('customer_name', '%'+name+'%');
-
-    const { data, error } = await query;
-
-    if (error || !data || data.length === 0) {
-      showEmptyBookings(container);
-      return;
-    }
-
-    container.innerHTML = data.map(b => `
-      <div style="background:var(--bg2);border-radius:16px;padding:16px;border:1.5px solid var(--border);margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-          <div>
-            <p style="font-size:14px;font-weight:600;color:var(--text);">${b.provider_name||'Provider'}</p>
-            <p style="font-size:12px;color:var(--text3);margin-top:2px;">${b.service||'Service'}</p>
-          </div>
-          <span class="status ${b.status||'confirmed'}">${b.status||'confirmed'}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:12px;">
-          <span>📅 ${b.booking_date||''} ${b.booking_time||''}</span>
-          <span style="font-weight:600;color:var(--text);">${b.amount||''}</span>
-        </div>
-        <div style="display:flex;gap:8px;">
-          ${b.status==='confirmed'?`<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="cancelBookingById('${b.id}',this)">Cancel</button>`:''}
-          ${b.status==='completed'?`<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="showScreen('screen-review')">Leave Review</button>`:''}
-        </div>
-      </div>
-    `).join('');
-
-  } catch(e) {
-    showEmptyBookings(container);
-  }
-}
-
-function showEmptyBookings(container) {
-  container.innerHTML = '<div style="text-align:center;padding:60px 20px;"><p style="font-size:40px;margin-bottom:12px;">📅</p><p style="font-size:15px;font-weight:600;margin-bottom:6px;">No bookings yet</p><p style="font-size:13px;color:var(--text3);">Book a service to see it here</p></div>';
-}
-
-async function cancelBookingById(id, btn) {
-  if (!confirm('Cancel this booking?')) return;
-  btn.textContent = '...';
-  btn.disabled = true;
-  try {
-    await db.from('bookings').update({status:'cancelled'}).eq('id', id);
-    btn.closest('div[style]').querySelector('.status').textContent = 'cancelled';
-    btn.closest('div[style]').querySelector('.status').className = 'status cancelled';
-    btn.style.display = 'none';
-  } catch(e) {
-    btn.textContent = 'Cancel';
-    btn.disabled = false;
-  }
-}
+// (dead duplicate cancelBookingById removed — kept the version below that refreshes the list after cancelling)
 
 // PROVIDER DASHBOARD - Real earnings
-async function loadProviderEarnings() {
-  if (!db) return;
-  const provName = localStorage.getItem('preen_provider_name') || '';
-  if (!provName) return;
-  try {
-    const { data } = await db
-      .from('bookings')
-      .select('*')
-      .eq('provider_name', provName)
-      .eq('status', 'completed');
-
-    if (!data) return;
-
-    const fee = 0.10;
-    const total = data.reduce((sum, b) => {
-      const amount = parseFloat((b.amount||'0').toString().replace(/[^0-9.]/g,'')) || 0;
-      return sum + (amount * (1 - fee));
-    }, 0);
-
-    const earningsEl = document.getElementById('provider-earnings');
-    if (earningsEl) earningsEl.textContent = '₦' + Math.round(total).toLocaleString();
-
-    const bookingsEl = document.getElementById('provider-total-bookings');
-    if (bookingsEl) bookingsEl.textContent = data.length;
-
-  } catch(e) { console.log('loadProviderEarnings error:', e); }
-}
+// (old duplicate loadProviderEarnings removed — see the single real implementation below)
 
 // LEADERBOARD - Real provider ratings
-async function loadLeaderboard() {
-  if (!db) return;
-  try {
-    const { data } = await db
-      .from('providers')
-      .select('*')
-      .eq('is_verified', true)
-      .order('rating', { ascending: false })
-      .limit(10);
-
-    if (!data || data.length === 0) return;
-
-    const container = document.getElementById('leaderboard-list');
-    if (!container) return;
-
-    const medals = ['🥇','🥈','🥉'];
-    container.innerHTML = data.map((p, i) => `
-      <div class="leaderboard-row ${i===0?'gold':i===1?'silver':i===2?'bronze':''}" onclick="showScreen('screen-provider')">
-        <span class="lb-rank">${medals[i]||'#'+(i+1)}</span>
-        <div class="lb-avatar" style="background:var(--primary);">
-          ${p.full_name ? p.full_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2) : 'PR'}
-        </div>
-        <div style="flex:1;">
-          <p style="font-size:14px;font-weight:600;">${p.full_name||'Provider'}</p>
-          <p style="font-size:11px;color:var(--text3);">${p.category||''} · ${p.location||''}</p>
-        </div>
-        <div style="text-align:right;">
-          <div class="lb-score">${p.rating ? Number(p.rating).toFixed(1) : '—'}</div>
-          <p style="font-size:9px;color:var(--text3);">Rating</p>
-        </div>
-      </div>
-    `).join('');
-
-  } catch(e) { console.log('loadLeaderboard error:', e); }
-}
+// (dead duplicate loadLeaderboard removed — kept the version below with a proper empty state)
 
 
 // ===== REAL DATA CONNECTIONS =====
 
 // MY BOOKINGS - Real data from Supabase
-async function loadMyBookings() {
-  const container = document.getElementById('my-bookings-list');
-  if (!container) return;
-  container.innerHTML = '<div style="text-align:center;padding:40px;"><div class="ai-spinner" style="margin:0 auto 12px;"></div><p style="font-size:13px;color:var(--text3);">Loading your bookings...</p></div>';
+// (dead duplicate loadMyBookings + showNoBookings removed — consolidated below)
 
-  if (!db) { showNoBookings(container); return; }
-
-  try {
-    const phone = localStorage.getItem('preen_user_phone') || '';
-    const name = localStorage.getItem('preen_user_name') || '';
-    if (!phone && !name) { showNoBookings(container); return; }
-
-    let query = db.from('bookings').select('*').order('created_at', { ascending: false });
-    if (phone) query = query.eq('customer_phone', phone);
-    else query = query.ilike('customer_name', name);
-
-    const { data, error } = await query;
-    if (error || !data || data.length === 0) { showNoBookings(container); return; }
-
-    container.innerHTML = data.map(b => `
-      <div style="background:var(--bg2);border-radius:16px;padding:16px;border:1.5px solid var(--border);margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
-          <div>
-            <p style="font-size:15px;font-weight:700;">${b.provider_name || 'Provider'}</p>
-            <p style="font-size:12px;color:var(--text3);margin-top:2px;">${b.service || 'Service'}</p>
-          </div>
-          <span class="status ${b.status || 'confirmed'}">${b.status || 'Confirmed'}</span>
-        </div>
-        <div style="background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:12px;display:flex;justify-content:space-between;">
-          <div><p style="font-size:11px;color:var(--text3);">Date & Time</p><p style="font-size:13px;font-weight:600;margin-top:2px;">${b.booking_date || ''} ${b.booking_time || ''}</p></div>
-          <div style="text-align:right;"><p style="font-size:11px;color:var(--text3);">Amount</p><p style="font-size:14px;font-weight:700;color:var(--primary);margin-top:2px;">${b.amount || ''}</p></div>
-        </div>
-        <div style="display:flex;gap:8px;">
-          ${b.status === 'confirmed' ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="cancelBookingById('${b.id}',this)">Cancel</button>` : ''}
-          ${b.status === 'completed' ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="openReview()">Leave Review</button><button class="btn-primary" style="flex:1;padding:8px;font-size:12px;" onclick="openTipping()">Tip</button>` : ''}
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    showNoBookings(container);
-  }
-}
-
-function showNoBookings(container) {
-  container.innerHTML = '<div style="text-align:center;padding:60px 20px;"><p style="font-size:40px;margin-bottom:12px;">📅</p><p style="font-size:15px;font-weight:600;margin-bottom:6px;">No bookings yet</p><p style="font-size:13px;color:var(--text3);">Your bookings will appear here after you book a service</p></div>';
-}
 
 async function cancelBookingById(id, btn) {
   if (!confirm('Cancel this booking? This cannot be undone.')) return;
@@ -712,51 +484,114 @@ async function loadProviderEarnings() {
   if (!provName || !db) return;
 
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('bookings')
       .select('*')
       .eq('provider_name', provName)
       .eq('status', 'completed');
 
-    if (!data) return;
+    if (error) { console.error('Earnings fetch error:', error); return; }
 
-    const fee = 10; // platform fee %
-    const totalGross = data.reduce((sum, b) => {
-      const amount = parseInt((b.amount || '0').replace(/[^0-9]/g, '')) || 0;
-      return sum + amount;
-    }, 0);
-    const totalFees = Math.round(totalGross * (fee / 100));
-    const totalEarned = totalGross - totalFees;
+    const bookings = data || [];
+    const platformFeePct = 10;
+    const parseAmount = (b) => parseInt((b.amount || '0').toString().replace(/[^0-9]/g, '')) || 0;
+    const netOf = (gross) => gross - Math.round(gross * (platformFeePct / 100));
 
-    // Update dashboard earnings card
-    const earningsEl = document.getElementById('provider-earnings-display');
-    if (earningsEl) earningsEl.textContent = '₦' + totalEarned.toLocaleString();
+    const now = new Date();
+    const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const startOfThisYear = new Date(now.getFullYear(), 0, 1);
 
-    const bookingsEl = document.getElementById('provider-bookings-count');
-    if (bookingsEl) bookingsEl.textContent = data.length + ' completed';
+    let grossThisMonth = 0, grossLastMonth = 0, grossThisYear = 0;
+    bookings.forEach(b => {
+      const created = b.created_at ? new Date(b.created_at) : null;
+      const gross = parseAmount(b);
+      if (!created || isNaN(created.getTime())) return;
+      if (created >= startOfThisMonth) grossThisMonth += gross;
+      else if (created >= startOfLastMonth && created < startOfThisMonth) grossLastMonth += gross;
+      if (created >= startOfThisYear) grossThisYear += gross;
+    });
 
-  } catch(e) { console.log('Earnings error:', e); }
+    const fmtK = (n) => n >= 1000 ? '₦' + Math.round(n / 1000) + 'k' : '₦' + n.toLocaleString();
+
+    const totalEl = document.getElementById('earnings-total-month');
+    if (totalEl) totalEl.textContent = '₦' + netOf(grossThisMonth).toLocaleString();
+    const countEl = document.getElementById('earnings-month-count');
+    if (countEl) {
+      const monthCount = bookings.filter(b => b.created_at && new Date(b.created_at) >= startOfThisMonth).length;
+      countEl.textContent = monthCount + (monthCount === 1 ? ' booking completed' : ' bookings completed');
+    }
+    const lastMonthEl = document.getElementById('earnings-last-month');
+    if (lastMonthEl) lastMonthEl.textContent = fmtK(netOf(grossLastMonth));
+    const yearEl = document.getElementById('earnings-this-year');
+    if (yearEl) yearEl.textContent = fmtK(netOf(grossThisYear));
+
+    // Rating pulled straight from the provider's own row
+    const ratingEl = document.getElementById('earnings-rating');
+    if (ratingEl) {
+      const { data: provRow } = await db.from('providers').select('rating').eq('full_name', provName).single();
+      ratingEl.textContent = provRow && provRow.rating ? Number(provRow.rating).toFixed(1) : '—';
+    }
+
+    // Recent payouts — group completed bookings by day
+    const payoutsEl = document.getElementById('earnings-recent-payouts');
+    if (payoutsEl) {
+      const byDay = {};
+      bookings.forEach(b => {
+        const created = b.created_at ? new Date(b.created_at) : null;
+        if (!created || isNaN(created.getTime())) return;
+        const key = created.toLocaleDateString('en-NG', { month: 'long', day: 'numeric' });
+        if (!byDay[key]) byDay[key] = { count: 0, gross: 0 };
+        byDay[key].count++;
+        byDay[key].gross += parseAmount(b);
+      });
+      const days = Object.keys(byDay);
+      if (days.length === 0) {
+        payoutsEl.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No payouts yet — completed bookings will show up here.</p>';
+      } else {
+        payoutsEl.innerHTML = days.slice(0, 10).map(day => {
+          const d = byDay[day];
+          return `<div class="service-item"><span>${day} — ${d.count} booking${d.count === 1 ? '' : 's'}</span><span class="service-price">₦${netOf(d.gross).toLocaleString()}</span></div>`;
+        }).join('');
+      }
+    }
+  } catch(e) { console.error('Earnings error:', e); }
 }
 
 // PROVIDER SEARCH - Real providers from Supabase
+function isProviderBlocked(name) {
+  return blockedProviders.includes(name);
+}
+
 async function searchProviders(query, category) {
   if (!db) return;
   try {
     let q = db.from('providers').select('*').eq('is_available', true);
     if (category && category !== 'All') q = q.eq('category', category);
     if (query) q = q.ilike('full_name', '%' + query + '%');
-    const { data } = await q.limit(30);
+    if (currentUserState) q = q.eq('state', currentUserState);
+    const { data, error } = await q.limit(30);
+    if (error) { console.error('Search error:', error); renderSearchResults([]); return; }
     if (data && data.length > 0) {
-      allProviders = data.map(p => ({
+      let results = data.filter(p => !isProviderBlocked(p.full_name)).map(p => ({
         id: p.id, name: p.full_name, category: p.category,
         location: p.location || 'Nigeria', distance: 'Nearby',
         rating: p.rating || 0, price: p.price || 5000,
         emoji: getCategoryEmoji(p.category),
         bg: 'linear-gradient(135deg, var(--primary-light), #FCB8CB)',
-        verified: p.is_verified, service: p.category + ' Services',
+        verified: p.is_verified, is_available: p.is_available, service: p.category + ' Services',
         hours: 'Available', image: p.profile_photo || null
       }));
-      renderSearchResults(allProviders);
+
+      if (priceMin > 0 || priceMax < 500000) {
+        results = results.filter(p => p.price >= priceMin && p.price <= priceMax);
+      }
+      if (verifiedOnly) results = results.filter(p => p.verified);
+      if (activeAmenities.includes('Available Now')) results = results.filter(p => p.is_available);
+      if (activeAmenities.includes('Verified Only')) results = results.filter(p => p.verified);
+
+      allProviders = results;
+      renderSearchResults(results);
     } else {
       renderSearchResults([]);
     }
@@ -766,36 +601,37 @@ async function searchProviders(query, category) {
 // LEADERBOARD - Real top providers from Supabase
 async function loadLeaderboard() {
   const container = document.getElementById('leaderboard-list');
+  const labelEl = document.getElementById('leaderboard-state-label');
   if (!container || !db) return;
 
+  const state = getUserState();
+  if (labelEl) labelEl.textContent = state ? 'Top rated providers in ' + state + ' this month' : 'Top rated providers this month';
+
   try {
-    const { data } = await db
-      .from('providers')
-      .select('*')
-      .eq('is_verified', true)
-      .order('rating', { ascending: false })
-      .limit(10);
+    let q = db.from('providers').select('*').eq('is_verified', true).order('rating', { ascending: false }).limit(10);
+    if (state) q = q.eq('state', state);
+    const { data } = await q;
 
     if (!data || data.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;"><p style="font-size:13px;color:var(--text3);">Leaderboard will show top providers once bookings start coming in</p></div>';
+      container.innerHTML = '<div style="text-align:center;padding:40px;"><p style="font-size:13px;color:var(--text3);">No ranked providers in ' + (state || 'your state') + ' yet</p></div>';
       return;
     }
 
-    const medals = ['🥇', '🥈', '🥉'];
+    const medals = [`<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M8 3l4 3 4-3"/></svg>`, `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A3A9B4" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M8 3l4 3 4-3"/></svg>`, `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C0722D" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M8 3l4 3 4-3"/></svg>`];
     const classes = ['gold', 'silver', 'bronze'];
 
     container.innerHTML = data.map((p, i) => `
-      <div class="leaderboard-row ${classes[i] || ''}" onclick="showScreen('screen-provider')">
+      <div class="leaderboard-row ${classes[i] || ''}" onclick="openProviderProfile('${(p.full_name||'Provider').replace(/'/g,"\\'")}')">
         <span class="lb-rank">${medals[i] || '#' + (i+1)}</span>
         <div class="lb-avatar" style="background:${i===0?'linear-gradient(135deg,#F59E0B,#D97706)':i===1?'linear-gradient(135deg,#9CA3AF,#6B7280)':i===2?'linear-gradient(135deg,#D97706,#B45309)':'var(--primary)'};">
           ${(p.full_name||'P').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
         </div>
         <div style="flex:1;">
           <p style="font-size:14px;font-weight:600;">${p.full_name || 'Provider'}</p>
-          <p style="font-size:11px;color:var(--text3);">${p.category || ''} · ${p.location || ''}</p>
+          <p style="font-size:11px;color:var(--text3);">${p.category || ''} · ${p.location || state || ''}</p>
         </div>
         <div style="text-align:right;">
-          <div class="lb-score">${p.rating > 0 ? p.rating.toFixed(1) + '★' : 'New'}</div>
+          <div class="lb-score">${p.rating > 0 ? p.rating.toFixed(1) + ' <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : 'New'}</div>
           <p style="font-size:9px;color:var(--text3);">Rating</p>
         </div>
       </div>
@@ -838,19 +674,19 @@ function openReportBlock() {
     '<div style="padding:16px 20px;display:flex;flex-direction:column;gap:10px;">' +
 
       '<div onclick="closeReportBlockSheet();openReport()" style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;">' +
-        '<div style="width:46px;height:46px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚩</div>' +
+        '<div style="width:46px;height:46px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div>' +
         '<div style="flex:1;"><p style="font-size:14px;font-weight:600;color:var(--text);">Report this provider</p><p style="font-size:12px;color:var(--text3);margin-top:2px;">Tell us what went wrong</p></div>' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
       '</div>' +
 
       '<div onclick="closeReportBlockSheet();openBlock()" style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;">' +
-        '<div style="width:46px;height:46px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚫</div>' +
+        '<div style="width:46px;height:46px;background:#FEF2F2;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg></div>' +
         '<div style="flex:1;"><p style="font-size:14px;font-weight:600;color:var(--text);">Block this provider</p><p style="font-size:12px;color:var(--text3);margin-top:2px;">They will not appear in your search</p></div>' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
       '</div>' +
 
       '<div onclick="closeReportBlockSheet();shareProfile()" style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;">' +
-        '<div style="width:46px;height:46px;background:#EEF2FF;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔗</div>' +
+        '<div style="width:46px;height:46px;background:#EEF2FF;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>' +
         '<div style="flex:1;"><p style="font-size:14px;font-weight:600;color:var(--text);">Share this profile</p><p style="font-size:12px;color:var(--text3);margin-top:2px;">Send to a friend</p></div>' +
         '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
       '</div>' +
@@ -892,14 +728,6 @@ function openBlock() {
   showScreen('screen-block');
 }
 
-
-function openBlock(name, type) {
-  reportBlockTarget = { name, type };
-  const nameEl = document.getElementById('block-target-name');
-  if (nameEl) nameEl.textContent = name;
-  showScreen('screen-block');
-}
-
 function selectReportReason(el) {
   document.querySelectorAll('#report-reasons .service-select-item').forEach(item => {
     item.classList.remove('selected');
@@ -917,19 +745,18 @@ async function submitReport() {
     alert('Please select a reason for your report.');
     return;
   }
-  const details = document.getElementById('report-details') ? document.getElementById('report-details').value : '';
+  const details = document.getElementById('report-details') ? document.getElementById('report-details').value.trim() : '';
 
-  // Save report to Supabase if connected
   if (db) {
     try {
-      await db.from('reviews').insert([{
+      const { error } = await db.from('reports').insert([{
         provider_name: reportBlockTarget.name,
         customer_name: localStorage.getItem('preen_user_name') || 'Anonymous',
-        rating: 1,
-        review_text: 'REPORT: ' + selectedReportReason + (details ? ' — ' + details : ''),
-        is_anonymous: true
+        reason: selectedReportReason,
+        details: details
       }]);
-    } catch(e) {}
+      if (error) { alert('Could not submit your report:\n\n' + error.message); console.error('Report save error:', error); return; }
+    } catch (e) { alert('Could not submit your report. Please try again.'); console.error('Report save failed:', e); return; }
   }
 
   alert('Report submitted. Our team will review this within 24 hours. Thank you for keeping Preen safe.');
@@ -949,12 +776,13 @@ function confirmBlock() {
 
 // ===== WAITING FOR PROVIDER SYSTEM =====
 let waitingTimer = null;
+let waitingPollTimer = null;
 let paymentTimer = null;
 let currentBookingDetails = {};
 
-function startWaitingForProvider(providerName, serviceLabel, date, time, amount) {
+function startWaitingForProvider(bookingId, providerName, serviceLabel, date, time, amount) {
   // Store booking details
-  currentBookingDetails = { providerName, serviceLabel, date, time, amount };
+  currentBookingDetails = { bookingId, providerName, serviceLabel, date, time, amount };
 
   // Update waiting screen UI
   const nameEl = document.getElementById('waiting-provider-name');
@@ -963,11 +791,12 @@ function startWaitingForProvider(providerName, serviceLabel, date, time, amount)
   if (serviceEl) serviceEl.textContent = serviceLabel;
 
   showScreen('screen-waiting-provider');
-  startWaitingCountdown(900); // 15 minutes
+  startWaitingCountdown(900, bookingId); // 15 minutes
 }
 
-function startWaitingCountdown(seconds) {
+function startWaitingCountdown(seconds, bookingId) {
   if (waitingTimer) clearInterval(waitingTimer);
+  if (waitingPollTimer) clearInterval(waitingPollTimer);
   let remaining = seconds;
   const ring = document.getElementById('waiting-ring');
   const totalDash = 502;
@@ -993,18 +822,49 @@ function startWaitingCountdown(seconds) {
 
     if (remaining <= 0) {
       clearInterval(waitingTimer);
+      if (waitingPollTimer) clearInterval(waitingPollTimer);
       providerAutoDeclined();
     }
   }, 1000);
 
-  // Simulate provider accepting after 5 seconds for demo
-  // In production this would be driven by Supabase Realtime
-  setTimeout(() => {
-    if (waitingTimer) {
-      clearInterval(waitingTimer);
-      providerAccepted();
-    }
-  }, 5000);
+  // Poll Supabase for the provider's real Accept/Decline response
+  if (db && bookingId) {
+    waitingPollTimer = setInterval(async () => {
+      try {
+        const { data } = await db.from('bookings').select('status').eq('id', bookingId).single();
+        if (data && data.status === 'accepted') {
+          clearInterval(waitingTimer);
+          clearInterval(waitingPollTimer);
+          // If the customer has navigated away from the waiting screen (e.g. to
+          // chat with the provider), don't forcibly yank them out of it — just
+          // remember it was accepted, and move them forward once they come back.
+          const activeScreen = document.querySelector('.screen.active');
+          if (activeScreen && activeScreen.id === 'screen-waiting-provider') {
+            providerAccepted();
+          } else {
+            window.bookingAcceptedPendingNav = true;
+          }
+        } else if (data && data.status === 'declined') {
+          clearInterval(waitingTimer);
+          clearInterval(waitingPollTimer);
+          const activeScreen = document.querySelector('.screen.active');
+          if (activeScreen && activeScreen.id === 'screen-waiting-provider') {
+            providerAutoDeclined();
+          } else {
+            window.bookingDeclinedPendingNav = true;
+          }
+        }
+      } catch (e) { /* transient network error, keep polling */ }
+    }, 3000);
+  } else {
+    // No DB connection or no booking id (e.g. demo mode) — fall back to a simple simulation
+    setTimeout(() => {
+      if (waitingTimer) {
+        clearInterval(waitingTimer);
+        providerAccepted();
+      }
+    }, 5000);
+  }
 }
 
 function providerAccepted() {
@@ -1066,58 +926,286 @@ function providerAutoDeclined() {
   showScreen('screen-provider-declined');
 }
 
+let currentDetailBooking = null;
+let currentDetailBookingProvider = null;
+let bookingDetailMap = null;
+
+async function openBookingDetail(bookingId) {
+  if (!db || !bookingId) return;
+  showScreen('screen-booking-detail');
+  document.getElementById('bd-provider-name').textContent = 'Loading...';
+
+  try {
+    const { data: booking, error } = await db.from('bookings').select('*').eq('id', bookingId).single();
+    if (error || !booking) { alert('Could not load this booking.'); goBack(); return; }
+    currentDetailBooking = booking;
+
+    document.getElementById('bd-provider-name').textContent = booking.provider_name || 'Provider';
+
+    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+    const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Your Confirmation', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+    const badge = document.getElementById('bd-status-badge');
+    badge.className = 'status ' + (statusMap[booking.status] || 'confirmed');
+    badge.textContent = statusLabel[booking.status] || 'Pending';
+
+    document.getElementById('bd-date').textContent = (booking.booking_date || '-') + (booking.booking_time ? ' at ' + booking.booking_time : '');
+    document.getElementById('bd-duration').textContent = booking.is_house_call ? 'House Call' : 'Appointment';
+
+    document.getElementById('bd-service-name').textContent = booking.service || 'Service';
+    document.getElementById('bd-service-price').textContent = booking.amount || '₦0';
+    document.getElementById('bd-service-sub').textContent = 'with ' + (booking.provider_name || 'Provider');
+    document.getElementById('bd-total').textContent = booking.amount || '₦0';
+
+    const cancelRow = document.getElementById('bd-cancel-row');
+    cancelRow.style.display = (booking.status === 'confirmed' || booking.status === 'accepted') ? 'flex' : 'none';
+
+    // Load provider details for map, directions, and the Call button
+    const { data: provRow } = await db.from('providers').select('latitude, longitude, location_note, phone, whatsapp').eq('full_name', booking.provider_name).maybeSingle();
+    currentDetailBookingProvider = provRow || null;
+
+    const mapSection = document.getElementById('bd-map-section');
+    if (provRow && provRow.latitude != null && provRow.longitude != null) {
+      mapSection.style.display = 'block';
+      setTimeout(() => {
+        if (bookingDetailMap) { bookingDetailMap.remove(); bookingDetailMap = null; }
+        bookingDetailMap = L.map('booking-detail-map', { zoomControl: false, dragging: false, scrollWheelZoom: false, tap: false })
+          .setView([provRow.latitude, provRow.longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap contributors' }).addTo(bookingDetailMap);
+        L.marker([provRow.latitude, provRow.longitude]).addTo(bookingDetailMap);
+      }, 150);
+    } else {
+      mapSection.style.display = 'none';
+    }
+  } catch (e) { console.error('Booking detail load error:', e); }
+}
+
+let currentChatBookingId = null;
+let currentChatOtherPartyPhone = null;
+let currentChatOtherPartyName = null;
+let chatPollTimer = null;
+
+async function openChat(bookingId) {
+  if (!db || !bookingId) return;
+  currentChatBookingId = bookingId;
+  showScreen('screen-chat');
+  document.getElementById('chat-messages').innerHTML = '<p style="text-align:center; font-size:12px; color:var(--text3); padding:20px 0;">Loading messages...</p>';
+
+  try {
+    const { data: booking } = await db.from('bookings').select('*').eq('id', bookingId).single();
+    if (!booking) { alert('Could not load this conversation.'); goBack(); return; }
+
+    const myRole = localStorage.getItem('preen_role') === 'provider' ? 'provider' : 'customer';
+    if (myRole === 'provider') {
+      currentChatOtherPartyName = booking.customer_name || 'Customer';
+      currentChatOtherPartyPhone = booking.customer_phone || '';
+    } else {
+      currentChatOtherPartyName = booking.provider_name || 'Provider';
+      const { data: prov } = await db.from('providers').select('phone, whatsapp').eq('full_name', booking.provider_name).maybeSingle();
+      currentChatOtherPartyPhone = prov ? (prov.phone || prov.whatsapp) : '';
+    }
+    document.getElementById('chat-header-name').textContent = currentChatOtherPartyName;
+    document.getElementById('chat-header-sub').textContent = booking.service || '';
+    document.getElementById('chat-header-avatar').textContent = currentChatOtherPartyName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+
+    await loadChatMessages();
+    if (chatPollTimer) clearInterval(chatPollTimer);
+    chatPollTimer = setInterval(loadChatMessages, 3000);
+  } catch (e) { console.error('Open chat error:', e); }
+}
+
+async function loadChatMessages() {
+  // Self-terminating: if the customer/provider has navigated away from chat,
+  // stop polling instead of running forever in the background.
+  const screenEl = document.getElementById('screen-chat');
+  if (!screenEl || !screenEl.classList.contains('active')) {
+    if (chatPollTimer) clearInterval(chatPollTimer);
+    return;
+  }
+  if (!currentChatBookingId || !db) return;
+
+  // If the booking was accepted/declined while the customer was chatting,
+  // show it clearly right here instead of leaving them to discover it later.
+  const banner = document.getElementById('chat-status-banner');
+  if (window.bookingAcceptedPendingNav || window.bookingDeclinedPendingNav) {
+    if (!banner) {
+      const accepted = !!window.bookingAcceptedPendingNav;
+      const bannerEl = document.createElement('div');
+      bannerEl.id = 'chat-status-banner';
+      bannerEl.onclick = closeChatScreen;
+      bannerEl.style.cssText = 'background:' + (accepted ? 'var(--primary-light)' : 'var(--bg3)') + '; border-bottom:1px solid var(--border); padding:12px 16px; text-align:center; font-size:12px; font-weight:600; color:' + (accepted ? 'var(--primary-dark)' : 'var(--error)') + '; cursor:pointer;';
+      bannerEl.textContent = accepted ? 'Booking accepted! Tap here to continue to payment →' : 'This booking was declined. Tap here to continue →';
+      const chatScreenEl = document.getElementById('screen-chat');
+      chatScreenEl.querySelector('.inner-header').insertAdjacentElement('afterend', bannerEl);
+    }
+  }
+
+  const container = document.getElementById('chat-messages');
+  try {
+    const { data, error } = await db.from('messages').select('*').eq('booking_id', currentChatBookingId).order('created_at', { ascending: true });
+    if (error) { console.error('Chat load error:', error); return; }
+    const myRole = localStorage.getItem('preen_role') === 'provider' ? 'provider' : 'customer';
+    const msgs = data || [];
+
+    if (msgs.length === 0) {
+      container.innerHTML = '<p style="text-align:center; font-size:12px; color:var(--text3); padding:20px 0;">No messages yet. Say hello!</p>';
+      return;
+    }
+
+    container.innerHTML = msgs.map(m => {
+      const isMine = m.sender_role === myRole;
+      const time = m.created_at ? new Date(m.created_at).toLocaleTimeString('en-NG', { hour: 'numeric', minute: '2-digit' }) : '';
+      const content = m.image_url
+        ? '<img src="' + m.image_url + '" style="max-width:180px;border-radius:12px;display:block;" onclick="window.open(\'' + m.image_url + '\',\'_blank\')"/>'
+        : (m.message || '').replace(/</g, '&lt;');
+      const tick = isMine ? ' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;display:inline-block;opacity:0.6;"><polyline points="20 6 9 17 4 12"/></svg>' : '';
+      // The wrapper itself must be the flex item for align-items to have any
+      // effect — putting alignment on the bubble alone (nested one level
+      // deeper) silently does nothing, which is why every bubble was
+      // rendering on the same side regardless of sender.
+      return '<div style="display:flex; flex-direction:column; align-items:' + (isMine ? 'flex-end' : 'flex-start') + ';">' +
+        '<div class="chat-bubble ' + (isMine ? 'sent' : 'received') + '"' + (m.image_url ? ' style="padding:4px;background:transparent;"' : '') + '>' + content + '</div>' +
+        '<div class="chat-time" style="' + (isMine ? 'text-align:right; padding-right:4px;' : 'padding-left:4px;') + '">' + time + tick + '</div>' +
+        '</div>';
+    }).join('');
+    container.scrollTop = container.scrollHeight;
+  } catch (e) { console.error('Load chat messages error:', e); }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !currentChatBookingId || !db) return;
+  const myRole = localStorage.getItem('preen_role') === 'provider' ? 'provider' : 'customer';
+  const myName = myRole === 'provider' ? (localStorage.getItem('preen_provider_name') || 'Provider') : (localStorage.getItem('preen_user_name') || 'Customer');
+  input.value = '';
+  try {
+    const { error } = await db.from('messages').insert([{ booking_id: currentChatBookingId, sender_role: myRole, sender_name: myName, message: text }]);
+    if (error) { alert('Could not send message:\n\n' + error.message); return; }
+    loadChatMessages();
+  } catch (e) { console.error('Send chat message error:', e); alert('Could not send message. Please try again.'); }
+}
+
+async function sendChatImage(inputEl) {
+  const file = inputEl.files[0];
+  if (!file || !currentChatBookingId || !db) return;
+  try {
+    const fileName = currentChatBookingId + '-' + Date.now() + '-' + file.name.replace(/[^a-zA-Z0-9.]/g, '');
+    const { error: uploadError } = await db.storage.from('chat-images').upload(fileName, file);
+    if (uploadError) { alert('Could not upload image:\n\n' + uploadError.message); inputEl.value = ''; return; }
+    const { data: urlData } = db.storage.from('chat-images').getPublicUrl(fileName);
+    const imageUrl = urlData.publicUrl;
+
+    const myRole = localStorage.getItem('preen_role') === 'provider' ? 'provider' : 'customer';
+    const myName = myRole === 'provider' ? (localStorage.getItem('preen_provider_name') || 'Provider') : (localStorage.getItem('preen_user_name') || 'Customer');
+    const { error } = await db.from('messages').insert([{ booking_id: currentChatBookingId, sender_role: myRole, sender_name: myName, image_url: imageUrl }]);
+    if (error) { alert('Could not send image:\n\n' + error.message); inputEl.value = ''; return; }
+    loadChatMessages();
+  } catch (e) { console.error('Send chat image error:', e); alert('Could not send image. Please try again.'); }
+  inputEl.value = '';
+}
+
+function closeChatScreen() {
+  if (chatPollTimer) clearInterval(chatPollTimer);
+  if (window.bookingAcceptedPendingNav) {
+    window.bookingAcceptedPendingNav = false;
+    providerAccepted();
+    return;
+  }
+  if (window.bookingDeclinedPendingNav) {
+    window.bookingDeclinedPendingNav = false;
+    providerAutoDeclined();
+    return;
+  }
+  goBack();
+}
+
+function callFromChat() {
+  if (!currentChatOtherPartyPhone) { alert('No phone number available for this conversation.'); return; }
+  window.location.href = 'tel:' + currentChatOtherPartyPhone;
+}
+
+function closeBookingDetail() {
+  showScreen('screen-home');
+}
+
+function addBookingToCalendar() {
+  if (!currentDetailBooking) return;
+  const title = encodeURIComponent((currentDetailBooking.service || 'Booking') + ' at ' + (currentDetailBooking.provider_name || 'Preen'));
+  const details = encodeURIComponent('Booking with ' + (currentDetailBooking.provider_name || 'your provider') + ' via Preen');
+  let datesParam = '';
+  try {
+    const d = new Date(currentDetailBooking.booking_date + ' ' + (currentDetailBooking.booking_time || ''));
+    if (!isNaN(d.getTime())) {
+      const end = new Date(d.getTime() + 60 * 60 * 1000);
+      const fmt = (dt) => dt.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      datesParam = '&dates=' + fmt(d) + '/' + fmt(end);
+    }
+  } catch (e) { /* falls back to an undated event below */ }
+  const url = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + datesParam + '&details=' + details;
+  window.open(url, '_blank');
+}
+
+function openDirectionsForBookingDetail() {
+  if (!currentDetailBookingProvider || currentDetailBookingProvider.latitude == null) {
+    alert('This provider hasn\'t set their studio location yet.');
+    return;
+  }
+  const url = 'https://www.google.com/maps/dir/?api=1&destination=' + currentDetailBookingProvider.latitude + ',' + currentDetailBookingProvider.longitude;
+  window.open(url, '_blank');
+}
+
+function callProviderFromBookingDetail() {
+  const phone = currentDetailBookingProvider ? (currentDetailBookingProvider.phone || currentDetailBookingProvider.whatsapp) : null;
+  if (!phone) { alert('No phone number available for this provider.'); return; }
+  window.location.href = 'tel:' + phone;
+}
+
+function openProviderProfileFromDetail() {
+  if (!currentDetailBooking) return;
+  openProviderProfile(currentDetailBooking.provider_name);
+}
+
+async function cancelFromBookingDetail() {
+  if (!currentDetailBooking) return;
+  if (!confirm('Cancel this booking? This cannot be undone.')) return;
+  try {
+    const { error } = await db.from('bookings').update({ status: 'cancelled' }).eq('id', currentDetailBooking.id);
+    if (error) { alert('Could not cancel this booking:\n\n' + error.message); return; }
+    alert('Booking cancelled.');
+    showScreen('screen-bookings');
+    loadMyBookings();
+  } catch (e) { console.error('Cancel error:', e); alert('Could not cancel this booking. Please try again.'); }
+}
+
+function openChatForBookingDetail() {
+  if (!currentDetailBooking) return;
+  openChat(currentDetailBooking.id);
+}
+
 function proceedToPayment() {
   if (paymentTimer) clearInterval(paymentTimer);
   // In production — open Paystack here
   // For now simulate payment success
-  showScreen('screen-booking-success');
+  if (currentBookingDetails && currentBookingDetails.bookingId) {
+    openBookingDetail(currentBookingDetails.bookingId);
+  } else {
+    showScreen('screen-home');
+  }
 }
 
 function cancelWaitingBooking() {
   if (waitingTimer) clearInterval(waitingTimer);
+  if (waitingPollTimer) clearInterval(waitingPollTimer);
   if (paymentTimer) clearInterval(paymentTimer);
+  if (db && currentBookingDetails.bookingId) {
+    db.from('bookings').update({ status: 'cancelled' }).eq('id', currentBookingDetails.bookingId).then(()=>{}).catch(()=>{});
+  }
   currentBookingDetails = {};
   showScreen('screen-home');
 }
 
 // ===== WAITING SCREEN CHAT =====
-function sendWaitingMessage() {
-  const input = document.getElementById('waiting-chat-input');
-  if (!input || !input.value.trim()) return;
-  const msg = input.value.trim();
-  const container = document.getElementById('waiting-chat-messages');
-  if (!container) return;
-
-  // Add customer message
-  const customerMsg = document.createElement('div');
-  customerMsg.style.cssText = 'display:flex;justify-content:flex-end;';
-  customerMsg.innerHTML = `<div style="background:var(--primary);border-radius:12px 12px 0 12px;padding:10px 14px;max-width:75%;">
-    <p style="font-size:12px;color:#fff;">${msg}</p>
-    <p style="font-size:10px;color:rgba(255,255,255,0.7);margin-top:4px;">You · just now</p>
-  </div>`;
-  container.appendChild(customerMsg);
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
-
-  // Simulate provider reply after 3 seconds
-  setTimeout(() => {
-    const replies = [
-      'Got it! See you then 😊',
-      'No problem, noted!',
-      'Thanks for letting me know 🙏',
-      'Perfect, I will be ready for you!'
-    ];
-    const reply = replies[Math.floor(Math.random() * replies.length)];
-    const provMsg = document.createElement('div');
-    provMsg.style.cssText = 'display:flex;justify-content:flex-start;';
-    provMsg.innerHTML = `<div style="background:var(--bg2);border-radius:12px 12px 12px 0;padding:10px 14px;max-width:75%;border:1px solid var(--border);">
-      <p style="font-size:12px;color:var(--text);">${reply}</p>
-      <p style="font-size:10px;color:var(--text3);margin-top:4px;">Provider · just now</p>
-    </div>`;
-    container.appendChild(provMsg);
-    container.scrollTop = container.scrollHeight;
-  }, 3000);
-}
+// (sendWaitingMessage removed — the waiting screen now uses the real chat system via openChat(), not this old fake canned-reply widget)
 
 
 // 15 MINUTE COUNTDOWN TIMER FOR BOOKING REQUESTS
@@ -1147,7 +1235,7 @@ function startRequestTimer(bookingId, seconds) {
       const card = document.getElementById('req-' + bookingId);
       if (card) {
         card.style.opacity = '0.5';
-        card.innerHTML += '<div style="background:#FEF2F2;border-radius:10px;padding:10px;margin-top:8px;text-align:center;"><p style="font-size:12px;font-weight:600;color:var(--error);">⏰ Time expired — booking auto-declined. Customer has been refunded.</p></div>';
+        card.innerHTML += '<div style="background:#FEF2F2;border-radius:10px;padding:10px;margin-top:8px;text-align:center;"><p style="font-size:12px;font-weight:600;color:var(--error);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Time expired — booking auto-declined. Customer has been refunded.</p></div>';
         card.querySelectorAll('button').forEach(b => b.disabled = true);
       }
     }
@@ -1163,6 +1251,8 @@ function stopRequestTimer(bookingId) {
 
 
 // FIX - selectCloseReason
+let selectedCloseReason = '';
+
 function selectCloseReason(el) {
   document.querySelectorAll('#close-reasons .service-select-item').forEach(item => {
     item.classList.remove('selected');
@@ -1172,21 +1262,38 @@ function selectCloseReason(el) {
   el.classList.add('selected');
   const check = el.querySelector('.service-check');
   if (check) check.style.opacity = '1';
+  selectedCloseReason = el.querySelector('span') ? el.querySelector('span').textContent : '';
 }
 
-// FIX - Provider edit profile
-function loadProviderEditProfile() {
-  const name = document.getElementById('provider-name-display');
-  const cat = document.getElementById('provider-category-display');
-  if (name) document.getElementById('prov-edit-name') && (document.getElementById('prov-edit-name').value = name.textContent);
+// Provider edit profile — loads real data from Supabase and shows the
+// bio/hours/social fields that only make sense for a business account.
+async function loadProviderEditProfile() {
   showScreen('screen-edit-profile');
-  // Pre-fill with provider data
+  document.getElementById('edit-profile-title').textContent = 'Edit Business Profile';
+  document.getElementById('edit-name-group').style.display = 'none';
+  document.getElementById('edit-business-name-group').style.display = 'block';
+  document.getElementById('edit-provider-fields').style.display = 'flex';
+
   const provName = localStorage.getItem('preen_provider_name') || '';
-  const provEmail = localStorage.getItem('preen_provider_email') || '';
-  const provPhone = localStorage.getItem('preen_provider_phone') || '';
-  if (document.getElementById('edit-name')) document.getElementById('edit-name').value = provName;
-  if (document.getElementById('edit-email')) document.getElementById('edit-email').value = provEmail;
-  if (document.getElementById('edit-phone')) document.getElementById('edit-phone').value = provPhone;
+  document.getElementById('edit-business-name').value = provName;
+  document.getElementById('edit-email').value = localStorage.getItem('preen_provider_email') || '';
+  document.getElementById('edit-phone').value = localStorage.getItem('preen_provider_phone') || '';
+
+  if (db && provName) {
+    try {
+      const { data } = await db.from('providers').select('*').eq('full_name', provName).single();
+      if (data) {
+        document.getElementById('edit-location').value = data.location || '';
+        document.getElementById('edit-bio').value = data.bio || '';
+        document.getElementById('edit-hours').value = data.working_hours || '';
+        document.getElementById('edit-instagram').value = data.instagram_url || '';
+        document.getElementById('edit-tiktok').value = data.tiktok_url || '';
+        capturedProviderLat = data.latitude != null ? data.latitude : null;
+        capturedProviderLng = data.longitude != null ? data.longitude : null;
+        capturedProviderNote = data.location_note || '';
+      }
+    } catch (e) { console.error('Provider profile load error:', e); }
+  }
 }
 
 // CONNECT HOME SCREEN PROVIDERS TO SUPABASE
@@ -1247,13 +1354,13 @@ function renderHomeProviders(providers) {
   const cards = providers.slice(0, 6).map(p => `
     <div class="provider-card" onclick="openProviderProfile('${p.name}','${p.category}','${p.location}','${p.rating}','${p.verified}')">
       <div class="provider-card-img" style="${p.image ? 'background-image:url(' + p.image + ');background-size:cover;background-position:center;' : p.bg}">
-        ${!p.image ? '<span style="font-size:28px;">' + p.emoji + '</span>' : ''}
-        ${p.verified ? '<div class="verified-badge-small">✓</div>' : ''}
+        ${!p.image ? '<span style="color:var(--primary);">' + p.emoji + '</span>' : ''}
+        ${p.verified ? '<div class="verified-badge-small"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></div>' : ''}
       </div>
       <div class="provider-card-info">
         <p class="provider-card-name">${p.name}</p>
         <p class="provider-card-cat">${p.category} · ${p.location}</p>
-        ${p.rating > 0 ? '<p class="provider-card-rating">★ ' + p.rating.toFixed(1) + '</p>' : ''}
+        ${p.rating > 0 ? '<p class="provider-card-rating"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' + p.rating.toFixed(1) + '</p>' : ''}
       </div>
     </div>
   `).join('');
@@ -1274,6 +1381,7 @@ async function loadMyBookings() {
     const phone = localStorage.getItem('preen_user_phone') || '';
     const email = localStorage.getItem('preen_user_email') || '';
     if (!phone && !email) { renderFakeBookings(container); return; }
+    if (phone) await checkAutoReleaseBookings(phone);
 
     let query = db.from('bookings').select('*').order('created_at', { ascending: false });
     if (phone) query = query.eq('customer_phone', phone);
@@ -1281,57 +1389,134 @@ async function loadMyBookings() {
 
     const { data, error } = await query;
     if (error || !data || data.length === 0) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;"><p style="font-size:40px;margin-bottom:12px;">📅</p><p style="font-size:15px;font-weight:600;">No bookings yet</p><p style="font-size:13px;color:var(--text3);margin-top:6px;">Your bookings will appear here</p></div>';
+      container.innerHTML = '<div style="text-align:center;padding:40px;"><div style="margin-bottom:12px;display:flex;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><p style="font-size:15px;font-weight:600;">No bookings yet</p><p style="font-size:13px;color:var(--text3);margin-top:6px;">Your bookings will appear here</p></div>';
       return;
     }
 
-    container.innerHTML = data.map(b => `
-      <div style="background:var(--bg2);border-radius:16px;padding:16px;border:1.5px solid var(--border);margin-bottom:12px;">
+    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+    const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Your Confirmation', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+
+    // Check which of these bookings already have a review and/or tip attached,
+    // so those buttons can correctly disappear instead of being reusable forever
+    const completedIds = data.filter(b => b.status === 'completed').map(b => b.id);
+    let reviewedBookingIds = new Set();
+    let tippedBookingIds = new Set();
+    if (completedIds.length > 0) {
+      try {
+        const [{ data: reviewRows }, { data: tipRows }] = await Promise.all([
+          db.from('reviews').select('booking_id').in('booking_id', completedIds),
+          db.from('tips').select('booking_id').in('booking_id', completedIds)
+        ]);
+        reviewedBookingIds = new Set((reviewRows || []).map(r => r.booking_id).filter(Boolean));
+        tippedBookingIds = new Set((tipRows || []).map(t => t.booking_id).filter(Boolean));
+      } catch (e) { console.error('Review/tip status check error:', e); }
+    }
+
+    container.innerHTML = data.map(b => {
+      const cls = statusMap[b.status] || 'confirmed';
+      const label = statusLabel[b.status] || 'Pending';
+      const safeName = (b.provider_name || '').replace(/'/g, "\\'");
+      const alreadyReviewed = reviewedBookingIds.has(b.id);
+      const alreadyTipped = tippedBookingIds.has(b.id);
+      return `
+      <div style="background:var(--bg2);border-radius:16px;padding:16px;border:1.5px solid var(--border);margin-bottom:12px;cursor:pointer;" onclick="openBookingDetail('${b.id}')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
           <div>
             <p style="font-size:14px;font-weight:600;">${b.provider_name || 'Provider'}</p>
             <p style="font-size:12px;color:var(--text3);">${b.service || 'Service'}</p>
           </div>
-          <span class="status ${b.status || 'confirmed'}">${b.status || 'confirmed'}</span>
+          <span class="status ${cls}">${label}</span>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:12px;">
-          <span>📅 ${b.booking_date || ''} ${b.booking_time || ''}</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> ${b.booking_date || ''} ${b.booking_time || ''}</span>
           <span style="font-weight:600;color:var(--text);">${b.amount || ''}</span>
         </div>
-        <div style="display:flex;gap:8px;">
-          ${b.status === 'confirmed' ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="cancelBooking('${b.id}',this)">Cancel</button>` : ''}
-          ${b.status === 'completed' ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="openReview()">Leave Review</button>` : ''}
+        ${b.status === 'pending_confirmation' ? `<div class="booking-note" style="margin-bottom:10px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>${b.provider_name || 'The provider'} marked this service as done. Please confirm it went as expected.</div>` : ''}
+        ${b.status === 'disputed' ? `<div class="booking-note" style="margin-bottom:10px; border-color:var(--error);"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>This booking is on hold pending review. We'll be in touch.</div>` : ''}
+        <div style="display:flex;gap:8px;" onclick="event.stopPropagation()">
+          ${(b.status === 'confirmed' || b.status === 'accepted') ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="cancelBookingById('${b.id}',this)">Cancel</button>` : ''}
+          ${b.status === 'pending_confirmation' ? `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;color:var(--error);border-color:var(--error);" onclick="reportServiceProblem('${b.id}')">Report a Problem</button><button class="btn-primary" style="flex:1;padding:8px;font-size:12px;" onclick="confirmServiceCompletion('${b.id}')">Confirm</button>` : ''}
+          ${b.status === 'completed' ? `${alreadyReviewed ? '<span class="status completed" style="flex:1;text-align:center;padding:8px;">Reviewed</span>' : `<button class="btn-secondary" style="flex:1;padding:8px;font-size:12px;" onclick="openReview('${safeName}', '${b.id}')">Leave Review</button>`}${alreadyTipped ? '<span class="status completed" style="flex:1;text-align:center;padding:8px;">Tipped</span>' : `<button class="btn-primary" style="flex:1;padding:8px;font-size:12px;" onclick="openTip('${safeName}', '${b.id}')">Tip</button>`}` : ''}
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch(e) {
     renderFakeBookings(container);
   }
 }
 
 function renderFakeBookings(container) {
-  container.innerHTML = '<div style="text-align:center;padding:40px;"><p style="font-size:40px;margin-bottom:12px;">📅</p><p style="font-size:15px;font-weight:600;">No bookings yet</p><p style="font-size:13px;color:var(--text3);margin-top:6px;">Book a service to see it here</p></div>';
+  container.innerHTML = '<div style="text-align:center;padding:40px;"><div style="margin-bottom:12px;display:flex;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div><p style="font-size:15px;font-weight:600;">No bookings yet</p><p style="font-size:13px;color:var(--text3);margin-top:6px;">Book a service to see it here</p></div>';
 }
 
 // CONNECT PROVIDER BOOKING REQUESTS TO SUPABASE
+async function loadAcceptedTodayBookings() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  const container = document.getElementById('accepted-today-list');
+  if (!container) return;
+
+  try {
+    const { data, error } = await db
+      .from('bookings')
+      .select('*')
+      .eq('provider_name', provName)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) { console.error('Accepted bookings fetch error:', error); return; }
+
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No bookings accepted yet today.</p>';
+      return;
+    }
+
+    container.innerHTML = data.map(b => `
+      <div class="request-card" style="opacity:0.85;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+          <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">${(b.customer_name || 'C').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;">
+            <p style="font-size:14px; font-weight:600;">${b.customer_name || 'Customer'}</p>
+            <p style="font-size:11px; color:var(--text3);">${b.service || ''} · ${b.booking_time || ''} · ${b.amount || ''}</p>
+          </div>
+          <span class="status confirmed">Accepted</span>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { console.error('Accepted bookings error:', e); }
+}
+
 async function loadProviderBookingRequests() {
   if (!db) return;
   const provName = localStorage.getItem('preen_provider_name') || '';
   if (!provName) return;
 
+  const container = document.getElementById('booking-requests-list');
+  if (!container) return;
+
   try {
-    const { data } = await db
+    const { data, error } = await db
       .from('bookings')
       .select('*')
       .eq('provider_name', provName)
       .eq('status', 'confirmed')
       .order('created_at', { ascending: false });
 
-    const container = document.getElementById('booking-requests-list');
-    if (!container || !data || data.length === 0) return;
+    if (error) { console.error('Booking requests fetch error:', error); return; }
 
+    const count = data ? data.length : 0;
     const badge = document.getElementById('requests-badge');
-    if (badge) badge.textContent = data.length;
+    if (badge) badge.textContent = count;
+    const label = document.getElementById('pending-count-label');
+    if (label) label.textContent = 'Pending — ' + count;
+
+    if (count === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:24px 0;">No pending booking requests right now.</p>';
+      return;
+    }
 
     container.innerHTML = data.map(b => `
       <div class="request-card" id="req-${b.id}">
@@ -1353,12 +1538,13 @@ async function loadProviderBookingRequests() {
           <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--text3);">Amount</span><span style="font-size:14px;font-weight:700;color:var(--primary);">${b.amount || ''}</span></div>
         </div>
         <div style="text-align:center;margin-bottom:10px;">
-          <p style="font-size:12px;color:var(--text3);">⏰ Auto-declines in <span id="countdown-${b.id}" style="font-weight:700;color:var(--accent);">15:00</span></p>
+          <p style="font-size:12px;color:var(--text3);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Auto-declines in <span id="countdown-${b.id}" style="font-weight:700;color:var(--accent);">15:00</span></p>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="req-decline-btn" onclick="declineBookingRequest(this,'${b.customer_name}','${b.id}')">✗ Decline</button>
-          <button class="req-accept-btn" onclick="acceptBookingRequest(this,'${b.customer_name}','${b.id}')">✓ Accept</button>
+          <button class="req-decline-btn" onclick="declineBookingRequest(this,'${b.customer_name}','${b.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Decline</button>
+          <button class="req-accept-btn" onclick="acceptBookingRequest(this,'${b.customer_name}','${b.id}')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg> Accept</button>
         </div>
+        <button class="btn-secondary" style="width:100%; margin-top:8px; padding:8px; font-size:12px;" onclick="openChat('${b.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;display:inline-block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message</button>
       </div>
     `).join('');
     
@@ -1471,69 +1657,111 @@ function filterVerifiedOnly(btn) {
 }
 
 // ===== MAIN FILTER FUNCTION =====
-let currentUserState = localStorage.getItem('preen_user_state') || 'Abuja';
+let currentUserState = localStorage.getItem('preen_user_state') || '';
+
+// Approximate center point of each Nigerian state, used to guess which state
+// a customer is in from raw GPS coordinates without needing a paid reverse-
+// geocoding API. Not perfectly precise right at a state border, but combined
+// with the manual override in the location picker, that's a reasonable trade.
+const STATE_CENTERS = {
+  'Abia': [5.4527, 7.5248], 'Adamawa': [9.3265, 12.3984], 'Akwa Ibom': [4.9057, 7.8537],
+  'Anambra': [6.2209, 6.9370], 'Bauchi': [10.7769, 9.9959], 'Bayelsa': [4.7719, 6.0699],
+  'Benue': [7.3369, 8.7404], 'Borno': [11.8333, 13.1500], 'Cross River': [5.8702, 8.5988],
+  'Delta': [5.5320, 5.8987], 'Ebonyi': [6.2649, 8.0137], 'Edo': [6.5244, 5.8987],
+  'Ekiti': [7.7190, 5.3110], 'Enugu': [6.5244, 7.5106], 'FCT': [9.0579, 7.4951],
+  'Gombe': [10.2897, 11.1673], 'Imo': [5.5720, 7.0588], 'Jigawa': [12.2280, 9.5616],
+  'Kaduna': [10.5105, 7.4165], 'Kano': [11.9914, 8.5317], 'Katsina': [12.9908, 7.6018],
+  'Kebbi': [11.4942, 4.2333], 'Kogi': [7.7337, 6.6906], 'Kwara': [8.9670, 4.3874],
+  'Lagos': [6.5244, 3.3792], 'Nasarawa': [8.4933, 8.3200], 'Niger': [9.9309, 5.5983],
+  'Ogun': [7.1608, 3.3487], 'Ondo': [7.2571, 5.2058], 'Osun': [7.5629, 4.5199],
+  'Oyo': [7.8500, 3.9300], 'Plateau': [9.2182, 9.5179], 'Rivers': [4.8156, 6.9778],
+  'Sokoto': [13.0059, 5.2476], 'Taraba': [8.8937, 11.3595], 'Yobe': [12.2939, 11.4390],
+  'Zamfara': [12.1704, 6.2597]
+};
+
+function guessNearestState(lat, lng) {
+  let closest = null, closestDist = Infinity;
+  for (const [state, [slat, slng]] of Object.entries(STATE_CENTERS)) {
+    const dist = getDistanceKm(lat, lng, slat, slng);
+    if (dist < closestDist) { closestDist = dist; closest = state; }
+  }
+  return closest;
+}
+
+function useLiveLocation() {
+  localStorage.removeItem('preen_state_is_manual');
+  const input = document.querySelector('#screen-location input');
+  if (input) input.value = '';
+  const listEl = document.getElementById('states-list');
+  if (listEl) listEl.innerHTML = '<p style="font-size:12px;color:var(--text3);text-align:center;padding:20px 0;">Detecting your location...</p>';
+  if (!navigator.geolocation) { alert('Location is not available on this device.'); renderStates(''); return; }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const state = guessNearestState(position.coords.latitude, position.coords.longitude);
+      if (state) {
+        currentUserState = state;
+        localStorage.setItem('preen_user_state', state);
+        const el = document.getElementById('selected-location');
+        if (el) el.textContent = state;
+        goBack();
+        setTimeout(loadHomeSections, 300);
+      }
+    },
+    () => { alert('Could not get your location — please allow location access and try again, or pick your state manually below.'); renderStates(''); },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function detectCustomerStateFromGPS() {
+  // A manual choice (via the location picker) always wins and is never
+  // silently overridden. Otherwise, follow live GPS every time — this is
+  // what lets a traveling customer's feed genuinely follow where they are,
+  // rather than being stuck on wherever they happened to open the app first.
+  if (localStorage.getItem('preen_state_is_manual') === 'true') return;
+  if (!navigator.geolocation) return;
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const state = guessNearestState(position.coords.latitude, position.coords.longitude);
+      if (state && state !== currentUserState) {
+        currentUserState = state;
+        localStorage.setItem('preen_user_state', state);
+        const el = document.getElementById('selected-location');
+        if (el) el.textContent = state;
+        loadHomeSections();
+      }
+    },
+    () => { /* permission denied or unavailable — falls back to the manual picker */ },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+  );
+}
 
 function applyAllFilters() {
   const query = (document.getElementById('search-input') ? document.getElementById('search-input').value : '').toLowerCase();
-  // Load from Supabase with filters
-  loadSearchProviders(query);
-  return;
-  let results = [...allProviders];
-
-  // State filter
-  if (currentUserState) {
-    results = results.filter(p => {
-      const loc = (p.location || '').toLowerCase();
-      const state = currentUserState.toLowerCase();
-      return loc.includes(state) || state.includes(loc.split(',')[0]);
-    });
-  }
-
-  // Text search
-  if (query) {
-    results = results.filter(p =>
-      (p.full_name || '').toLowerCase().includes(query) ||
-      (p.category || '').toLowerCase().includes(query) ||
-      (p.location || '').toLowerCase().includes(query)
-    );
-  }
-
-  // Price filter
-  if (priceMin > 0 || priceMax < 500000) {
-    results = results.filter(p => {
-      const price = p.price || 0;
-      return price >= priceMin && price <= priceMax;
-    });
-  }
-
-  // Verified filter
-  if (verifiedOnly) results = results.filter(p => p.is_verified);
-
-  // Amenities
-  if (activeAmenities.includes('Available Now')) results = results.filter(p => p.is_available);
-  if (activeAmenities.includes('Verified Only')) results = results.filter(p => p.is_verified);
-  if (activeAmenities.includes('Elite Only')) results = results.filter(p => p.preen_elite);
-
-  renderSearchResults(results);
+  searchProviders(query, '');
 }
 
 function renderSearchResults(results) {
   const container = document.getElementById('search-results');
   if (!container) return;
   if (!results || results.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:60px 20px;"><p style="font-size:40px;margin-bottom:12px;">🔍</p><p style="font-size:15px;font-weight:600;margin-bottom:6px;">No providers found</p><p style="font-size:13px;color:var(--text3);">Try adjusting your filters</p></div>';
+    container.innerHTML = '<div style="text-align:center;padding:60px 20px;"><div style="margin-bottom:14px;display:flex;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div><p style="font-size:15px;font-weight:600;margin-bottom:6px;">No providers found</p><p style="font-size:13px;color:var(--text3);">Try adjusting your filters</p></div>';
     return;
   }
   container.innerHTML = results.map(p => buildProviderCard ? buildProviderCard(p) : '').join('');
 }
 
 // ===== BOOKING REQUESTS - ACCEPT / DECLINE =====
-function acceptBookingRequest(btn, customerName, bookingId) {
+async function acceptBookingRequest(btn, customerName, bookingId) {
   const card = btn.closest('.request-card') || btn.parentElement.parentElement;
   if (bookingId) stopRequestTimer(bookingId);
-  btn.textContent = '✓ Accepted';
+  if (bookingId && db) {
+    try { await db.from('bookings').update({ status: 'accepted' }).eq('id', bookingId); }
+    catch (e) { console.error('Accept update failed:', e); }
+  }
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg> Accepted';
   btn.disabled = true;
-  btn.style.background = 'var(--success)';
+  btn.style.background = 'var(--primary)';
   const declineBtn = card.querySelector('.req-decline-btn') ||
     card.querySelector('[onclick*="decline"]') ||
     card.querySelectorAll('button')[0];
@@ -1546,14 +1774,14 @@ function acceptBookingRequest(btn, customerName, bookingId) {
   // Update status badge
   const badge = card.querySelector('[style*="FEF3C7"], [style*="accent-light"]');
   if (badge) {
-    badge.innerHTML = '<p style="font-size:11px;font-weight:600;color:var(--success);">✓ Accepted</p>';
-    badge.style.background = '#ECFDF5';
+    badge.innerHTML = '<p style="font-size:11px;font-weight:600;color:var(--primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg> Accepted</p>';
+    badge.style.background = 'var(--primary-light)';
   }
 
   // Add confirmation
   const confirm = document.createElement('div');
-  confirm.style.cssText = 'background:#ECFDF5;border-radius:10px;padding:10px 14px;margin-top:10px;text-align:center;border:1px solid #A7F3D0;';
-  confirm.innerHTML = '<p style="font-size:13px;font-weight:600;color:var(--success);">Booking confirmed! ' + customerName + ' has been notified. 🎉</p>';
+  confirm.style.cssText = 'background:var(--primary-light);border-radius:10px;padding:10px 14px;margin-top:10px;text-align:center;border:1px solid rgba(232,84,122,0.2);';
+  confirm.innerHTML = '<p style="font-size:13px;font-weight:600;color:var(--primary-dark);">Booking confirmed! ' + customerName + ' has been notified.</p>';
   card.appendChild(confirm);
   card.classList.add('accepted');
 
@@ -1563,14 +1791,21 @@ function acceptBookingRequest(btn, customerName, bookingId) {
     const count = parseInt(badge2.textContent) - 1;
     badge2.textContent = count > 0 ? count : '0';
   }
+  const label2 = document.getElementById('pending-count-label');
+  if (label2) label2.textContent = 'Pending — ' + (badge2 ? badge2.textContent : '0');
+  loadAcceptedTodayBookings();
 }
 
-function declineBookingRequest(btn, customerName, bookingId) {
+async function declineBookingRequest(btn, customerName, bookingId) {
   const card = btn.closest('.request-card') || btn.parentElement.parentElement;
   if (!confirm('Decline booking from ' + customerName + '? They will be refunded.')) return;
   if (bookingId) stopRequestTimer(bookingId);
+  if (bookingId && db) {
+    try { await db.from('bookings').update({ status: 'declined' }).eq('id', bookingId); }
+    catch (e) { console.error('Decline update failed:', e); }
+  }
 
-  btn.textContent = '✗ Declined';
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Declined';
   btn.disabled = true;
   const acceptBtn = card.querySelector('.req-accept-btn') ||
     card.querySelector('[onclick*="accept"]') ||
@@ -1579,7 +1814,7 @@ function declineBookingRequest(btn, customerName, bookingId) {
 
   const badge = card.querySelector('[style*="FEF3C7"], [style*="accent-light"]');
   if (badge) {
-    badge.innerHTML = '<p style="font-size:11px;font-weight:600;color:var(--error);">✗ Declined</p>';
+    badge.innerHTML = '<p style="font-size:11px;font-weight:600;color:var(--error);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Declined</p>';
     badge.style.background = '#FEF2F2';
   }
 
@@ -1652,42 +1887,86 @@ function sendResetEmail() {
 
 // EDIT PROFILE
 function loadEditProfile() {
+  showScreen('screen-edit-profile');
+  document.getElementById('edit-profile-title').textContent = 'Edit Profile';
+  document.getElementById('edit-name-group').style.display = 'block';
+  document.getElementById('edit-business-name-group').style.display = 'none';
+  document.getElementById('edit-provider-fields').style.display = 'none';
+
   const name = document.getElementById('profile-name').textContent || '';
   const email = document.getElementById('profile-email').textContent || '';
-  document.getElementById('edit-name').value = name;
+  document.getElementById('edit-full-name').value = name;
   document.getElementById('edit-email').value = email;
-  document.getElementById('edit-phone').value = '';
-  document.getElementById('edit-location').value = document.getElementById('selected-location').textContent || 'Abuja, FCT';
-  showScreen('screen-edit-profile');
+  document.getElementById('edit-phone').value = localStorage.getItem('preen_user_phone') || '';
+  document.getElementById('edit-location').value = document.getElementById('selected-location') ? (document.getElementById('selected-location').textContent || '') : '';
 }
 
-function saveEditProfile() {
-  const name = document.getElementById('edit-name').value.trim();
+async function saveEditProfile() {
+  const isProvider = document.getElementById('edit-provider-fields').style.display !== 'none';
   const email = document.getElementById('edit-email').value.trim();
   const phone = document.getElementById('edit-phone').value.trim();
-  if (!name) { alert('Please enter your name.'); return; }
+  const location = document.getElementById('edit-location').value.trim();
   if (!email) { alert('Please enter your email.'); return; }
+
+  if (isProvider) {
+    const provName = localStorage.getItem('preen_provider_name') || '';
+    const bio = document.getElementById('edit-bio').value.trim();
+    const hours = document.getElementById('edit-hours').value.trim();
+    const instagram = document.getElementById('edit-instagram').value.trim();
+    const tiktok = document.getElementById('edit-tiktok').value.trim();
+
+    if (db && provName) {
+      try {
+        const { error } = await db.from('providers').update({
+          email: email,
+          phone: phone,
+          location: location,
+          bio: bio,
+          working_hours: hours,
+          instagram_url: instagram,
+          tiktok_url: tiktok
+        }).eq('full_name', provName);
+        if (error) { alert('Could not save your profile:\n\n' + error.message); console.error('Provider profile save error:', error); return; }
+      } catch (e) { alert('Could not save your profile. Please try again.'); console.error('Provider profile save failed:', e); return; }
+    }
+    localStorage.setItem('preen_provider_email', email);
+    localStorage.setItem('preen_provider_phone', phone);
+    alert('Profile updated successfully!');
+    goBack();
+    return;
+  }
+
+  // Customer path
+  const name = document.getElementById('edit-full-name').value.trim();
+  if (!name) { alert('Please enter your name.'); return; }
+  const oldEmail = localStorage.getItem('preen_user_email') || '';
+
+  if (db && oldEmail) {
+    try {
+      const { error } = await db.from('user').update({
+        full_name: name,
+        email: email,
+        phone: phone
+      }).eq('email', oldEmail);
+      if (error) { alert('Could not save your profile:\n\n' + error.message); console.error('Customer profile save error:', error); return; }
+    } catch (e) { alert('Could not save your profile. Please try again.'); console.error('Customer profile save failed:', e); return; }
+  }
+
   document.getElementById('profile-name').textContent = name;
   document.getElementById('profile-email').textContent = email;
-  // Update initials
+  localStorage.setItem('preen_user_name', name);
+  localStorage.setItem('preen_user_email', email);
+  localStorage.setItem('preen_user_phone', phone);
   const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  document.querySelector('.profile-avatar').textContent = initials;
+  const avatarEl = document.querySelector('.profile-avatar');
+  if (avatarEl) avatarEl.textContent = initials;
   alert('Profile updated successfully!');
   goBack();
 }
 
-function changePassword() {
-  const current = document.getElementById('current-password').value.trim();
-  const newPass = document.getElementById('new-password').value.trim();
-  const confirm = document.getElementById('confirm-password').value.trim();
-  if (!current || !newPass || !confirm) { alert('Please fill in all password fields.'); return; }
-  if (newPass !== confirm) { alert('New passwords do not match.'); return; }
-  if (newPass.length < 6) { alert('Password must be at least 6 characters.'); return; }
-  document.getElementById('current-password').value = '';
-  document.getElementById('new-password').value = '';
-  document.getElementById('confirm-password').value = '';
-  alert('Password updated successfully!');
-}
+// (changePassword removed — this app has no real password authentication to
+// change against; the Edit Profile screen now says so honestly instead of
+// faking a successful password change)
 
 function uploadEditProfilePhoto() {
   const input = document.createElement('input');
@@ -1713,9 +1992,44 @@ function uploadEditProfilePhoto() {
 }
 
 // CLOSE ACCOUNT
-function closeAccount() {
-  const confirm = document.getElementById('close-confirm').value.trim();
-  if (confirm !== 'DELETE') { alert('Please type DELETE exactly to confirm.'); return; }
+async function closeAccount() {
+  const input = document.getElementById('delete-confirm');
+  if (!input) { alert('Error finding input field.'); return; }
+  const val = input.value.trim().toUpperCase();
+  if (val !== 'DELETE') { alert('Please type DELETE exactly to confirm.'); return; }
+
+  // Your own database rules deliberately block hard deletion of user accounts
+  // and bookings — accounts are meant to be closed via a status flag instead,
+  // same as how providers, bookings, and reviews already work in this app.
+  const email = localStorage.getItem('preen_user_email');
+  if (db && email) {
+    try {
+      const { error } = await db.from('user').update({
+        is_closed: true,
+        closed_at: new Date().toISOString(),
+        close_reason: selectedCloseReason || 'Not specified'
+      }).eq('email', email);
+      if (error) {
+        alert('Could not close your account:\n\n' + error.message + '\n\nPlease try again or contact support.');
+        console.error('Close account error:', error);
+        return;
+      }
+    } catch (e) {
+      alert('Could not close your account. Please check your connection and try again.');
+      console.error('Close account failed:', e);
+      return;
+    }
+  }
+
+  // Clear localStorage
+  localStorage.removeItem('preen_user_name');
+  localStorage.removeItem('preen_user_email');
+  localStorage.removeItem('preen_user_phone');
+  localStorage.removeItem('preen_role');
+  localStorage.removeItem('preen_recently_viewed');
+  localStorage.removeItem('preen_browse_history');
+  selectedCloseReason = '';
+
   alert('Your account has been closed. We are sorry to see you go.');
   showScreen('screen-welcome');
 }
@@ -1734,40 +2048,56 @@ function getNearbyProviders() {
   }
 
   navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
+    async () => {
+      // Note: real distance sorting needs each provider's actual coordinates,
+      // which this app doesn't collect yet (would need a "pin your location"
+      // step at signup, or geocoding their typed address via a paid API).
+      // For now this shows real available providers without a fabricated
+      // distance number, rather than pretending to sort by proximity.
       document.getElementById('selected-location').textContent = 'Near you · GPS';
 
-      // Calculate distance from user to each provider
-      const nearby = allProviders.map(p => {
-        const dist = getDistanceKm(lat, lng, p.lat || 9.0579, p.lng || 7.4951);
-        return { ...p, distance: dist.toFixed(1) + 'km' };
-      }).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance));
-
-      // Also pull from Supabase
-      let dbProviders = [];
-      if (db) {
-        try {
-          const { data } = await db.from('providers').select('*').eq('is_available', true);
-          if (data) {
-            dbProviders = data.map(p => ({
-              name: p.full_name, category: p.category,
-              location: p.location || 'Nearby', distance: 'Nearby',
-              rating: p.rating || 0, price: 2500,
-              verified: p.is_verified, service: 'Available',
-              hours: 'Available now', image: null,
-              emoji: getCategoryEmoji(p.category),
-              bg: 'linear-gradient(135deg, var(--primary-light), #FCB8CB)'
-            }));
-          }
-        } catch(e) {}
+      const container = document.getElementById('nearby-results');
+      if (!db) {
+        document.getElementById('nearby-loading').style.display = 'none';
+        document.getElementById('nearby-denied').style.display = 'block';
+        return;
       }
 
-      const combined = [...dbProviders, ...nearby].slice(0, 10);
-      const container = document.getElementById('nearby-results');
-      container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:0 0 12px;">' + combined.length + ' providers found near you</p>' +
-        combined.map(buildProviderCard).join('');
+      try {
+        const { data: providers, error } = await db.from('providers').select('*').eq('is_available', true).eq('is_verified', true).limit(20);
+        if (error) { console.error('Nearby providers fetch error:', error); document.getElementById('nearby-loading').style.display = 'none'; document.getElementById('nearby-denied').style.display = 'block'; return; }
+
+        const list = providers || [];
+        if (list.length === 0) {
+          container.innerHTML = '<p style="font-size:12px;color:var(--text3);text-align:center;padding:40px 20px;">No available providers found right now.</p>';
+        } else {
+          // Get each provider's real cheapest service price
+          const names = list.map(p => p.full_name);
+          const { data: skills } = await db.from('skills').select('provider_name, price').in('provider_name', names);
+          const priceByProvider = {};
+          (skills || []).forEach(s => {
+            const p = Number(s.price) || 0;
+            if (!priceByProvider[s.provider_name] || p < priceByProvider[s.provider_name]) priceByProvider[s.provider_name] = p;
+          });
+
+          const cards = list.map(p => ({
+            name: p.full_name, category: p.category,
+            location: p.location || 'Location not set', distance: '',
+            rating: p.rating || 0,
+            price: priceByProvider[p.full_name] || 0,
+            verified: p.is_verified, service: 'Available',
+            hours: p.is_available ? 'Available now' : 'Unavailable',
+            image: null, emoji: getCategoryEmoji(p.category),
+            bg: 'linear-gradient(135deg, var(--primary-light), #FCB8CB)'
+          }));
+
+          container.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:0 0 12px;">' + cards.length + ' available providers</p>' +
+            cards.map(buildProviderCard).join('');
+        }
+      } catch (e) {
+        console.error('Nearby providers error:', e);
+      }
+
       document.getElementById('nearby-loading').style.display = 'none';
       document.getElementById('nearby-results').style.display = 'block';
     },
@@ -1814,6 +2144,36 @@ function selectWithdrawalMethod(el, method) {
   }
 }
 
+async function loadWithdrawalBalance() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+
+  try {
+    const { data, error } = await db.from('bookings').select('*').eq('provider_name', provName).eq('status', 'completed');
+    if (error) { console.error('Withdrawal balance error:', error); return; }
+
+    const completed = data || [];
+    const gross = completed.reduce((sum, b) => sum + (parseInt((b.amount || '0').toString().replace(/[^0-9]/g, '')) || 0), 0);
+    const net = gross - Math.round(gross * 0.10);
+
+    // No withdrawal-tracking table exists yet, so "Already Withdrawn" is honestly
+    // always ₦0 for now — the full amount earned is what's available.
+    window.realAvailableBalance = net;
+
+    const balEl = document.getElementById('withdraw-available-balance');
+    if (balEl) balEl.textContent = '₦' + net.toLocaleString();
+    const countEl = document.getElementById('withdraw-completed-count');
+    if (countEl) countEl.textContent = 'From ' + completed.length + (completed.length === 1 ? ' completed booking' : ' completed bookings');
+    const totalEl = document.getElementById('withdraw-total-earned');
+    if (totalEl) totalEl.textContent = '₦' + net.toLocaleString();
+    const withdrawnEl = document.getElementById('withdraw-already-withdrawn');
+    if (withdrawnEl) withdrawnEl.textContent = '₦0';
+    const allOption = document.getElementById('withdraw-all-option');
+    if (allOption) allOption.textContent = 'All ₦' + net.toLocaleString();
+  } catch (e) { console.error('Withdrawal balance load error:', e); }
+}
+
 function setWithdrawAmount(el, amount) {
   document.querySelectorAll('#screen-withdrawal .tip-option').forEach(t => t.classList.remove('selected'));
   el.classList.add('selected');
@@ -1841,14 +2201,15 @@ function verifyAccountNumber() {
   document.getElementById('account-name').value = 'Verifying...';
   setTimeout(() => {
     document.getElementById('account-name').value = 'ADEYANJU WISDOM';
-    alert('Account verified ✓\nName: ADEYANJU WISDOM');
+    alert('Account verified\nName: ADEYANJU WISDOM');
   }, 1500);
 }
 
 function requestWithdrawal() {
+  const realBalance = window.realAvailableBalance || 0;
   if (selectedWithdrawAmount === 0) { alert('Please select or enter a withdrawal amount.'); return; }
   if (selectedWithdrawAmount < 1000) { alert('Minimum withdrawal amount is ₦1,000.'); return; }
-  if (selectedWithdrawAmount > 47500) { alert('Amount exceeds your available balance of ₦47,500.'); return; }
+  if (selectedWithdrawAmount > realBalance) { alert('Amount exceeds your available balance of ₦' + realBalance.toLocaleString() + '.'); return; }
   if (selectedWithdrawMethod === 'bank') {
     const bank = document.getElementById('bank-name').value;
     const number = document.getElementById('account-number').value;
@@ -2162,7 +2523,7 @@ async function uploadProviderProfilePhoto() {
         cover.style.borderStyle = 'solid';
         cover.innerHTML = '';
       }
-      if (btn) btn.textContent = '✓ Photo Updated';
+      if (btn) btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg> Photo Updated';
     } else {
       if (btn) btn.textContent = 'Upload Photo';
       alert('Upload failed. Please try again.');
@@ -2174,17 +2535,565 @@ async function uploadProviderProfilePhoto() {
 // PROVIDER DATA - connects to Supabase
 let allProviders = []; // Loaded from Supabase
 
+// Opens the (currently single, static) provider profile screen but — critically —
+// tags it with the REAL name of whichever provider was tapped. confirmBooking()
+// reads this name back off the .provider-title element, so this is what makes a
+// booking actually attribute to the correct provider instead of always saving
+// under the hardcoded demo name.
+function viewMyReviews() {
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  openProviderProfile(provName);
+  setTimeout(() => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    const reviewsTab = document.querySelector('.tab[onclick*="tab-reviews"]');
+    if (reviewsTab) reviewsTab.classList.add('active');
+    const reviewsContent = document.getElementById('tab-reviews');
+    if (reviewsContent) reviewsContent.classList.add('active');
+  }, 150);
+}
+
+async function loadProviderNotifications() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  const container = document.getElementById('prov-notif-list');
+  if (!container) return;
+
+  const iconCalendar = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
+  const iconCheck = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="12" r="10"/><polyline points="8 12.5 11 15.5 16 9"/></svg>';
+  const iconCross = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  const iconStar = '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)" stroke="none" style="vertical-align:-2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  const iconHeart = '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--primary)" stroke="none" style="vertical-align:-2px;"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.6z"/></svg>';
+
+  try {
+    const [{ data: bookings, error: bErr }, { data: reviews, error: rErr }, { data: tips, error: tErr }] = await Promise.all([
+      db.from('bookings').select('*').eq('provider_name', provName).order('created_at', { ascending: false }).limit(10),
+      db.from('reviews').select('*').eq('provider_name', provName).order('created_at', { ascending: false }).limit(5),
+      db.from('tips').select('*').eq('provider_name', provName).order('created_at', { ascending: false }).limit(5)
+    ]);
+
+    if (bErr) console.error('Provider notif bookings error:', bErr);
+    if (rErr) console.error('Provider notif reviews error:', rErr);
+    if (tErr) console.error('Provider notif tips error:', tErr);
+
+    const items = [];
+    (bookings || []).forEach(b => {
+      const isOffer = (b.service || '').includes('(Offer');
+      const isHouseCall = !!b.is_house_call;
+      const kind = isHouseCall ? 'House Call Request' : isOffer ? 'New Offer' : 'New Booking Request';
+
+      if (b.status === 'confirmed') {
+        items.push({ icon: iconCalendar, title: kind, sub: (b.customer_name || 'A customer') + ' · ' + (b.service || '') + (isHouseCall ? '' : ' · ' + (b.booking_time || '')), onclick: "showScreen('screen-booking-requests')" });
+      } else if (b.status === 'accepted') {
+        items.push({ icon: iconCheck, title: (isHouseCall ? 'House Call' : isOffer ? 'Offer' : 'Booking') + ' Confirmed', sub: (b.customer_name || 'A customer') + ' booked ' + (b.service || ''), onclick: "showScreen('screen-booking-requests')" });
+      } else if (b.status === 'completed') {
+        items.push({ icon: iconCheck, title: 'Payment Released', sub: (b.customer_name || 'A customer') + ' confirmed the service — funds have been released to your balance.', onclick: "showScreen('screen-provider-all-bookings')" });
+      } else if (b.status === 'disputed') {
+        items.push({ icon: iconCross, title: 'Booking Disputed', sub: (b.customer_name || 'A customer') + ' reported an issue with their booking. It\'s on hold pending review.', onclick: "showScreen('screen-provider-all-bookings')" });
+      }
+    });
+    (reviews || []).forEach(r => {
+      const stars = r.rating ? r.rating + ' star' + (r.rating === 1 ? '' : 's') : '';
+      items.push({ icon: iconStar, title: 'New Review', sub: (r.is_anonymous ? 'Someone' : (r.customer_name || 'A customer')) + ' left you a ' + stars + ' review', onclick: "viewMyReviews()" });
+    });
+    (tips || []).forEach(t => {
+      items.push({ icon: iconHeart, title: 'Tip Received', sub: (t.customer_name || 'A customer') + ' sent you a ₦' + Number(t.amount || 0).toLocaleString() + ' tip', onclick: "showScreen('screen-provider-earnings')" });
+    });
+
+    if (items.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No notifications yet.</p>';
+      return;
+    }
+
+    container.innerHTML = items.slice(0, 10).map(n => `
+      <div class="notif-item" style="cursor:pointer;" onclick="${n.onclick}">
+        <div class="notif-icon">${n.icon}</div>
+        <div class="notif-text">
+          <p class="notif-title">${n.title}</p>
+          <p class="notif-sub">${n.sub}</p>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) { console.error('Provider notifications error:', e); }
+}
+
+async function loadCustomerNotifications() {
+  if (!db) return;
+  const phone = localStorage.getItem('preen_user_phone') || '';
+  if (!phone) return;
+  const container = document.querySelector('#screen-notifications .notif-list');
+  if (!container) return;
+  await checkAutoReleaseBookings(phone);
+
+  const iconCheck = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="9 12 12 15 16 10"/></svg>';
+  const iconCross = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+  const iconClock = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  const iconStar = '<svg width="18" height="18" viewBox="0 0 24 24" fill="var(--accent)" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  const iconQuestion = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  try {
+    const { data, error } = await db
+      .from('bookings')
+      .select('*')
+      .eq('customer_phone', phone)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    if (error) { console.error('Notifications fetch error:', error); return; }
+
+    const bookings = data || [];
+    if (bookings.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:24px 0;">No notifications yet.</p>';
+      return;
+    }
+
+    // Also check which completed bookings still need a review, to add a reminder notification
+    const { data: myReviews } = await db.from('reviews').select('booking_id').eq('customer_name', localStorage.getItem('preen_user_name') || '');
+    const reviewedBookingIds = new Set((myReviews || []).map(r => r.booking_id).filter(Boolean));
+
+    const items = [];
+    bookings.forEach(b => {
+      const isOffer = (b.service || '').includes('(Offer');
+      const isHouseCall = !!b.is_house_call;
+      const kind = isHouseCall ? 'House Call' : isOffer ? 'Offer' : 'Booking';
+
+      if (b.status === 'accepted') {
+        items.push({ icon: iconCheck, title: kind + ' Confirmed', sub: (b.provider_name || 'Provider') + (isHouseCall ? ' will come to ' + (b.house_call_address || 'your location') : ' · ' + (b.booking_date || '') + (b.booking_time ? ' ' + b.booking_time : '')), onclick: "showScreen('screen-bookings')" });
+      } else if (b.status === 'declined') {
+        items.push({ icon: iconCross, title: kind + ' Declined', sub: (b.provider_name || 'Provider') + ' was unable to accept your ' + kind.toLowerCase() + ' — you were refunded.', onclick: "showScreen('screen-bookings')" });
+      } else if (b.status === 'confirmed') {
+        items.push({ icon: iconClock, title: 'Waiting for Provider', sub: (b.provider_name || 'Provider') + ' has ' + (isHouseCall ? '15 minutes' : isOffer ? '10 minutes' : '15 minutes') + ' to respond to your ' + kind.toLowerCase() + '.', onclick: "showScreen('screen-bookings')" });
+      } else if (b.status === 'pending_confirmation') {
+        items.push({ icon: iconQuestion, title: 'Please Confirm', sub: (b.provider_name || 'Provider') + ' marked your ' + kind.toLowerCase() + ' as done — please confirm or report a problem.', onclick: "showScreen('screen-bookings')" });
+      } else if (b.status === 'disputed') {
+        items.push({ icon: iconCross, title: 'Under Review', sub: 'Your reported issue with ' + (b.provider_name || 'this provider') + ' is being reviewed.', onclick: "showScreen('screen-bookings')" });
+      } else if (b.status === 'completed' && !reviewedBookingIds.has(b.id)) {
+        const safeName = (b.provider_name || '').replace(/'/g, "\\'");
+        items.push({ icon: iconStar, title: 'Leave a Review', sub: 'How was your experience with ' + (b.provider_name || 'your provider') + '? You can also add a tip.', onclick: "openReview('" + safeName + "', '" + b.id + "')" });
+      }
+    });
+
+    if (items.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:24px 0;">No notifications yet.</p>';
+      return;
+    }
+
+    container.innerHTML = items.map(n => `
+      <div class="notif-item" style="cursor:pointer;" onclick="${n.onclick}"><div class="notif-icon">${n.icon}</div><div class="notif-text"><p class="notif-title">${n.title}</p><p class="notif-sub">${n.sub}</p></div></div>
+    `).join('');
+  } catch (e) { console.error('Notifications load error:', e); }
+}
+
+async function loadProviderAvailabilityStatus(providerName) {
+  const el = document.getElementById('provider-availability-status');
+  if (!el || !db || !providerName) return;
+  try {
+    const { data } = await db.from('providers').select('is_available').eq('full_name', providerName).single();
+    const isAvailable = data ? !!data.is_available : true;
+    el.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' + (isAvailable ? 'var(--success)' : 'var(--text3)') + ';display:inline-block;"></span>' + (isAvailable ? 'Available now' : 'Currently unavailable');
+    el.style.color = isAvailable ? 'var(--success)' : 'var(--text3)';
+  } catch (e) { console.error('Availability status error:', e); }
+}
+
+function starIcons(count, color) {
+  const one = '<svg width="11" height="11" viewBox="0 0 24 24" fill="' + (color || 'var(--accent)') + '" stroke="none" style="vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  return one.repeat(count);
+}
+
+async function loadProfileTeamMembers(providerName) {
+  const container = document.getElementById('profile-team-list');
+  if (!container || !db || !providerName) return;
+
+  try {
+    const { data, error } = await db.from('team_members').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('Profile team fetch error:', error); return; }
+
+    const members = data || [];
+    if (members.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:24px 0;">This provider hasn\'t added team members yet.</p>';
+      return;
+    }
+
+    container.innerHTML = members.map(m => {
+      const initials = (m.name || 'T').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      return `
+      <div class="team-member">
+        <div class="team-avatar">${initials}</div>
+        <div>
+          <p style="font-size:14px; font-weight:500;">${m.name}</p>
+          <p style="font-size:12px; color:var(--text3); margin-top:2px;">${m.role || ''} · ${m.years_experience || ''}</p>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error('Profile team load error:', e); }
+}
+
+async function loadLoyaltyPoints() {
+  const el = document.getElementById('loyalty-points-balance');
+  const email = localStorage.getItem('preen_user_email') || '';
+  if (!el || !db || !email) return;
+  try {
+    const { data } = await db.from('user').select('loyalty_points').eq('email', email).single();
+    el.textContent = (data && data.loyalty_points) ? data.loyalty_points : 0;
+  } catch (e) { console.error('Loyalty points load error:', e); }
+}
+
+// How long a customer has to confirm or dispute before it auto-releases.
+// This check only runs opportunistically when relevant screens load (no real
+// server-side scheduled job exists yet) — see markServiceDone below for details.
+const SERVICE_CONFIRMATION_WINDOW_HOURS = 6;
+
+async function markServiceDone(id, btn) {
+  if (!confirm('Mark this service as done? The customer will be asked to confirm — if they don\'t respond within ' + SERVICE_CONFIRMATION_WINDOW_HOURS + ' hours, it releases automatically.')) return;
+  if (btn) { btn.textContent = '...'; btn.disabled = true; }
+  try {
+    const { error } = await db.from('bookings').update({
+      status: 'pending_confirmation',
+      service_done_at: new Date().toISOString()
+    }).eq('id', id);
+
+    if (error) { alert('Could not update this booking:\n\n' + error.message); if (btn) { btn.textContent = 'Service Done'; btn.disabled = false; } return; }
+
+    if (btn) {
+      const card = btn.closest('.prov-booking-card') || btn.closest('div');
+      if (card) card.style.opacity = '0.7';
+      btn.textContent = 'Waiting for customer';
+    }
+    loadProviderAllBookings();
+    loadProviderDashboardSchedule();
+  } catch (e) {
+    console.error('Mark service done error:', e);
+    alert('Could not update this booking. Please try again.');
+    if (btn) { btn.textContent = 'Service Done'; btn.disabled = false; }
+  }
+}
+
+async function confirmServiceCompletion(id) {
+  if (!db) return;
+  try {
+    const { error } = await db.from('bookings').update({ status: 'completed' }).eq('id', id);
+    if (error) { alert('Could not confirm this booking:\n\n' + error.message); return; }
+    await awardLoyaltyPoints(50);
+    alert('Thanks for confirming! You earned 50 loyalty points.');
+    loadMyBookings();
+    loadCustomerNotifications();
+  } catch (e) { console.error('Confirm completion error:', e); alert('Could not confirm this booking. Please try again.'); }
+}
+
+async function reportServiceProblem(id) {
+  const reason = prompt('What went wrong? This will be reviewed before any funds are released.');
+  if (reason === null) return; // cancelled
+  if (!reason.trim()) { alert('Please describe the issue so it can be reviewed.'); return; }
+  if (!db) return;
+  try {
+    const { error } = await db.from('bookings').update({ status: 'disputed', dispute_reason: reason.trim() }).eq('id', id);
+    if (error) { alert('Could not report this issue:\n\n' + error.message); return; }
+    alert('Your report has been submitted. This booking is now on hold pending review — no funds will be released until it\'s resolved.');
+    loadMyBookings();
+    loadCustomerNotifications();
+  } catch (e) { console.error('Report problem error:', e); alert('Could not report this issue. Please try again.'); }
+}
+
+// Opportunistic auto-release: since there's no real server-side scheduled job
+// yet, this checks for bookings whose confirmation window has quietly expired
+// whenever a relevant screen loads, and releases them the same way an active
+// customer confirmation would.
+async function checkAutoReleaseBookings(phone) {
+  if (!db || !phone) return;
+  try {
+    const { data } = await db.from('bookings').select('id, service_done_at').eq('customer_phone', phone).eq('status', 'pending_confirmation');
+    const cutoff = Date.now() - SERVICE_CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000;
+    for (const b of (data || [])) {
+      if (b.service_done_at && new Date(b.service_done_at).getTime() < cutoff) {
+        await db.from('bookings').update({ status: 'completed' }).eq('id', b.id);
+        await awardLoyaltyPoints(50);
+      }
+    }
+  } catch (e) { console.error('Auto-release check error:', e); }
+}
+
+async function awardLoyaltyPoints(points, targetEmail) {
+  const email = targetEmail || localStorage.getItem('preen_user_email') || '';
+  if (!db || !email || !points) return;
+  try {
+    const { data } = await db.from('user').select('loyalty_points').eq('email', email).single();
+    const current = (data && data.loyalty_points) || 0;
+    const { error } = await db.from('user').update({ loyalty_points: current + points }).eq('email', email);
+    if (error) console.error('Award loyalty points update error:', error);
+  } catch (e) { console.error('Award loyalty points error:', e); }
+}
+
+async function toggleSaveProvider() {
+  if (!requireAuth('save this provider')) return;
+  const providerName = window.currentProviderName;
+  const phone = localStorage.getItem('preen_user_phone') || '';
+  if (!db || !providerName || !phone) return;
+
+  const icon = document.getElementById('save-provider-icon');
+  const isSaved = icon.getAttribute('fill') === '#E8547A';
+
+  try {
+    if (isSaved) {
+      const { error } = await db.from('saved_providers').delete().eq('customer_phone', phone).eq('provider_name', providerName);
+      if (error) { console.error('Unsave error:', error); return; }
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', '#1a1a1a');
+    } else {
+      const { error } = await db.from('saved_providers').insert([{ customer_phone: phone, provider_name: providerName }]);
+      if (error) { console.error('Save error:', error); return; }
+      icon.setAttribute('fill', '#E8547A');
+      icon.setAttribute('stroke', '#E8547A');
+    }
+  } catch (e) { console.error('Toggle save failed:', e); }
+}
+
+async function syncSaveProviderIcon(providerName) {
+  const icon = document.getElementById('save-provider-icon');
+  const phone = localStorage.getItem('preen_user_phone') || '';
+  if (!icon || !db || !providerName || !phone) return;
+  try {
+    const { data } = await db.from('saved_providers').select('id').eq('customer_phone', phone).eq('provider_name', providerName).maybeSingle();
+    if (data) {
+      icon.setAttribute('fill', '#E8547A');
+      icon.setAttribute('stroke', '#E8547A');
+    } else {
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', '#1a1a1a');
+    }
+  } catch (e) { console.error('Save icon sync error:', e); }
+}
+
+async function loadSavedProviders() {
+  const container = document.querySelector('#screen-saved .providers-list');
+  const phone = localStorage.getItem('preen_user_phone') || '';
+  if (!container || !db || !phone) return;
+
+  try {
+    const { data, error } = await db.from('saved_providers').select('*').eq('customer_phone', phone).order('created_at', { ascending: false });
+    if (error) { console.error('Saved providers fetch error:', error); return; }
+
+    const saved = data || [];
+    if (saved.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:40px 0;">You haven\'t saved any providers yet. Tap the heart icon on a profile to save it here.</p>';
+      return;
+    }
+
+    // Look up each saved provider's real details
+    const names = saved.map(s => s.provider_name);
+    const { data: providers } = await db.from('providers').select('*').in('full_name', names);
+    const providerMap = {};
+    (providers || []).forEach(p => { providerMap[p.full_name] = p; });
+
+    container.innerHTML = saved.map(s => {
+      const p = providerMap[s.provider_name];
+      const rating = p && p.rating ? Number(p.rating).toFixed(1) : 'New';
+      const category = p ? p.category : '';
+      const location = p ? p.location : '';
+      const safeName = s.provider_name.replace(/'/g, "\\'");
+      return `
+      <div class="provider-card-new" onclick="openProviderProfile('${safeName}')">
+        <div class="provider-card-img" style="background:linear-gradient(135deg,#FDF2F8,#FBCFE8);"><div class="provider-card-rating-badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${rating}</div></div>
+        <div class="provider-card-body"><div class="provider-card-top"><p class="provider-name">${s.provider_name}</p><p style="font-size:11px; color:var(--text3);">${category}${category && location ? ' · ' : ''}${location}</p></div></div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error('Saved providers load error:', e); }
+}
+
+function openDirectionsToProvider() {
+  if (!window.currentProviderCoords) {
+    alert('This provider hasn\'t set their studio location yet.');
+    return;
+  }
+  const { lat, lng } = window.currentProviderCoords;
+  // Universal link — opens whichever maps app is installed (Google Maps,
+  // Apple Maps, etc.) on the actual device once this is running as a real app.
+  const url = 'https://www.google.com/maps/dir/?api=1&destination=' + lat + ',' + lng;
+  window.open(url, '_blank');
+}
+
+async function loadProviderAboutTab(providerName) {
+  if (!db || !providerName) return;
+
+  try {
+    const [{ data: provRow }, { data: skills }] = await Promise.all([
+      db.from('providers').select('*').eq('full_name', providerName).single(),
+      db.from('skills').select('price').eq('provider_name', providerName)
+    ]);
+
+    const bioEl = document.getElementById('about-bio-text');
+    if (bioEl) bioEl.textContent = (provRow && provRow.bio) ? provRow.bio : 'This provider hasn\'t added a bio yet.';
+
+    const hoursEl = document.getElementById('about-hours-text');
+    if (hoursEl) hoursEl.textContent = (provRow && provRow.working_hours) ? provRow.working_hours : 'Working hours not set yet.';
+
+    const locEl = document.getElementById('about-location-text');
+    if (locEl) locEl.textContent = (provRow && provRow.location) ? provRow.location : (provRow && provRow.state) ? provRow.state : 'Location not set.';
+
+    const directionsBtn = document.getElementById('get-directions-btn');
+    if (directionsBtn) {
+      if (provRow && provRow.latitude != null && provRow.longitude != null) {
+        window.currentProviderCoords = { lat: provRow.latitude, lng: provRow.longitude };
+        directionsBtn.style.display = 'flex';
+      } else {
+        window.currentProviderCoords = null;
+        directionsBtn.style.display = 'none';
+      }
+    }
+
+    const socialBlock = document.getElementById('about-social-block');
+    const socialLinks = document.getElementById('about-social-links');
+    if (socialBlock && socialLinks && provRow) {
+      let html = '';
+      if (provRow.instagram_url) {
+        const handle = provRow.instagram_url.replace(/^@/, '');
+        html += `<div class="social-link-item" onclick="window.open('https://instagram.com/${handle.replace(/'/g, "")}', '_blank')">
+          <div class="social-icon" style="background:var(--primary-light);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg></div>
+          <div><p style="font-size:13px; font-weight:500;">Instagram</p><p style="font-size:11px; color:var(--text3);">@${handle}</p></div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" style="margin-left:auto;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>`;
+      }
+      if (provRow.tiktok_url) {
+        const handle = provRow.tiktok_url.replace(/^@/, '');
+        html += `<div class="social-link-item" onclick="window.open('https://tiktok.com/@${handle.replace(/'/g, "")}', '_blank')">
+          <div class="social-icon" style="background:var(--bg3);"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text2)" stroke-width="2"><path d="M9 18V6a4 4 0 0 0 4 4V6a8 8 0 0 0 8 8v-2a6 6 0 0 1-4-2v6a4 4 0 1 1-4-4"/></svg></div>
+          <div><p style="font-size:13px; font-weight:500;">TikTok</p><p style="font-size:11px; color:var(--text3);">@${handle}</p></div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2" style="margin-left:auto;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>`;
+      }
+      if (html) {
+        socialLinks.innerHTML = html;
+        socialBlock.style.display = 'block';
+      } else {
+        socialBlock.style.display = 'none';
+      }
+    }
+
+    const prices = (skills || []).map(s => Number(s.price) || 0).filter(p => p > 0);
+    const priceEl = document.getElementById('sticky-price');
+    const countEl = document.getElementById('sticky-service-count');
+    if (priceEl) priceEl.textContent = prices.length > 0 ? '₦' + Math.min(...prices).toLocaleString() : '—';
+    if (countEl) countEl.textContent = (skills ? skills.length : 0) + (skills && skills.length === 1 ? ' service available' : ' services available');
+  } catch (e) { console.error('About tab load error:', e); }
+}
+
+async function loadProviderReviews(providerName) {
+  if (!db || !providerName) return;
+  const avgEl = document.getElementById('rating-avg-number');
+  const starsEl = document.getElementById('rating-avg-stars');
+  const countEl = document.getElementById('rating-count-text');
+  const listEl = document.getElementById('reviews-list');
+  if (!listEl) return;
+
+  try {
+    const { data, error } = await db
+      .from('reviews')
+      .select('*')
+      .eq('provider_name', providerName)
+      .order('created_at', { ascending: false });
+
+    if (error) { console.error('Reviews fetch error:', error); return; }
+
+    const reviews = data || [];
+    const total = reviews.length;
+    const headerNumEl = document.getElementById('header-rating-number');
+    const headerCountEl = document.getElementById('header-rating-count');
+
+    if (total === 0) {
+      if (avgEl) avgEl.textContent = '—';
+      if (starsEl) starsEl.innerHTML = '';
+      if (countEl) countEl.textContent = 'No reviews yet';
+      if (headerNumEl) headerNumEl.textContent = 'New';
+      if (headerCountEl) headerCountEl.textContent = '0 reviews';
+      for (let s = 1; s <= 5; s++) {
+        const bar = document.getElementById('rating-bar-' + s);
+        const pct = document.getElementById('rating-pct-' + s);
+        if (bar) bar.style.width = '0%';
+        if (pct) pct.textContent = '0%';
+      }
+      listEl.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No reviews yet. Be the first to book and leave one!</p>';
+      return;
+    }
+
+    const avg = reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / total;
+    if (avgEl) avgEl.textContent = avg.toFixed(1);
+    if (starsEl) starsEl.innerHTML = starIcons(Math.round(avg));
+    if (countEl) countEl.textContent = total + (total === 1 ? ' review' : ' reviews');
+    if (headerNumEl) headerNumEl.textContent = avg.toFixed(1);
+    if (headerCountEl) headerCountEl.textContent = total + (total === 1 ? ' review' : ' reviews');
+
+    for (let s = 1; s <= 5; s++) {
+      const starCount = reviews.filter(r => Math.round(r.rating) === s).length;
+      const pct = Math.round((starCount / total) * 100);
+      const bar = document.getElementById('rating-bar-' + s);
+      const pctEl = document.getElementById('rating-pct-' + s);
+      if (bar) bar.style.width = pct + '%';
+      if (pctEl) pctEl.textContent = pct + '%';
+    }
+
+    listEl.innerHTML = reviews.map(r => {
+      const displayName = r.is_anonymous ? 'Anonymous' : (r.customer_name || 'Customer');
+      const initials = r.is_anonymous ? '?' : displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      const when = r.created_at ? timeAgo(r.created_at) : '';
+      return `
+        <div class="review-item">
+          <div class="review-avatar">${initials}</div>
+          <div class="review-content">
+            <div class="review-name">${displayName} <span>${starIcons(r.rating || 0)}</span></div>
+            <p style="font-size:12px; color:var(--text2); margin-bottom:4px;">${when}</p>
+            <p>${(r.review_text || '').replace(/</g, '&lt;')}</p>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) { console.error('Reviews load error:', e); }
+}
+
+function timeAgo(dateStr) {
+  const then = new Date(dateStr);
+  if (isNaN(then.getTime())) return '';
+  const days = Math.floor((Date.now() - then.getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return 'Today';
+  if (days === 1) return '1 day ago';
+  if (days < 7) return days + ' days ago';
+  if (days < 14) return '1 week ago';
+  if (days < 30) return Math.floor(days / 7) + ' weeks ago';
+  return Math.floor(days / 30) + (Math.floor(days / 30) === 1 ? ' month ago' : ' months ago');
+}
+
+function openProviderProfile(name, category, location, rating, verified) {
+  // This was previously called from several card templates (Recently Viewed,
+  // Recommended, category results) but never actually defined anywhere —
+  // those taps silently threw a ReferenceError and never opened the profile.
+  // It's now defined once here and drives which provider a booking gets
+  // attributed to, since confirmBooking() reads the name back off .provider-title.
+  window.currentProviderName = name || 'Kings Barbershop';
+  const titleEl = document.querySelector('#screen-provider .provider-title');
+  if (titleEl) {
+    const badge = titleEl.querySelector('.verified-check');
+    titleEl.textContent = window.currentProviderName + ' ';
+    if (badge) titleEl.appendChild(badge);
+  }
+  loadProviderReviews(window.currentProviderName);
+  loadProviderAvailabilityStatus(window.currentProviderName);
+  loadProviderScore(window.currentProviderName);
+  loadProviderServicesTab(window.currentProviderName);
+  loadProfileTeamMembers(window.currentProviderName);
+  loadProviderAboutTab(window.currentProviderName);
+  syncSaveProviderIcon(window.currentProviderName);
+  showScreen('screen-provider');
+}
+
 function buildProviderCard(p) {
-  return '<div class="provider-card-new" onclick="showScreen(\'screen-provider\')">' +
+  return '<div class="provider-card-new" onclick="openProviderProfile(\'' + String(p.name).replace(/'/g,"\\'") + '\')">' +
     '<div class="provider-card-img" style="' + (p.image ? 'background-image:url(' + p.image + '); background-size:cover; background-position:center;' : 'background:' + p.bg + '; display:flex; align-items:center; justify-content:center;') + '">' +
-    (p.image ? '' : '<span style="font-size:40px;">' + p.emoji + '</span>') +
-    '<div class="provider-card-rating-badge">★ ' + p.rating + '</div>' +
+    (p.image ? '' : '<span style="color:var(--primary);display:flex;align-items:center;justify-content:center;height:100%;">' + p.emoji + '</span>') +
+    '<div class="provider-card-rating-badge"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ' + p.rating + '</div>' +
     '</div>' +
     '<div class="provider-card-body">' +
     '<div class="provider-card-top">' +
-    '<p class="provider-name">' + p.name + (p.verified ? ' <span class="verified-dot">✓</span>' : '') + '</p>' +
-    '<p style="font-size:11px; color:var(--text3);">' + p.distance + ' · ' + p.location + '</p>' +
-    '<p style="font-size:11px; color:var(--text3);">' + p.category + ' · ' + p.hours + '</p>' +
+    '<p class="provider-name">' + p.name + (p.verified ? ' <span class="verified-dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></span>' : '') + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + (p.distance ? p.distance + ' · ' : '') + p.location + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + p.category + ' · <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:' + (p.hours === 'Available now' ? 'var(--success)' : 'var(--text3)') + ';display:inline-block;"></span>' + p.hours + '</span></p>' +
     '</div>' +
     '<div class="provider-service-preview">' +
     '<span>' + p.service + '</span>' +
@@ -2195,46 +3104,63 @@ function buildProviderCard(p) {
 }
 
 async function showCategory(category) {
-  document.getElementById('category-title').textContent = category === 'Hair' ? 'Hair Salons' : category === 'Barber' ? 'Barbers' : category + ' Specialists';
+  const categoryTitles = {
+    'Hair Stylist': 'Hair Salons',
+    'Barber': 'Barbers',
+    'Nail Tech': 'Nail Specialists',
+    'Makeup Artist': 'Makeup Artists',
+    'Massage Therapist': 'Massage Therapists',
+    'Lash Tech': 'Lash Specialists',
+    'Wig Stylist': 'Wig Stylists',
+    'Gele Tying': 'Gele Specialists'
+  };
+  document.getElementById('category-title').textContent = categoryTitles[category] || category + ' Specialists';
   const container = document.getElementById('category-results');
   container.innerHTML = '<div style="text-align:center; padding:20px;"><div class="ai-spinner"></div><p style="margin-top:12px; font-size:13px; color:var(--text3);">Finding providers near you...</p></div>';
   showScreen('screen-category');
 
-  await new Promise(r => setTimeout(r, 800));
-
-  let providers = allProviders.filter(p => p.category === category);
+  let providers = [];
 
   if (db) {
     try {
-      const { data, error } = await db.from('providers').select('*').eq('category', category);
-      if (!error && data && data.length > 0) {
-        const dbCards = data.map(p => ({
+      let q = db.from('providers').select('*').eq('category', category).eq('is_available', true);
+      if (currentUserState) q = q.eq('state', currentUserState);
+      const { data, error } = await q;
+      if (error) { console.error('Category fetch error:', error); }
+      else if (data && data.length > 0) {
+        const available = data.filter(p => !isProviderBlocked(p.full_name));
+        const names = available.map(p => p.full_name);
+        const { data: skills } = await db.from('skills').select('provider_name, price').in('provider_name', names);
+        const priceByProvider = {};
+        (skills || []).forEach(s => {
+          const p = Number(s.price) || 0;
+          if (!priceByProvider[s.provider_name] || p < priceByProvider[s.provider_name]) priceByProvider[s.provider_name] = p;
+        });
+
+        providers = available.map(p => ({
           name: p.full_name,
           category: p.category,
-          location: p.location || 'Abuja',
-          distance: 'Nearby',
+          location: p.location || 'Location not set',
+          distance: '',
           rating: p.rating || 0,
-          price: 2500,
-          emoji: '✂️',
+          price: priceByProvider[p.full_name] || 0,
+          emoji: getCategoryIcon(p.category, 40),
           bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
           verified: p.is_verified,
           service: 'Available services',
           hours: p.is_available ? 'Available now' : 'Currently unavailable',
           image: null
         }));
-        providers = [...dbCards, ...providers];
       }
-    } catch(e) {
-      console.log('Using local data');
-    }
+    } catch (e) { console.error('Category browsing error:', e); }
   }
 
   if (providers.length === 0) {
     const noProviderHTML = [
       '<div style="text-align:center; padding:40px 20px;">',
-      '<p style="font-size:32px; margin-bottom:12px;">🔍</p>',
+      '<div style="margin-bottom:14px;display:flex;justify-content:center;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>',
       '<p style="font-size:16px; font-weight:600;">No providers yet</p>',
-      '<p style="font-size:13px; color:var(--text3); margin-top:8px;">Be the first ' + category + ' provider in your area!</p>',
+      '<p style="font-size:13px; color:var(--text3); margin-top:8px;">No ' + category + ' providers in ' + (currentUserState || 'your area') + ' yet — be the first!</p>',
       '<button class="btn-primary" style="margin-top:20px; width:auto; padding:12px 24px;" onclick="showScreen(\x27screen-provider-login\x27)">Join as Provider</button>',
       '</div>'
     ].join('');
@@ -2277,28 +3203,32 @@ async function loadHomeProviders() {
   container.innerHTML = providers.slice(0, 6).map(buildProviderCard).join('');
 }
 
-function getCategoryEmoji(category) {
-  const map = {
-    'Barber': '✂️',
-    'Hair Stylist': '💇',
-    'Nail Tech': '💅',
-    'Lash Tech': '👁️',
-    'Makeup Artist': '👄',
-    'Massage Therapist': '💆',
-    'Wig Stylist': '👱',
-    'Gele Tying': '👑',
-    'Skincare Specialist': '✨',
-    'Spa / Sauna': '🧖',
-    'MedSpa': '🏥',
-    'Nails': '💅',
-    'Lash': '👁️',
-    'Hair': '💇',
-    'Makeup': '👄',
-    'Massage': '💆',
-    'Spa': '🧖'
+function getCategoryIcon(category, size) {
+  size = size || 28;
+  const icons = {
+    'Barber': '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/>',
+    'Hair Stylist': '<path d="M6 3a3 3 0 0 0-3 3v3a4 4 0 0 0 4 4h1v6a3 3 0 0 0 6 0v-6h1a4 4 0 0 0 4-4V6a3 3 0 0 0-3-3"/>',
+    'Hair': '<path d="M6 3a3 3 0 0 0-3 3v3a4 4 0 0 0 4 4h1v6a3 3 0 0 0 6 0v-6h1a4 4 0 0 0 4-4V6a3 3 0 0 0-3-3"/>',
+    'Nail Tech': '<path d="M12 2c-1 3-4 5-4 9a4 4 0 0 0 8 0c0-4-3-6-4-9z"/>',
+    'Nails': '<path d="M12 2c-1 3-4 5-4 9a4 4 0 0 0 8 0c0-4-3-6-4-9z"/>',
+    'Lash Tech': '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    'Lash': '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+    'Makeup Artist': '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    'Makeup': '<circle cx="12" cy="12" r="9"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+    'Massage Therapist': '<circle cx="12" cy="6" r="3"/><path d="M6 21v-4a6 6 0 0 1 12 0v4"/>',
+    'Massage': '<circle cx="12" cy="6" r="3"/><path d="M6 21v-4a6 6 0 0 1 12 0v4"/>',
+    'Wig Stylist': '<path d="M4 18c0-6 3-11 8-11s8 5 8 11" /><path d="M4 18h16" /><path d="M7 18v3M12 18v3M17 18v3"/>',
+    'Gele Tying': '<path d="M4 15c2-6 6-9 8-9s6 3 8 9" /><path d="M4 15c2 2 5 3 8 3s6-1 8-3"/>',
+    'Skincare Specialist': '<path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+    'Spa / Sauna': '<path d="M4 12h16M6 12a6 6 0 0 1 12 0M4 16h16v4H4z"/>',
+    'Spa': '<path d="M4 12h16M6 12a6 6 0 0 1 12 0M4 16h16v4H4z"/>',
+    'MedSpa': '<path d="M12 3v18M4 8h16M4 16h16"/>'
   };
-  return map[category] || '✂️';
+  const path = icons[category] || icons['Barber'];
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
 }
+// Kept for compatibility with older calls; now returns an SVG icon string instead of an emoji character.
+function getCategoryEmoji(category) { return getCategoryIcon(category, 28); }
 
 
 // SPLASH SCREEN
@@ -2363,32 +3293,9 @@ function selectTeamMember(el, memberName) {
 }
 
 // CHAT
-function sendChatMessage() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  const container = document.getElementById('chat-messages');
-  const now = new Date();
-  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0') + ' ' + (now.getHours() >= 12 ? 'PM' : 'AM');
-  const div = document.createElement('div');
-  div.innerHTML = '<div class="chat-bubble sent">' + msg + '</div><div class="chat-time" style="text-align:right; padding-right:4px;">' + time + '</div>';
-  container.appendChild(div);
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
-  setTimeout(() => {
-    const replies = [
-      'Thank you for your message! We will get back to you shortly.',
-      'Great question! Yes we can definitely help with that.',
-      'Our slots are filling up fast. Would you like to book now?',
-      'Please check our services tab for full pricing details.',
-      'We look forward to seeing you! Book anytime.'
-    ];
-    const reply = document.createElement('div');
-    reply.innerHTML = '<div class="chat-bubble received">' + replies[Math.floor(Math.random() * replies.length)] + '</div><div class="chat-time" style="padding-left:4px;">' + time + '</div>';
-    container.appendChild(reply);
-    container.scrollTop = container.scrollHeight;
-  }, 1200);
-}
+// (dead duplicate sendChatMessage removed — this was a leftover from the
+// original codebase that silently overrode the real Supabase-backed version
+// above, since JS keeps whichever same-named function is declared last)
 
 // SOCIAL LINKS
 function saveSocialLinks() {
@@ -2437,7 +3344,7 @@ async function saveUser(fullName, email, phone, role) {
 }
 
 async function saveBooking(customerName, customerPhone, providerName, service, date, time, amount) {
-  if (!db) { console.error('DB not ready'); return; }
+  if (!db) { console.error('DB not ready'); return null; }
   const { data, error } = await db.from('bookings').insert([{
     customer_name: customerName,
     customer_phone: customerPhone,
@@ -2447,9 +3354,10 @@ async function saveBooking(customerName, customerPhone, providerName, service, d
     booking_time: time,
     amount: amount,
     status: 'confirmed'
-  }]);
-  if (error) console.error('Booking save error:', error.message);
-  else console.log('Booking saved for:', customerName);
+  }]).select();
+  if (error) { console.error('Booking save error:', error.message); return null; }
+  console.log('Booking saved for:', customerName);
+  return (data && data[0]) ? data[0].id : null;
 }
 
 // SAVE PROVIDER TO SUPABASE
@@ -2468,21 +3376,476 @@ async function saveProvider(name, email, phone, category) {
 }
 
 // SAVE REVIEW TO SUPABASE
-async function saveReview(providerName, customerName, rating, reviewText, isAnonymous) {
-  if (!db) { console.error('DB not ready'); return; }
-  const { data, error } = await db.from('reviews').insert([{
+async function saveReview(providerName, customerName, rating, reviewText, isAnonymous, bookingId) {
+  if (!db) { console.error('DB not ready'); return false; }
+  const { error } = await db.from('reviews').insert([{
     provider_name: providerName,
     customer_name: isAnonymous ? 'Anonymous' : customerName,
     rating: rating,
     review_text: reviewText,
-    is_anonymous: isAnonymous
+    is_anonymous: isAnonymous,
+    booking_id: bookingId || null
   }]);
-  if (error) console.error('Review save error:', error.message);
-  else console.log('Review saved for:', providerName);
+  if (error) { console.error('Review save error:', error.message); return false; }
+  console.log('Review saved for:', providerName);
+  return true;
 }
 
 // NAVIGATION
 let history = [];
+
+// The dashboard header (business name + photo prompt) was previously hardcoded
+// static text ("Kings Barbershop") in the HTML — no signup, login, or session
+// restore ever updated it, so every provider saw the same demo name regardless
+// of what they actually signed up as. This pulls the real logged-in provider's
+// name from localStorage every time the dashboard screen opens.
+async function loadProviderDashboardStats() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+
+  try {
+    const [{ data: completed }, { data: accepted }, { data: reviews }, { data: provRow }] = await Promise.all([
+      db.from('bookings').select('*').eq('provider_name', provName).eq('status', 'completed'),
+      db.from('bookings').select('*').eq('provider_name', provName).eq('status', 'accepted'),
+      db.from('reviews').select('rating').eq('provider_name', provName),
+      db.from('providers').select('rating, is_verified').eq('full_name', provName).single()
+    ]);
+
+    const parseAmount = (b) => parseInt((b.amount || '0').toString().replace(/[^0-9]/g, '')) || 0;
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const todayStr = now.toDateString();
+
+    const thisMonth = (completed || []).filter(b => b.created_at && new Date(b.created_at) >= startOfMonth);
+    const gross = thisMonth.reduce((sum, b) => sum + parseAmount(b), 0);
+    const net = gross - Math.round(gross * 0.10);
+
+    const earningsEl = document.getElementById('dash-earnings-month');
+    if (earningsEl) earningsEl.textContent = '₦' + net.toLocaleString();
+    const countEl = document.getElementById('dash-earnings-count');
+    if (countEl) countEl.textContent = thisMonth.length + (thisMonth.length === 1 ? ' booking completed' : ' bookings completed');
+
+    const todayCount = (accepted || []).filter(b => {
+      const d = b.booking_date ? new Date(b.booking_date) : null;
+      return d && !isNaN(d.getTime()) && d.toDateString() === todayStr;
+    }).length;
+    const todayEl = document.getElementById('dash-stat-today');
+    if (todayEl) todayEl.textContent = todayCount;
+
+    const ratingEl = document.getElementById('dash-stat-rating');
+    if (ratingEl) {
+      const r = provRow && provRow.rating ? Number(provRow.rating).toFixed(1) : '—';
+      ratingEl.innerHTML = r + '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+    }
+
+    const reviewsEl = document.getElementById('dash-stat-reviews');
+    if (reviewsEl) reviewsEl.textContent = (reviews || []).length;
+
+    const verifiedEl = document.getElementById('dash-stat-verified');
+    if (verifiedEl) {
+      verifiedEl.innerHTML = provRow && provRow.is_verified
+        ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg>'
+        : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    }
+  } catch (e) { console.error('Dashboard stats error:', e); }
+}
+
+async function loadProviderServicesTab(providerName) {
+  const container = document.getElementById('tab-services');
+  if (!container || !db || !providerName) return;
+
+  try {
+    const { data, error } = await db.from('skills').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('Services fetch error:', error); return; }
+
+    const services = data || [];
+    if (services.length === 0) {
+      container.innerHTML = '<div style="padding: 24px 20px; text-align:center;"><p style="font-size:13px; color:var(--text3);">This provider has not added any services yet.</p></div>';
+      return;
+    }
+
+    container.innerHTML = '<div style="padding: 16px 20px;">' + services.map(s => {
+      const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `
+      <div style="padding:14px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <p style="font-size:14px; font-weight:600; color:var(--text);">${s.name}</p>
+          <p style="font-size:12px; color:var(--text3); margin-top:2px;">${s.duration || ''}</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span style="font-size:14px; font-weight:700; color:var(--primary-dark);">₦${Number(s.price || 0).toLocaleString()}</span>
+          <button class="btn-secondary" style="padding:6px 14px; font-size:11px;" onclick="bookSpecificService('${safeName}', ${s.price || 0}, '${(s.duration || '').replace(/'/g, "\\'")}')">Book</button>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  } catch (e) { console.error('Services tab load error:', e); }
+}
+
+function bookSpecificService(name, price, duration) {
+  if (!requireAuth('book this service')) return;
+  showScreen('screen-booking');
+  setTimeout(async () => {
+    await loadBookingServicesForProvider(window.currentProviderName);
+    const items = document.querySelectorAll('#service-select-list .service-select-item');
+    items.forEach(item => {
+      if (item.getAttribute('data-name') === name) toggleService(item, name, price);
+    });
+  }, 150);
+}
+
+function prefillBookingCustomerInfo() {
+  const nameEl = document.getElementById('booking-name');
+  const phoneEl = document.getElementById('booking-phone');
+  const savedName = localStorage.getItem('preen_user_name');
+  const savedPhone = localStorage.getItem('preen_user_phone');
+  // Pre-filling matters beyond convenience: "My Bookings" and Notifications
+  // both look up a customer's bookings by matching this exact phone number
+  // against their account. If this field was left blank or typed differently,
+  // the booking would silently never show up anywhere for that customer.
+  if (nameEl && savedName && !nameEl.value) nameEl.value = savedName;
+  if (phoneEl && savedPhone && !phoneEl.value) phoneEl.value = savedPhone;
+}
+
+async function loadBookingTeamMembers(providerName) {
+  const container = document.getElementById('team-select-list');
+  if (!container || !db || !providerName) return;
+
+  // Keep the "No preference" option, just clear anything appended after it
+  const noPreference = container.querySelector('.team-member');
+  container.innerHTML = '';
+  if (noPreference) container.appendChild(noPreference);
+
+  try {
+    const { data, error } = await db.from('team_members').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('Booking team members error:', error); return; }
+
+    (data || []).forEach(m => {
+      const initials = (m.name || 'T').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const safeName = (m.name || '').replace(/'/g, "\\'");
+      const el = document.createElement('div');
+      el.className = 'team-member';
+      el.setAttribute('onclick', "selectTeamMember(this, '" + safeName + "')");
+      el.innerHTML = '<div class="team-avatar">' + initials + '</div><div><p style="font-size:13px; font-weight:500;">' + m.name + '</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">' + (m.role || '') + (m.years_experience ? ' · ' + m.years_experience : '') + '</p></div>';
+      container.appendChild(el);
+    });
+  } catch (e) { console.error('Booking team members load error:', e); }
+}
+
+async function checkTimeSlotAvailability() {
+  const dateInput = document.getElementById('booking-date');
+  const slotsContainer = document.getElementById('booking-time-slots');
+  if (!dateInput || !dateInput.value || !slotsContainer || !db) return;
+
+  const providerName = window.currentProviderName;
+  if (!providerName) return;
+
+  const formattedDate = new Date(dateInput.value).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  try {
+    const { data, error } = await db.from('bookings')
+      .select('booking_time')
+      .eq('provider_name', providerName)
+      .eq('booking_date', formattedDate)
+      .in('status', ['confirmed', 'accepted', 'pending_confirmation']);
+
+    if (error) { console.error('Time slot availability check error:', error); return; }
+
+    const takenTimes = new Set((data || []).map(b => b.booking_time));
+    slotsContainer.querySelectorAll('.time-slot').forEach(slot => {
+      const isTaken = takenTimes.has(slot.textContent.trim());
+      slot.classList.toggle('taken', isTaken);
+      // If the slot they'd already picked just became unavailable (someone
+      // else booked it while they were filling out the form), deselect it
+      // so they can't submit a conflict.
+      if (isTaken && slot.classList.contains('selected')) {
+        slot.classList.remove('selected');
+      }
+    });
+  } catch (e) { console.error('Time slot availability error:', e); }
+}
+
+async function loadBookingServicesForProvider(providerName) {
+  const container = document.getElementById('service-select-list');
+  if (!container || !db || !providerName) return;
+
+  // Also reflect the real provider's name/location on the booking screen header
+  const nameEl = document.querySelector('.booking-provider-name');
+  if (nameEl) nameEl.textContent = providerName;
+
+  try {
+    const { data, error } = await db.from('skills').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('Booking services fetch error:', error); return; }
+
+    const services = data || [];
+    if (services.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">This provider has not added any services yet.</p>';
+      return;
+    }
+
+    container.innerHTML = services.map(s => {
+      const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `
+      <div class="service-select-item" data-name="${safeName}" onclick="toggleService(this, '${safeName}', ${s.price || 0})">
+        <div><p style="font-size:13px; font-weight:500; color:var(--text);">${s.name}</p><p style="font-size:11px; color:var(--text3); margin-top:2px;">${s.duration || ''}</p></div>
+        <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:13px; font-weight:600; color:var(--primary);">₦${Number(s.price || 0).toLocaleString()}</span><div class="service-check"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error('Booking services load error:', e); }
+}
+
+async function loadScoreLeaderboard(currentProviderName) {
+  if (!db) return;
+  const container = document.getElementById('score-leaderboard-mini');
+  if (!container) return;
+
+  try {
+    const { data, error } = await db
+      .from('providers')
+      .select('*')
+      .eq('is_verified', true)
+      .order('rating', { ascending: false })
+      .limit(10);
+
+    if (error) { console.error('Score leaderboard error:', error); return; }
+
+    const providers = data || [];
+    if (providers.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">Leaderboard will show top providers once ratings start coming in.</p>';
+      return;
+    }
+
+    const medalColors = ['gold', 'silver', 'bronze'];
+    const medalIcons = [
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5A623" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M12 10v8M9 12l3-2 3 2"/><path d="M8 3l4 3 4-3"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A3A9B4" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M9 17h6M10 11a2 2 0 1 1 3 1.7L9.5 17H15"/><path d="M8 3l4 3 4-3"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C0722D" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><circle cx="12" cy="14" r="7"/><path d="M9.5 11.5a2 2 0 1 1 2 2.5 2 2 0 1 1-2 2.5"/><path d="M8 3l4 3 4-3"/></svg>'
+    ];
+
+    // Show the top 5, but if the currently-viewed provider isn't in that top 5,
+    // swap the last slot for their real row so they can always see where they stand.
+    let rows = providers.slice(0, 5).map((p, i) => ({ p, rank: i + 1 }));
+    if (currentProviderName) {
+      const inTop = rows.some(r => r.p.full_name === currentProviderName);
+      if (!inTop) {
+        const idx = providers.findIndex(p => p.full_name === currentProviderName);
+        if (idx >= 0) {
+          rows[rows.length - 1] = { p: providers[idx], rank: idx + 1 };
+        }
+      }
+    }
+
+    container.innerHTML = rows.map(({ p, rank }) => {
+      const isMe = p.full_name === currentProviderName;
+      const initials = (p.full_name || 'P').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      const medal = rank <= 3 ? medalIcons[rank - 1] : ('<span style="font-size:13px; font-weight:600; color:' + (isMe ? 'var(--primary)' : 'var(--text3)') + ';">#' + rank + '</span>');
+      const cls = rank <= 3 ? medalColors[rank - 1] : (isMe ? 'active-row' : '');
+      return `
+        <div class="leaderboard-row ${cls}" onclick="openProviderProfile('${(p.full_name || 'Provider').replace(/'/g, "\\'")}')">
+          <span class="lb-rank">${medal}</span>
+          <div class="lb-avatar" style="background:${isMe ? 'var(--primary)' : 'var(--text3)'};">${initials}</div>
+          <div style="flex:1;"><p style="font-size:13px; font-weight:600; ${isMe ? 'color:var(--primary);' : ''}">${p.full_name}</p><p style="font-size:11px; color:var(--text3);">${p.category || ''} · ${p.location || ''}</p></div>
+          <div class="lb-score" style="${isMe ? 'color:var(--primary);' : ''}">${p.rating ? Number(p.rating).toFixed(1) : '—'}</div>
+        </div>`;
+    }).join('');
+  } catch (e) { console.error('Score leaderboard load error:', e); }
+}
+
+async function loadProviderScore(providerNameOverride) {
+  if (!db) return;
+  const provName = providerNameOverride || localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  const nameEl = document.getElementById('score-provider-name');
+  if (nameEl) nameEl.textContent = provName;
+
+  try {
+    const [{ data: bookings }, { data: reviews }, { data: provRow }] = await Promise.all([
+      db.from('bookings').select('*').eq('provider_name', provName),
+      db.from('reviews').select('rating').eq('provider_name', provName),
+      db.from('providers').select('*').eq('full_name', provName).single()
+    ]);
+
+    const allBookings = bookings || [];
+    const completed = allBookings.filter(b => b.status === 'completed').length;
+    const declined = allBookings.filter(b => b.status === 'declined').length;
+    const showUpTotal = completed + declined;
+
+    // Show-up rate (25pts) — proportion of resolved bookings that were completed
+    // rather than declined. New providers with no history yet get full marks
+    // (no reason to penalize before they've had a chance).
+    const showUpPct = showUpTotal > 0 ? Math.round((completed / showUpTotal) * 100) : 100;
+    const showUpPts = Math.round((showUpPct / 100) * 25);
+
+    // Customer reviews (25pts) — scaled from average star rating
+    const reviewList = reviews || [];
+    const avgRating = reviewList.length > 0 ? reviewList.reduce((s, r) => s + (r.rating || 0), 0) / reviewList.length : 0;
+    const reviewPts = reviewList.length > 0 ? Math.round((avgRating / 5) * 25) : 13; // neutral starting point pre-reviews
+
+    // Profile completeness (25pts) — based on whether real profile fields are filled in
+    const fields = [provRow?.profile_photo, provRow?.bio, provRow?.work_photos, provRow?.is_verified];
+    const filledCount = fields.filter(Boolean).length;
+    const profilePct = Math.round((filledCount / fields.length) * 100);
+    const profilePts = Math.round((profilePct / 100) * 25);
+
+    // Booking consistency (25pts) — completed bookings this month, capped at 10 for full marks
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const completedThisMonth = allBookings.filter(b => b.status === 'completed' && b.created_at && new Date(b.created_at) >= startOfMonth).length;
+    const consistencyPts = Math.round(Math.min(completedThisMonth / 10, 1) * 25);
+
+    const total = showUpPts + reviewPts + profilePts + consistencyPts;
+
+    const scoreEl = document.getElementById('score-number');
+    if (scoreEl) scoreEl.textContent = total;
+    const ring = document.getElementById('score-ring');
+    if (ring) ring.style.strokeDashoffset = 314 - (314 * (total / 100));
+
+    const showUpLabel = document.getElementById('score-showup-label');
+    if (showUpLabel) showUpLabel.textContent = showUpPct + '% · ' + showUpPts + 'pts';
+    const showUpBar = document.getElementById('score-showup-bar');
+    if (showUpBar) showUpBar.style.width = showUpPct + '%';
+    const showUpSub = document.getElementById('score-showup-sub');
+    if (showUpSub) showUpSub.textContent = showUpTotal > 0 ? completed + ' completed, ' + declined + ' declined' : 'No booking history yet';
+
+    const reviewsLabel = document.getElementById('score-reviews-label');
+    if (reviewsLabel) reviewsLabel.textContent = (reviewList.length > 0 ? avgRating.toFixed(1) : '—') + ' · ' + reviewPts + 'pts';
+    const reviewsBar = document.getElementById('score-reviews-bar');
+    if (reviewsBar) reviewsBar.style.width = (reviewPts / 25 * 100) + '%';
+    const reviewsSub = document.getElementById('score-reviews-sub');
+    if (reviewsSub) reviewsSub.textContent = reviewList.length > 0 ? reviewList.length + (reviewList.length === 1 ? ' review' : ' reviews') : 'No reviews yet';
+
+    const profileLabel = document.getElementById('score-profile-label');
+    if (profileLabel) profileLabel.textContent = profilePct + '% · ' + profilePts + 'pts';
+    const profileBar = document.getElementById('score-profile-bar');
+    if (profileBar) profileBar.style.width = profilePct + '%';
+
+    const consistencyLabel = document.getElementById('score-consistency-label');
+    if (consistencyLabel) consistencyLabel.textContent = completedThisMonth + ' this month · ' + consistencyPts + 'pts';
+    const consistencyBar = document.getElementById('score-consistency-bar');
+    if (consistencyBar) consistencyBar.style.width = (consistencyPts / 25 * 100) + '%';
+
+    const eliteBadge = document.getElementById('score-elite-badge');
+    if (eliteBadge) eliteBadge.style.display = total >= 80 ? 'inline-flex' : 'none';
+    const encourageEl = document.getElementById('score-encouragement');
+    if (encourageEl) {
+      encourageEl.textContent = total >= 80
+        ? 'Great work — you are building a strong reputation on Preen.'
+        : 'Complete more bookings and collect reviews to raise your score.';
+    }
+
+    // Dashboard home preview card (separate, smaller version of the same score)
+    const dashNumEl = document.getElementById('dash-score-number');
+    if (dashNumEl) dashNumEl.textContent = total;
+    const dashRing = document.getElementById('dash-score-ring');
+    if (dashRing) dashRing.style.strokeDashoffset = 163 - (163 * (total / 100));
+    const dashBadge = document.getElementById('dash-score-elite-badge');
+    if (dashBadge) dashBadge.style.display = total >= 80 ? 'inline-flex' : 'none';
+    const dashShowup = document.getElementById('dash-score-showup');
+    if (dashShowup) dashShowup.textContent = 'Show-up ' + showUpPct + '%';
+    const dashReviews = document.getElementById('dash-score-reviews');
+    if (dashReviews) dashReviews.textContent = 'Reviews ' + (reviewList.length > 0 ? avgRating.toFixed(1) : '—');
+    const dashConsistency = document.getElementById('dash-score-consistency');
+    if (dashConsistency) dashConsistency.textContent = completedThisMonth + ' this month';
+
+    // Customer-facing mini score badge on the provider profile screen
+    const profileNumEl = document.getElementById('profile-score-number');
+    if (profileNumEl) profileNumEl.textContent = total;
+    const profileRing = document.getElementById('profile-score-ring');
+    if (profileRing) profileRing.style.strokeDashoffset = 163 - (163 * (total / 100));
+  } catch (e) { console.error('Preen Score error:', e); }
+}
+
+async function refreshProviderDashboardHeader() {
+  const nameEl = document.getElementById('prov-dashboard-name');
+  const realName = localStorage.getItem('preen_provider_name');
+  if (nameEl && realName) nameEl.textContent = realName;
+
+  // The Requests quick-action badge was previously a hardcoded "3" that never
+  // changed no matter how many real requests existed. This fetches the real count.
+  const dashBadge = document.getElementById('dashboard-requests-badge');
+  if (dashBadge && db && realName) {
+    try {
+      const { count, error } = await db
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('provider_name', realName)
+        .eq('status', 'confirmed');
+      if (error) { console.error('Dashboard badge count error:', error); return; }
+      dashBadge.textContent = count || 0;
+    } catch (e) { console.error('Dashboard badge fetch failed:', e); }
+  }
+}
+
+async function loadProviderDashboardSchedule() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  const todayEl = document.getElementById('prov-today-bookings');
+  const upcomingEl = document.getElementById('prov-upcoming-bookings');
+  if (!todayEl && !upcomingEl) return;
+
+  try {
+    const { data, error } = await db
+      .from('bookings')
+      .select('*')
+      .eq('provider_name', provName)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) { console.error('Dashboard schedule fetch error:', error); return; }
+
+    const cardHtml = (b) => `
+      <div class="prov-booking-card" style="flex-direction:column; align-items:stretch; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">${(b.customer_name || 'C').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;">
+            <p style="font-size:14px; font-weight:500;">${b.customer_name || 'Customer'}</p>
+            <p style="font-size:12px; color:var(--text3); margin-top:2px;">${b.service || ''} · ${b.booking_time || ''}</p>
+          </div>
+          <div style="text-align:right;">
+            <span class="status confirmed">Confirmed</span>
+            <p style="font-size:12px; color:var(--primary-dark); font-weight:600; margin-top:4px;">${b.amount || ''}</p>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn-secondary" style="flex:1; padding:8px; font-size:12px;" onclick="openChat('${b.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;display:inline-block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message</button>
+          <button class="btn-primary" style="flex:1; padding:8px; font-size:12px;" onclick="markServiceDone('${b.id}', this)">Service Done</button>
+        </div>
+      </div>`;
+
+    // booking_date is stored as a human-readable string (e.g. "Saturday, 10 May 2025").
+    // We try to parse it back into a real date to split today vs. this week; if a
+    // particular row's date can't be parsed, it's shown under "Upcoming" as a safe default.
+    const now = new Date();
+    const todayStr = now.toDateString();
+    const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const todayBookings = [];
+    const upcomingBookings = [];
+
+    (data || []).forEach(b => {
+      const parsed = b.booking_date ? new Date(b.booking_date) : null;
+      const isValidDate = parsed && !isNaN(parsed.getTime());
+      if (isValidDate && parsed.toDateString() === todayStr) {
+        todayBookings.push(b);
+      } else if (!isValidDate || parsed <= weekFromNow) {
+        upcomingBookings.push(b);
+      }
+    });
+
+    if (todayEl) {
+      todayEl.innerHTML = todayBookings.length
+        ? todayBookings.map(cardHtml).join('')
+        : '<p style="font-size:12px; color:var(--text3); text-align:center; padding:12px 0;">No bookings today yet.</p>';
+    }
+    if (upcomingEl) {
+      upcomingEl.innerHTML = upcomingBookings.length
+        ? upcomingBookings.slice(0, 5).map(cardHtml).join('')
+        : '<p style="font-size:12px; color:var(--text3); text-align:center; padding:12px 0;">Nothing else on the calendar this week.</p>';
+    }
+  } catch (e) { console.error('Dashboard schedule error:', e); }
+}
 
 function showScreen(id) {
   const current = document.querySelector('.screen.active');
@@ -2490,13 +3853,34 @@ function showScreen(id) {
   // Load real data when screen opens
   if (id === 'screen-bookings') setTimeout(loadMyBookings, 100);
   if (id === 'screen-booking-requests') setTimeout(loadProviderBookingRequests, 100);
+  if (id === 'screen-booking-requests') setTimeout(loadAcceptedTodayBookings, 100);
   if (id === 'screen-home') setTimeout(loadHomeSections, 300);
   if (id === 'screen-leaderboard') setTimeout(loadLeaderboard, 100);
   if (id === 'screen-provider-dashboard') setTimeout(loadProviderEarnings, 100);
-  if (id === 'screen-search') setTimeout(() => loadSearchProviders(), 100);
+  if (id === 'screen-provider-dashboard') refreshProviderDashboardHeader();
+  if (id === 'screen-provider-dashboard') setTimeout(loadProviderDashboardSchedule, 100);
+  if (id === 'screen-provider-dashboard') setTimeout(loadProviderDashboardStats, 100);
+  if (id === 'screen-provider-dashboard') setTimeout(syncAvailabilityToggle, 100);
+  if (id === 'screen-provider-dashboard') setTimeout(loadProviderScore, 150);
+  if (id === 'screen-provider-score') setTimeout(() => loadProviderScore(window.currentProviderName), 100);
+  if (id === 'screen-provider-score') setTimeout(() => loadScoreLeaderboard(window.currentProviderName || localStorage.getItem('preen_provider_name')), 100);
+  if (id === 'screen-withdrawal') setTimeout(loadWithdrawalBalance, 100);
+  if (id === 'screen-provider-earnings') setTimeout(loadProviderEarnings, 100);
+  if (id === 'screen-notifications') setTimeout(loadCustomerNotifications, 100);
+  if (id === 'screen-provider-notifications') setTimeout(loadProviderNotifications, 100);
+  if (id === 'screen-provider-all-bookings') setTimeout(loadProviderAllBookings, 100);
+  if (id === 'screen-booking') setTimeout(() => loadBookingServicesForProvider(window.currentProviderName), 100);
+  if (id === 'screen-booking') setTimeout(() => loadBookingTeamMembers(window.currentProviderName), 100);
+  if (id === 'screen-booking') setTimeout(prefillBookingCustomerInfo, 50);
+  if (id === 'screen-booking') setTimeout(checkTimeSlotAvailability, 150);
+  if (id === 'screen-saved') setTimeout(loadSavedProviders, 100);
+  if (id === 'screen-promo') setTimeout(loadActivePromoDisplay, 50);
+  if (id === 'screen-loyalty') setTimeout(loadLoyaltyPoints, 50);
+  if (id === 'screen-manage-team') setTimeout(loadManageTeamList, 100);
+  if (id === 'screen-housecall') setTimeout(() => loadHouseCallServices(window.currentProviderName), 100);
   if (id === 'screen-leaderboard') setTimeout(loadLeaderboard, 100);
   if (id === 'screen-provider-dashboard') setTimeout(loadProviderEarnings, 200);
-  if (id === 'screen-search') setTimeout(() => searchProviders('', ''), 200);
+  if (id === 'screen-search') setTimeout(() => searchProviders('', ''), 100);
   const next = document.getElementById(id);
   if (next) { next.classList.add('active'); window.scrollTo(0, 0); }
 }
@@ -2520,7 +3904,17 @@ async function handleSignup() {
   document.getElementById('profile-name').textContent = name;
   document.getElementById('profile-email').textContent = email;
   saveUser(name, email, phone, 'customer');
-  showScreen('screen-home');
+  // This was the real root cause of bookings/notifications being invisible after
+  // a fresh signup: these identity keys were never set here at all (only
+  // handleLogin set them), so every phone-matching lookup had nothing to match.
+  localStorage.setItem('preen_role', 'customer');
+  localStorage.setItem('preen_user_name', name);
+  localStorage.setItem('preen_user_email', email);
+  localStorage.setItem('preen_user_phone', phone);
+  const redirect = localStorage.getItem('preen_redirect_screen');
+  localStorage.removeItem('preen_redirect_screen');
+  showScreen(redirect || 'screen-home');
+  setTimeout(updateHomeForGuest, 100);
 }
 
 function handleLogin() {
@@ -2536,7 +3930,12 @@ async function confirmBooking() {
   const date = document.getElementById('booking-date').value;
   const selectedTime = document.querySelector('.time-slot.selected');
   const customerName = document.getElementById('booking-name').value.trim();
-  const customerPhone = document.getElementById('booking-phone').value.trim();
+  // Prefer the logged-in account's real phone number over whatever's typed here.
+  // My Bookings and Notifications both match bookings to a customer by this exact
+  // value — if it doesn't match the account's saved number, the booking becomes
+  // invisible to that customer even though it's genuinely theirs.
+  const typedPhone = document.getElementById('booking-phone').value.trim();
+  const customerPhone = localStorage.getItem('preen_user_phone') || typedPhone;
   if (selectedServices.length === 0) { alert('Please select at least one service.'); return; }
   if (!date) { alert('Please select a date.'); return; }
   if (!selectedTime) { alert('Please select a time slot.'); return; }
@@ -2544,36 +3943,73 @@ async function confirmBooking() {
   if (!customerPhone) { alert('Please enter your phone number.'); return; }
   const formattedDate = new Date(date).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const serviceNames = selectedServices.map(s => s.name).join(', ');
-  const totalAmount = '₦' + selectedServiceTotal.toLocaleString();
-  document.getElementById('confirmed-date').textContent = formattedDate + ' · ' + selectedTime.textContent;
-  document.getElementById('confirmed-services').textContent = serviceNames;
-  document.getElementById('confirmed-amount').textContent = totalAmount;
-  document.getElementById('confirmed-team').textContent = selectedTeamMember;
-  saveBooking(customerName, customerPhone, 'Kings Barbershop', serviceNames, formattedDate, selectedTime.textContent, totalAmount);
+
+  // Apply an active promo, if one was applied on the Promo Codes screen
+  let finalAmount = selectedServiceTotal;
+  let appliedPromo = null;
+  const rawPromo = localStorage.getItem('preen_active_promo');
+  if (rawPromo) {
+    try {
+      appliedPromo = JSON.parse(rawPromo);
+      const discount = appliedPromo.discount_type === 'percent'
+        ? Math.round(selectedServiceTotal * (appliedPromo.discount_value / 100))
+        : Math.min(appliedPromo.discount_value, selectedServiceTotal);
+      finalAmount = Math.max(0, selectedServiceTotal - discount);
+    } catch (e) { appliedPromo = null; }
+  }
+
+  const totalAmount = '₦' + finalAmount.toLocaleString();
+
+  // Get provider details for the waiting screen
+  const providerName = document.querySelector('.provider-title') ?
+    document.querySelector('.provider-title').textContent.replace('✓','').trim() : 'Kings Barbershop';
+  const rawAmount = finalAmount;
+  const serviceLabel = serviceNames + (appliedPromo ? ' (' + appliedPromo.code + ' applied)' : '') + ' · ' + totalAmount;
+
+  // Prevent double-booking: check if this provider already has an active
+  // booking (from anyone) at this exact date and time before saving a new one.
+  if (db) {
+    try {
+      const { data: conflicts } = await db.from('bookings')
+        .select('id')
+        .eq('provider_name', providerName)
+        .eq('booking_date', formattedDate)
+        .eq('booking_time', selectedTime.textContent)
+        .in('status', ['confirmed', 'accepted', 'pending_confirmation']);
+      if (conflicts && conflicts.length > 0) {
+        alert('That time slot is no longer available — someone else has already booked ' + providerName + ' for ' + formattedDate + ' at ' + selectedTime.textContent + '. Please choose a different time.');
+        return;
+      }
+    } catch (e) { console.error('Booking conflict check error:', e); }
+  }
+
+  const bookingId = await saveBooking(customerName, customerPhone, providerName, serviceNames, formattedDate, selectedTime.textContent, totalAmount);
+
+  // Record the redemption now that the booking actually went through, so the
+  // discount can't be reused, and clear it so the next booking starts fresh
+  if (appliedPromo && bookingId && db) {
+    try {
+      await db.from('promo_redemptions').insert([{ customer_phone: customerPhone, code: appliedPromo.code }]);
+      const { data: currentPromo } = await db.from('promo_codes').select('times_used').eq('code', appliedPromo.code).single();
+      if (currentPromo) {
+        await db.from('promo_codes').update({ times_used: (currentPromo.times_used || 0) + 1 }).eq('code', appliedPromo.code);
+      }
+    } catch (e) { console.error('Promo redemption record error:', e); }
+    localStorage.removeItem('preen_active_promo');
+  }
+
   selectedServices = [];
   selectedServiceTotal = 0;
 
-  // Get booking details for waiting screen
-  const providerName = document.querySelector('.provider-title') ?
-    document.querySelector('.provider-title').textContent.replace('✓','').trim() : 'Provider';
-  const serviceLabel = serviceNames + ' · ₦' + totalAmount.toLocaleString();
-
   // Go to waiting screen instead of booking success
-  startWaitingForProvider(providerName, serviceLabel, formattedDate, selectedTime.textContent, totalAmount);
+  startWaitingForProvider(bookingId, providerName, serviceLabel, formattedDate, selectedTime.textContent, rawAmount);
 }
 
-function cancelBooking(btn) {
-  if (confirm('Are you sure you want to cancel this booking?')) {
-    const item = btn.closest('.booking-item');
-    const status = item.querySelector('.status');
-    status.textContent = 'Cancelled';
-    status.className = 'status cancelled';
-    btn.style.display = 'none';
-  }
-}
+// (dead cancelBooking(btn) — UI-only, no persistence — removed; use cancelBookingById)
 
 // TIME SLOTS
 function selectTime(el) {
+  if (el.classList.contains('taken')) return;
   document.querySelectorAll('.time-slot').forEach(t => t.classList.remove('selected'));
   el.classList.add('selected');
 }
@@ -2642,18 +4078,23 @@ function selectSortType(type) {
 }
 
 function getProviderCards(type) {
+  const starSvg = '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+  const checkSvg = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg>';
+  const barberIcon = '<span style="color:var(--primary);display:flex;align-items:center;justify-content:center;height:100%;">' + getCategoryIcon('Barber', 32) + '</span>';
+  const nailIcon = '<span style="color:var(--primary);display:flex;align-items:center;justify-content:center;height:100%;">' + getCategoryIcon('Nail Tech', 32) + '</span>';
+
   if (type === 'Professionals') {
     return `
-      <div class="provider-card-new" onclick="showScreen('screen-provider')">
-        <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-          <span style="font-size:32px;">✂️</span>
-          <div class="provider-card-rating-badge">★ 4.9</div>
+      <div class="provider-card-new" onclick="openProviderProfile('Kingsley James','Barber','Wuse 2',4.9,true)">
+        <div class="provider-card-img" style="background: linear-gradient(135deg, var(--primary-light), #FCB8CB);">
+          ${barberIcon}
+          <div class="provider-card-rating-badge">${starSvg} 4.9</div>
         </div>
         <div class="provider-card-body">
           <div class="provider-card-top">
-            <p class="provider-name">Kingsley James <span class="verified-dot">✓</span></p>
-            <p style="font-size:11px; color:#888;">Senior Barber · 0.8km · Wuse 2</p>
-            <p style="font-size:11px; color:#888;">5 years experience</p>
+            <p class="provider-name">Kingsley James <span class="verified-dot">${checkSvg}</span></p>
+            <p style="font-size:11px; color:var(--text3);">Senior Barber · 0.8km · Wuse 2</p>
+            <p style="font-size:11px; color:var(--text3);">5 years experience</p>
           </div>
           <div class="provider-service-preview">
             <span>Signature Fade</span>
@@ -2661,16 +4102,16 @@ function getProviderCards(type) {
           </div>
         </div>
       </div>
-      <div class="provider-card-new" onclick="showScreen('screen-provider')">
-        <div class="provider-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
-          <span style="font-size:32px;">💅</span>
-          <div class="provider-card-rating-badge">★ 4.8</div>
+      <div class="provider-card-new" onclick="openProviderProfile('Temi Adeyemi','Nail Tech','Garki',4.8,true)">
+        <div class="provider-card-img" style="background: linear-gradient(135deg, #FEF3C7, #FDE68A);">
+          ${nailIcon}
+          <div class="provider-card-rating-badge">${starSvg} 4.8</div>
         </div>
         <div class="provider-card-body">
           <div class="provider-card-top">
-            <p class="provider-name">Temi Adeyemi <span class="verified-dot">✓</span></p>
-            <p style="font-size:11px; color:#888;">Nail Tech · 1.2km · Garki</p>
-            <p style="font-size:11px; color:#888;">3 years experience</p>
+            <p class="provider-name">Temi Adeyemi <span class="verified-dot">${checkSvg}</span></p>
+            <p style="font-size:11px; color:var(--text3);">Nail Tech · 1.2km · Garki</p>
+            <p style="font-size:11px; color:var(--text3);">3 years experience</p>
           </div>
           <div class="provider-service-preview">
             <span>Gel Manicure</span>
@@ -2680,16 +4121,16 @@ function getProviderCards(type) {
       </div>`;
   }
   return `
-    <div class="provider-card-new" onclick="showScreen('screen-provider')">
-      <div class="provider-card-img" style="background: linear-gradient(135deg, #1e1040, #3b1a7a);">
-        <span style="font-size:32px;">✂️</span>
-        <div class="provider-card-rating-badge">★ 4.9</div>
+    <div class="provider-card-new" onclick="openProviderProfile('Kings Barbershop','Barber','Wuse 2, Abuja',4.9,true)">
+      <div class="provider-card-img" style="background: linear-gradient(135deg, var(--primary-light), #FCB8CB);">
+        ${barberIcon}
+        <div class="provider-card-rating-badge">${starSvg} 4.9</div>
       </div>
       <div class="provider-card-body">
         <div class="provider-card-top">
-          <p class="provider-name">Kings Barbershop <span class="verified-dot">✓</span></p>
-          <p style="font-size:11px; color:#888;">0.8km · Wuse 2, Abuja</p>
-          <p style="font-size:11px; color:#888;">Barber · Open until 8:00 PM</p>
+          <p class="provider-name">Kings Barbershop <span class="verified-dot">${checkSvg}</span></p>
+          <p style="font-size:11px; color:var(--text3);">0.8km · Wuse 2, Abuja</p>
+          <p style="font-size:11px; color:var(--text3);">Barber · Open until 8:00 PM</p>
         </div>
         <div class="provider-service-preview">
           <span>Signature Fade</span>
@@ -2697,16 +4138,16 @@ function getProviderCards(type) {
         </div>
       </div>
     </div>
-    <div class="provider-card-new" onclick="showScreen('screen-provider')">
-      <div class="provider-card-img" style="background: linear-gradient(135deg, #1a0e2e, #4a1a6e);">
-        <span style="font-size:32px;">💅</span>
-        <div class="provider-card-rating-badge">★ 4.8</div>
+    <div class="provider-card-new" onclick="openProviderProfile('Glam Nails by Temi','Nail Tech','Garki, Abuja',4.8,true)">
+      <div class="provider-card-img" style="background: linear-gradient(135deg, #FEF3C7, #FDE68A);">
+        ${nailIcon}
+        <div class="provider-card-rating-badge">${starSvg} 4.8</div>
       </div>
       <div class="provider-card-body">
         <div class="provider-card-top">
-          <p class="provider-name">Glam Nails by Temi <span class="verified-dot">✓</span></p>
-          <p style="font-size:11px; color:#888;">1.2km · Garki, Abuja</p>
-          <p style="font-size:11px; color:#888;">Nail Tech · Open until 7:00 PM</p>
+          <p class="provider-name">Glam Nails by Temi <span class="verified-dot">${checkSvg}</span></p>
+          <p style="font-size:11px; color:var(--text3);">1.2km · Garki, Abuja</p>
+          <p style="font-size:11px; color:var(--text3);">Nail Tech · Open until 7:00 PM</p>
         </div>
         <div class="provider-service-preview">
           <span>Gel Manicure</span>
@@ -2719,7 +4160,7 @@ function getProviderCards(type) {
 // STATES
 const nigerianStates = [
   'Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno',
-  'Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT Abuja','Gombe',
+  'Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe',
   'Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos',
   'Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto',
   'Taraba','Yobe','Zamfara'
@@ -2732,7 +4173,7 @@ function renderStates(filter = '') {
   list.innerHTML = filtered.map(state =>
     '<div onclick="selectState(\''+state+'\')" style="padding:16px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;">' +
     '<div style="display:flex;align-items:center;gap:12px;">' +
-    '<div style="width:36px;height:36px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;">📍</div>' +
+    '<div style="width:36px;height:36px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg></div>' +
     '<span style="font-size:14px;font-weight:500;color:var(--text);">'+state+'</span>' +
     '</div>' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>' +
@@ -2748,6 +4189,7 @@ function selectState(state) {
   // Save state and reload home sections
   currentUserState = state;
   localStorage.setItem('preen_user_state', state);
+  localStorage.setItem('preen_state_is_manual', 'true');
   goBack();
   setTimeout(loadHomeSections, 300);
 }
@@ -2756,7 +4198,10 @@ function selectState(state) {
 let selectedRating = 0;
 let isAnonymous = false;
 
-function openReview(providerName) {
+let reviewBookingId = null;
+
+function openReview(providerName, bookingId) {
+  reviewBookingId = bookingId || null;
   document.getElementById('review-provider-name').textContent = providerName;
   selectedRating = 0;
   renderStars(0);
@@ -2774,7 +4219,7 @@ function renderStars(rating) {
   for (let i = 1; i <= 5; i++) {
     const star = document.createElement('span');
     star.className = 'star' + (i <= rating ? ' active' : '');
-    star.textContent = '★';
+    star.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
     star.onclick = () => setRating(i);
     container.appendChild(star);
   }
@@ -2788,24 +4233,31 @@ function toggleAnonymous() {
   toggle.classList.toggle('active', isAnonymous);
 }
 
-function submitReview() {
+async function submitReview() {
   const text = document.getElementById('review-text').value.trim();
   const providerName = document.getElementById('review-provider-name').textContent;
   if (selectedRating === 0) { alert('Please select a star rating.'); return; }
   if (!text) { alert('Please write a short review.'); return; }
-  saveReview(providerName, 'Customer', selectedRating, text, isAnonymous);
+  const realCustomerName = localStorage.getItem('preen_user_name') || 'Customer';
+  const saved = await saveReview(providerName, realCustomerName, selectedRating, text, isAnonymous, reviewBookingId);
+  if (!saved) { alert('Could not save your review. Please check your connection and try again.'); return; }
+  await awardLoyaltyPoints(20);
   const name = isAnonymous ? 'Anonymous' : 'You';
-  alert('Review submitted as ' + name + '! Thank you 🙏');
+  alert('Review submitted as ' + name + '! Thank you — you earned 20 loyalty points.');
   isAnonymous = false;
+  reviewBookingId = null;
+  loadMyBookings();
   showScreen('screen-home');
 }
 
 // TIPPING
 let selectedTipAmount = 0;
 let tipProviderName = '';
+let tipBookingId = null;
 
-function openTip(providerName) {
+function openTip(providerName, bookingId) {
   tipProviderName = providerName;
+  tipBookingId = bookingId || null;
   selectedTipAmount = 0;
   document.getElementById('tip-provider-name').textContent = providerName;
   document.querySelectorAll('.tip-option').forEach(t => t.classList.remove('selected'));
@@ -2838,34 +4290,125 @@ function updateTipSummary(amount) {
   document.getElementById('tip-summary').style.display = 'block';
 }
 
-function sendTip() {
+async function sendTip() {
   if (selectedTipAmount === 0) { alert('Please select or enter a tip amount.'); return; }
-  alert('Tip of ₦' + selectedTipAmount.toLocaleString() + ' sent! 💛');
+  const customerName = localStorage.getItem('preen_user_name') || 'Guest';
+  const customerPhone = localStorage.getItem('preen_user_phone') || '';
+
+  if (db) {
+    try {
+      const { error } = await db.from('tips').insert([{
+        provider_name: tipProviderName,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        amount: selectedTipAmount,
+        booking_id: tipBookingId || null
+      }]);
+      if (error) { alert('Could not send your tip:\n\n' + error.message); console.error('Tip save error:', error); return; }
+    } catch (e) { alert('Could not send your tip. Please try again.'); console.error('Tip save failed:', e); return; }
+  }
+
+  await awardLoyaltyPoints(10);
+  alert('Tip of ₦' + selectedTipAmount.toLocaleString() + ' sent! You earned 10 loyalty points.');
+  tipBookingId = null;
+  loadMyBookings();
   showScreen('screen-bookings');
 }
 
 function skipTip() { showScreen('screen-bookings'); }
 
 // PROMO
-function applyPromo() {
+async function applyPromo() {
   const code = document.getElementById('promo-input').value.trim().toUpperCase();
-  const valid = ['PREEN20', 'ABUJA10'];
-  if (valid.includes(code)) alert('Promo code ' + code + ' applied successfully!');
-  else alert('Invalid promo code. Please try again.');
+  if (!code) { alert('Please enter a promo code.'); return; }
+  if (!db) { alert('Could not reach the server. Please try again.'); return; }
+
+  const phone = localStorage.getItem('preen_user_phone') || '';
+  if (!phone) { alert('Please sign in to apply a promo code.'); return; }
+
+  try {
+    const { data: promo, error } = await db.from('promo_codes').select('*').eq('code', code).eq('active', true).maybeSingle();
+    if (error) { console.error('Promo lookup error:', error); alert('Something went wrong. Please try again.'); return; }
+    if (!promo) { alert('Invalid or inactive promo code.'); return; }
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) { alert('This promo code has expired.'); return; }
+    if (promo.max_uses && promo.times_used >= promo.max_uses) { alert('This promo code has reached its usage limit.'); return; }
+
+    const { data: alreadyUsed } = await db.from('promo_redemptions').select('id').eq('customer_phone', phone).eq('code', code).maybeSingle();
+    if (alreadyUsed) { alert('You\'ve already used this promo code.'); return; }
+
+    // Store it so the next booking checkout can apply it — cleared after use in confirmBooking()
+    localStorage.setItem('preen_active_promo', JSON.stringify({ code: promo.code, discount_type: promo.discount_type, discount_value: promo.discount_value }));
+    alert('Promo code ' + code + ' applied! It will be used automatically on your next booking.');
+    loadActivePromoDisplay();
+  } catch (e) { console.error('Apply promo failed:', e); alert('Something went wrong. Please try again.'); }
+}
+
+function loadActivePromoDisplay() {
+  const container = document.getElementById('active-promos-list');
+  if (!container) return;
+  const raw = localStorage.getItem('preen_active_promo');
+  if (!raw) {
+    container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No active promo. Enter a code above to apply one.</p>';
+    return;
+  }
+  const promo = JSON.parse(raw);
+  const label = promo.discount_type === 'percent' ? promo.discount_value + '% off your next booking' : '₦' + Number(promo.discount_value).toLocaleString() + ' off your next booking';
+  container.innerHTML = `<div class="booking-item"><div class="booking-item-left"><div style="width:36px;height:36px;background:var(--primary-light);border-radius:10px;display:flex;align-items:center;justify-content:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18M12 8c-2 0-4-1-4-3.5S9.5 1 12 4c0-3 4.5-2.5 4.5-.5S14 8 12 8z"/></svg></div><div><p class="booking-item-name">${promo.code}</p><p class="booking-item-meta">${label}</p></div></div><span class="status confirmed">Active</span></div>`;
 }
 
 // OFFER
-function openOffer() {
+let selectedOfferService = null;
+let offerPollTimer = null;
+
+async function openOffer() {
   document.getElementById('offer-amount').value = '';
   document.getElementById('offer-preview').style.display = 'none';
   document.getElementById('offer-message').value = '';
+  selectedOfferService = null;
   showScreen('screen-offer');
+  await loadOfferServices(window.currentProviderName);
+}
+
+async function loadOfferServices(providerName) {
+  const container = document.getElementById('offer-service-list');
+  if (!container || !db || !providerName) return;
+  try {
+    const { data, error } = await db.from('skills').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('Offer services error:', error); return; }
+    const services = data || [];
+    if (services.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3);">This provider has not added any services yet.</p>';
+      return;
+    }
+    container.innerHTML = services.map(s => {
+      const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `<div class="offer-service-option" style="width:100%;text-align:left;padding:12px 14px;display:flex;justify-content:space-between;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;" onclick="selectOfferService(this, '${safeName}', ${s.price || 0})">
+        <span>${s.name}</span><span style="font-weight:600;">₦${Number(s.price || 0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+    const first = container.querySelector('.offer-service-option');
+    if (first && services[0]) selectOfferService(first, services[0].name, services[0].price || 0);
+  } catch (e) { console.error('Offer services load error:', e); }
+}
+
+function selectOfferService(el, name, price) {
+  document.querySelectorAll('#offer-service-list .offer-service-option').forEach(s => {
+    s.style.borderColor = 'var(--border)';
+    s.style.background = 'transparent';
+  });
+  el.style.borderColor = 'var(--primary)';
+  el.style.background = 'var(--primary-light)';
+  selectedOfferService = { name, price };
+  document.getElementById('offer-listed-price').textContent = '₦' + price.toLocaleString();
+  document.getElementById('offer-service-label').textContent = name + ' · ' + (window.currentProviderName || 'Provider');
+  updateOfferPreview(document.getElementById('offer-amount').value);
 }
 
 function updateOfferPreview(value) {
   const offer = parseInt(value) || 0;
-  const listed = 2500;
-  if (offer > 0 && offer < listed) {
+  const listed = selectedOfferService ? selectedOfferService.price : 0;
+  if (offer > 0 && listed > 0 && offer < listed) {
+    document.getElementById('offer-preview-listed').textContent = '₦' + listed.toLocaleString();
     document.getElementById('offer-display').textContent = '₦' + offer.toLocaleString();
     document.getElementById('offer-saving').textContent = '₦' + (listed - offer).toLocaleString();
     document.getElementById('offer-preview').style.display = 'block';
@@ -2874,45 +4417,194 @@ function updateOfferPreview(value) {
   }
 }
 
-function sendOffer() {
+async function sendOffer() {
+  if (!selectedOfferService) { alert('Please select a service.'); return; }
   const amount = parseInt(document.getElementById('offer-amount').value) || 0;
+  const listed = selectedOfferService.price;
   if (amount === 0) { alert('Please enter your offer amount.'); return; }
-  if (amount >= 2500) { alert('Your offer must be less than ₦2,500.'); return; }
-  if (amount < 500) { alert('Your offer is too low.'); return; }
+  if (amount >= listed) { alert('Your offer must be less than the listed price of ₦' + listed.toLocaleString() + '.'); return; }
+  if (amount < 100) { alert('Your offer is too low.'); return; }
+
+  const providerName = window.currentProviderName || 'Provider';
+  const customerName = localStorage.getItem('preen_user_name') || 'Guest';
+  const customerPhone = localStorage.getItem('preen_user_phone') || '';
+  const message = document.getElementById('offer-message').value.trim();
+
+  document.getElementById('offer-sent-provider').textContent = providerName;
+  document.getElementById('offer-sent-listed').textContent = '₦' + listed.toLocaleString();
   document.getElementById('offer-sent-amount').textContent = '₦' + amount.toLocaleString();
+  document.getElementById('offer-status').textContent = 'Pending';
+  document.getElementById('offer-status').style.color = '#F59E0B';
+  document.getElementById('offer-response-title').textContent = 'Offer Sent!';
+  document.getElementById('offer-response-msg').textContent = 'Waiting for ' + providerName + ' to respond.';
+  document.getElementById('offer-action-btn').textContent = 'Waiting for response...';
+  document.getElementById('offer-action-btn').setAttribute('onclick', 'return false;');
+  document.getElementById('offer-response-icon').innerHTML = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.8"><path d="M6 2h12M6 22h12M6 2c0 6 6 6 6 10s-6 4-6 10M18 2c0 6-6 6-6 10s6 4 6 10"/></svg>';
+
+  let bookingId = null;
+  const serviceLabel = selectedOfferService.name + (message ? ' — "' + message.replace(/"/g, "'") + '"' : '') + ' (Offer, listed ₦' + listed.toLocaleString() + ')';
+
+  if (db) {
+    try {
+      const { data, error } = await db.from('bookings').insert([{
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        provider_name: providerName,
+        service: serviceLabel,
+        booking_date: 'To be arranged',
+        booking_time: 'To be arranged',
+        amount: '₦' + amount.toLocaleString(),
+        status: 'confirmed'
+      }]).select();
+      if (error) { alert('Could not send your offer:\n\n' + error.message); console.error('Offer save error:', error); return; }
+      bookingId = data && data[0] ? data[0].id : null;
+    } catch (e) { alert('Could not send your offer. Please try again.'); console.error('Offer save failed:', e); return; }
+  }
+
   showScreen('screen-offer-response');
-  setTimeout(() => {
-    const accepted = amount >= 900;
-    if (accepted) {
-      document.getElementById('offer-response-icon').textContent = '✅';
-      document.getElementById('offer-response-title').textContent = 'Offer Accepted!';
-      document.getElementById('offer-response-msg').textContent = 'Kings Barbershop accepted your offer.';
-      document.getElementById('offer-status').textContent = 'Accepted';
-      document.getElementById('offer-status').style.color = '#22c55e';
-      document.getElementById('offer-action-btn').textContent = 'Book at ₦' + amount.toLocaleString();
-    } else {
-      document.getElementById('offer-response-icon').textContent = '❌';
-      document.getElementById('offer-response-title').textContent = 'Offer Declined';
-      document.getElementById('offer-response-msg').textContent = 'Kings Barbershop declined your offer.';
-      document.getElementById('offer-status').textContent = 'Declined';
-      document.getElementById('offer-status').style.color = '#ef4444';
-      document.getElementById('offer-action-btn').textContent = 'Book at Full Price ₦2,500';
-    }
+  if (!bookingId || !db) return;
+
+  // Poll for the real provider's response — same mechanism used for normal bookings
+  if (offerPollTimer) clearInterval(offerPollTimer);
+  offerPollTimer = setInterval(async () => {
+    try {
+      const { data } = await db.from('bookings').select('status').eq('id', bookingId).single();
+      if (data && data.status === 'accepted') {
+        clearInterval(offerPollTimer);
+        currentBookingDetails = { bookingId, providerName, serviceLabel: selectedOfferService.name, date: 'To be arranged', time: 'To be arranged', amount };
+        providerAccepted();
+      } else if (data && data.status === 'declined') {
+        clearInterval(offerPollTimer);
+        document.getElementById('offer-response-icon').innerHTML = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        document.getElementById('offer-response-title').textContent = 'Offer Declined';
+        document.getElementById('offer-response-msg').textContent = providerName + ' declined your offer.';
+        document.getElementById('offer-status').textContent = 'Declined';
+        document.getElementById('offer-status').style.color = 'var(--error)';
+        document.getElementById('offer-action-btn').textContent = 'Book at Full Price';
+        document.getElementById('offer-action-btn').setAttribute('onclick', "requireAuth('book this service') && showScreen('screen-booking')");
+      }
+    } catch (e) { /* transient error, keep polling */ }
   }, 3000);
+
+  // Stop polling after 10 minutes if the provider never responds
+  setTimeout(() => { if (offerPollTimer) clearInterval(offerPollTimer); }, 10 * 60 * 1000);
 }
 
 // HOUSE CALL
-function confirmHouseCall() {
+let selectedHouseCallService = null;
+let housecallPollTimer = null;
+
+async function loadHouseCallServices(providerName) {
+  const container = document.getElementById('housecall-service-list');
+  if (!container || !db || !providerName) return;
+
+  try {
+    const { data, error } = await db.from('skills').select('*').eq('provider_name', providerName).order('created_at', { ascending: true });
+    if (error) { console.error('House call services error:', error); return; }
+
+    const services = data || [];
+    if (services.length === 0) {
+      container.innerHTML = '<p style="font-size:12px; color:var(--text3);">This provider hasn\'t added any services yet.</p>';
+      return;
+    }
+
+    container.innerHTML = services.map((s, i) => {
+      const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      return `<div class="housecall-service-option" style="width:100%;text-align:left;padding:12px 14px;display:flex;justify-content:space-between;border:1px solid var(--border);border-radius:10px;cursor:pointer;font-size:13px;" onclick="selectHouseCallService(this, '${safeName}', ${s.price || 0})">
+        <span>${s.name}</span><span style="font-weight:600;">₦${Number(s.price || 0).toLocaleString()}</span>
+      </div>`;
+    }).join('');
+
+    // Auto-select the first service so the price shown is never ₦0/blank
+    const firstItem = container.querySelector('.housecall-service-option');
+    if (firstItem && services[0]) selectHouseCallService(firstItem, services[0].name, services[0].price || 0);
+  } catch (e) { console.error('House call services load error:', e); }
+}
+
+function selectHouseCallService(el, name, price) {
+  document.querySelectorAll('#housecall-service-list .housecall-service-option').forEach(s => {
+    s.style.borderColor = 'var(--border)';
+    s.style.background = 'transparent';
+  });
+  el.style.borderColor = 'var(--primary)';
+  el.style.background = 'var(--primary-light)';
+  selectedHouseCallService = { name, price };
+  const travelFee = 1000;
+  const total = price + travelFee;
+  document.getElementById('housecall-service-fee').textContent = '₦' + price.toLocaleString();
+  document.getElementById('housecall-total').textContent = '₦' + total.toLocaleString();
+  document.getElementById('housecall-submit-btn').textContent = 'Request House Call · ₦' + total.toLocaleString();
+}
+
+async function confirmHouseCall() {
   const address = document.getElementById('housecall-address').value.trim();
   const date = document.getElementById('housecall-date').value;
-  const selectedTime = document.querySelector('.time-slot.selected');
+  const selectedTime = document.querySelector('#screen-housecall .time-slots .time-slot.selected');
+  if (!selectedHouseCallService) { alert('Please select a service.'); return; }
   if (!address) { alert('Please enter your address.'); return; }
   if (!date) { alert('Please select a date.'); return; }
   if (!selectedTime) { alert('Please select a time slot.'); return; }
   const formattedDate = new Date(date).toLocaleDateString('en-NG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const providerName = window.currentProviderName || 'Provider';
+  const customerName = localStorage.getItem('preen_user_name') || 'Guest';
+  const customerPhone = localStorage.getItem('preen_user_phone') || '';
+  const travelFee = 1000;
+  const total = selectedHouseCallService.price + travelFee;
+
+  let bookingId = null;
+  if (db) {
+    try {
+      const { data, error } = await db.from('bookings').insert([{
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        provider_name: providerName,
+        service: selectedHouseCallService.name + ' (House Call)',
+        booking_date: formattedDate,
+        booking_time: selectedTime.textContent,
+        amount: '₦' + total.toLocaleString(),
+        status: 'confirmed',
+        is_house_call: true,
+        house_call_address: address
+      }]).select();
+      if (error) { alert('Could not send your house call request:\n\n' + error.message); console.error('House call save error:', error); return; }
+      bookingId = data && data[0] ? data[0].id : null;
+    } catch (e) { alert('Could not send your house call request. Please try again.'); console.error('House call save failed:', e); return; }
+  }
+
+  document.getElementById('housecall-confirmed-provider').textContent = providerName;
   document.getElementById('housecall-confirmed-address').textContent = address;
   document.getElementById('housecall-confirmed-date').textContent = formattedDate + ' · ' + selectedTime.textContent;
+  document.getElementById('housecall-confirmed-total').textContent = '₦' + total.toLocaleString();
+  document.getElementById('housecall-status-label').textContent = 'Pending';
+  document.getElementById('housecall-status-label').style.color = '#F59E0B';
+  document.getElementById('housecall-status-title').textContent = 'House Call Requested!';
+  document.getElementById('housecall-status-msg').textContent = 'The provider will confirm your request shortly.';
   showScreen('screen-housecall-success');
+
+  if (!bookingId || !db) return;
+
+  // Poll for the real provider's response, same mechanism used for offers and normal bookings
+  if (housecallPollTimer) clearInterval(housecallPollTimer);
+  housecallPollTimer = setInterval(async () => {
+    try {
+      const { data } = await db.from('bookings').select('status').eq('id', bookingId).single();
+      if (data && data.status === 'accepted') {
+        clearInterval(housecallPollTimer);
+        currentBookingDetails = { bookingId, providerName, serviceLabel: selectedHouseCallService.name, date: formattedDate, time: selectedTime.textContent, amount: total };
+        providerAccepted();
+      } else if (data && data.status === 'declined') {
+        clearInterval(housecallPollTimer);
+        document.getElementById('housecall-status-icon').innerHTML = '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--error)" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+        document.getElementById('housecall-status-title').textContent = 'House Call Declined';
+        document.getElementById('housecall-status-msg').textContent = providerName + ' is unable to take this request. You have not been charged.';
+        document.getElementById('housecall-status-label').textContent = 'Declined';
+        document.getElementById('housecall-status-label').style.color = 'var(--error)';
+      }
+    } catch (e) { /* transient error, keep polling */ }
+  }, 3000);
+
+  setTimeout(() => { if (housecallPollTimer) clearInterval(housecallPollTimer); }, 15 * 60 * 1000);
 }
 
 // SHARE
@@ -2940,6 +4632,104 @@ function handleProviderLogin() {
   showScreen('screen-provider-dashboard');
 }
 
+let capturedProviderLat = null;
+let capturedProviderLng = null;
+let capturedProviderNote = '';
+let locationPickerMap = null;
+let locationPickerMarker = null;
+let locationPickerMode = 'signup'; // 'signup' or 'edit'
+
+function openLocationPicker(mode) {
+  locationPickerMode = mode;
+  showScreen('screen-location-picker');
+
+  // Start centered on whatever was already set, or a reasonable Nigeria-wide default
+  const startLat = capturedProviderLat || 9.0820;
+  const startLng = capturedProviderLng || 8.6753;
+  const startZoom = capturedProviderLat ? 15 : 6;
+
+  setTimeout(() => {
+    if (locationPickerMap) { locationPickerMap.remove(); locationPickerMap = null; }
+    locationPickerMap = L.map('location-picker-map').setView([startLat, startLng], startZoom);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(locationPickerMap);
+
+    locationPickerMarker = L.marker([startLat, startLng], { draggable: true }).addTo(locationPickerMap);
+    locationPickerMarker.on('dragend', () => {
+      const pos = locationPickerMarker.getLatLng();
+      capturedProviderLat = pos.lat;
+      capturedProviderLng = pos.lng;
+    });
+
+    // Tapping anywhere on the map also moves the pin there — easier than
+    // fine dragging on a small phone screen
+    locationPickerMap.on('click', (e) => {
+      locationPickerMarker.setLatLng(e.latlng);
+      capturedProviderLat = e.latlng.lat;
+      capturedProviderLng = e.latlng.lng;
+    });
+  }, 150);
+
+  const noteInput = document.getElementById('location-picker-note');
+  if (noteInput) noteInput.value = capturedProviderNote || '';
+}
+
+function useMyCurrentLocationForPicker() {
+  if (!navigator.geolocation) { alert('Location is not available on this device.'); return; }
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      capturedProviderLat = lat;
+      capturedProviderLng = lng;
+      if (locationPickerMap && locationPickerMarker) {
+        locationPickerMap.setView([lat, lng], 16);
+        locationPickerMarker.setLatLng([lat, lng]);
+      }
+    },
+    () => { alert('Could not get your current location — please allow location access, or just drag the pin manually instead.'); },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function closeLocationPicker() {
+  goBack();
+}
+
+async function confirmLocationPicker() {
+  if (capturedProviderLat === null || capturedProviderLng === null) {
+    alert('Please set a location — drag the pin or use your current location.');
+    return;
+  }
+  capturedProviderNote = document.getElementById('location-picker-note').value.trim();
+
+  const statusText = document.getElementById('prov-location-status-text');
+  if (statusText) statusText.innerHTML = '<span style="color:var(--success);">Location set ✓</span> — tap to update';
+
+  if (locationPickerMode === 'edit') {
+    // Save immediately to Supabase since Edit Profile is a "revisit anytime" flow
+    const provName = localStorage.getItem('preen_provider_name') || '';
+    if (db && provName) {
+      try {
+        const { error } = await db.from('providers').update({
+          latitude: capturedProviderLat,
+          longitude: capturedProviderLng,
+          location_note: capturedProviderNote
+        }).eq('full_name', provName);
+        if (error) { alert('Could not save your location:\n\n' + error.message); console.error('Location save error:', error); return; }
+      } catch (e) { alert('Could not save your location. Please try again.'); console.error('Location save failed:', e); return; }
+    }
+    alert('Studio location updated!');
+    showScreen('screen-edit-profile');
+    return;
+  }
+
+  // Signup mode — just staged in memory, saved for real when the account is created
+  goBack();
+}
+
 async function handleProviderSignup() {
   const name = document.getElementById('prov-name').value.trim();
   const phone = document.getElementById('prov-phone').value.trim();
@@ -2947,12 +4737,14 @@ async function handleProviderSignup() {
   const email = document.getElementById('prov-email-signup').value.trim();
   const password = document.getElementById('prov-password') ? document.getElementById('prov-password').value.trim() : '';
   const category = document.getElementById('prov-category').value;
-  const location = document.getElementById('prov-location') ? document.getElementById('prov-location').value : '';
+  const state = document.getElementById('prov-state').value;
 
   if (!name) { alert('Please enter your business or stage name.'); return; }
   if (!phone) { alert('Please enter your phone number.'); return; }
   if (!email) { alert('Please enter your email address.'); return; }
   if (!category) { alert('Please select your service category.'); return; }
+  if (!state) { alert('Please select your state.'); return; }
+  if (capturedProviderLat === null || capturedProviderLng === null) { alert('Please set your studio location so customers can find you — tap the location field above.'); return; }
 
   // Check for duplicate business name
   if (db) {
@@ -2970,28 +4762,34 @@ async function handleProviderSignup() {
 
   // Save to Supabase
   if (db) {
-    try {
-      await db.from('providers').insert([{
-        full_name: name,
-        phone: phone,
-        whatsapp: whatsapp || phone,
-        email: email,
-        category: category,
-        location: location,
-        is_verified: false,
-        is_available: true,
-        rating: 0
-      }]);
+    const { error: providerError } = await db.from('providers').insert([{
+      full_name: name,
+      phone: phone,
+      whatsapp: whatsapp || phone,
+      email: email,
+      category: category,
+      state: state,
+      latitude: capturedProviderLat,
+      longitude: capturedProviderLng,
+      location_note: capturedProviderNote,
+      is_verified: false,
+      is_available: true,
+      rating: 0
+    }]);
 
-      await db.from('user').insert([{
-        full_name: name,
-        phone: phone,
-        email: email,
-        role: 'provider'
-      }]);
-    } catch(e) {
-      console.log('Provider signup error:', e);
+    if (providerError) {
+      alert('Could not save your provider account to the database:\n\n' + providerError.message + '\n\nYour account will only exist on this device until this is fixed — customers will not be able to find you. Please contact support with this error.');
+      console.error('Provider signup error:', providerError);
+      return;
     }
+
+    const { error: userError } = await db.from('user').insert([{
+      full_name: name,
+      phone: phone,
+      email: email,
+      role: 'provider'
+    }]);
+    if (userError) console.error('User table insert error (non-critical):', userError);
   }
 
   // Save to localStorage
@@ -3005,12 +4803,41 @@ async function handleProviderSignup() {
 }
 
 // AVAILABILITY
-function toggleAvailability() {
+async function toggleAvailability() {
   const toggle = document.getElementById('avail-toggle');
   const label = document.getElementById('avail-label');
+  const provName = localStorage.getItem('preen_provider_name') || '';
+
+  const goingAvailable = !toggle.classList.contains('active');
+
+  // Update the DB first — only flip the UI once we know it actually saved,
+  // since this toggle previously did nothing but change its own appearance.
+  if (db && provName) {
+    try {
+      const { error } = await db.from('providers').update({ is_available: goingAvailable }).eq('full_name', provName);
+      if (error) { console.error('Availability update error:', error); alert('Could not update your availability. Please try again.'); return; }
+    } catch (e) { console.error('Availability update failed:', e); alert('Could not update your availability. Please try again.'); return; }
+  }
+
   toggle.classList.toggle('active');
-  if (toggle.classList.contains('active')) { label.textContent = 'Available'; label.style.color = '#7C3AED'; }
-  else { label.textContent = 'Unavailable'; label.style.color = '#888'; }
+  if (toggle.classList.contains('active')) { label.textContent = 'Available'; label.style.color = 'var(--primary)'; }
+  else { label.textContent = 'Unavailable'; label.style.color = 'var(--text3)'; }
+}
+
+async function syncAvailabilityToggle() {
+  const toggle = document.getElementById('avail-toggle');
+  const label = document.getElementById('avail-label');
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!toggle || !db || !provName) return;
+  try {
+    const { data } = await db.from('providers').select('is_available').eq('full_name', provName).single();
+    const isAvailable = data ? !!data.is_available : true;
+    toggle.classList.toggle('active', isAvailable);
+    if (label) {
+      label.textContent = isAvailable ? 'Available' : 'Unavailable';
+      label.style.color = isAvailable ? 'var(--primary)' : 'var(--text3)';
+    }
+  } catch (e) { console.error('Availability sync error:', e); }
 }
 
 // AI ONBOARDING
@@ -3129,7 +4956,7 @@ function addSkill() {
   const photoUrl = window.skillPhotoUrl || null;
   const videoUrl = window.skillVideoUrl || null;
 
-  skills.push({ name, photoUrl, videoUrl, hasPhoto: photoUploaded, hasVideo: videoUploaded });
+  skills.push({ name, price, duration, photoUrl, videoUrl, hasPhoto: photoUploaded, hasVideo: videoUploaded });
 
   const card = document.createElement('div');
   card.className = 'skill-card';
@@ -3137,7 +4964,7 @@ function addSkill() {
   // Show actual photo thumbnail instead of emoji
   const thumbHtml = photoUrl
     ? '<div style="width:52px;height:52px;border-radius:12px;overflow:hidden;flex-shrink:0;"><img src="' + photoUrl + '" style="width:100%;height:100%;object-fit:cover;"/></div>'
-    : '<div style="width:52px;height:52px;background:#7C3AED22;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;">📸</div>';
+    : '<div style="width:52px;height:52px;background:#7C3AED22;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>';
 
   card.innerHTML = thumbHtml +
     '<div style="flex:1;margin-left:12px;">' +
@@ -3145,7 +4972,7 @@ function addSkill() {
     '<p style="font-size:12px;color:var(--primary);font-weight:600;margin-top:2px;">₦' + (price ? Number(price).toLocaleString() : '0') + ' · ' + duration + '</p>' +
     '<p style="font-size:11px;color:#888;margin-top:1px;">' + (videoUploaded ? 'Photo + Video' : 'Photo only') + '</p>' +
     '</div>' +
-    (videoUploaded ? '<span style="font-size:10px;color:var(--accent);font-weight:600;">📹 Video added</span>' : '');
+    (videoUploaded ? '<span style="font-size:10px;color:var(--accent);font-weight:600;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> Video added</span>' : '');
 
   document.getElementById('skill-list').appendChild(card);
 
@@ -3163,8 +4990,33 @@ function addSkill() {
   document.getElementById('video-preview').style.display = 'none';
 }
 
-function submitSkills() {
+async function submitSkills() {
   if (skills.length === 0) { alert('Please add at least one skill before saving.'); return; }
+  const provName = localStorage.getItem('preen_provider_name') || '';
+
+  if (db && provName) {
+    const rows = skills.map(s => ({
+      provider_name: provName,
+      name: s.name,
+      price: parseFloat(s.price) || 0,
+      duration: s.duration,
+      photo_url: s.photoUrl || null,
+      video_url: s.videoUrl || null
+    }));
+    try {
+      const { error } = await db.from('skills').insert(rows);
+      if (error) {
+        alert('Could not save your services to the database:\n\n' + error.message + '\n\nThey will only exist on this device until this is fixed.');
+        console.error('Skills save error:', error);
+        return;
+      }
+    } catch (e) {
+      alert('Could not save your services. Please check your connection and try again.');
+      console.error('Skills save failed:', e);
+      return;
+    }
+  }
+
   document.getElementById('skills-count').textContent = skills.length;
   skills = [];
   showScreen('screen-verified');
@@ -3174,20 +5026,93 @@ function submitSkills() {
 
 
 // PROVIDER BOOKINGS FILTER
+let allProviderBookingsCache = [];
+
+async function loadProviderAllBookings() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  const container = document.getElementById('prov-all-bookings-list');
+  if (!container) return;
+
+  try {
+    const { data, error } = await db
+      .from('bookings')
+      .select('*')
+      .eq('provider_name', provName)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) { console.error('All bookings fetch error:', error); return; }
+
+    allProviderBookingsCache = data || [];
+    renderProviderAllBookings('all');
+  } catch (e) { console.error('All bookings load error:', e); }
+}
+
+function renderProviderAllBookings(filterType) {
+  const container = document.getElementById('prov-all-bookings-list');
+  if (!container) return;
+
+  const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+  const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Customer', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+
+  const now = new Date();
+  const todayStr = now.toDateString();
+
+  let filtered = allProviderBookingsCache;
+  if (filterType === 'today') {
+    filtered = filtered.filter(b => {
+      const d = b.booking_date ? new Date(b.booking_date) : null;
+      return d && !isNaN(d.getTime()) && d.toDateString() === todayStr;
+    });
+  } else if (filterType === 'upcoming') {
+    filtered = filtered.filter(b => {
+      const d = b.booking_date ? new Date(b.booking_date) : null;
+      return (b.status === 'accepted' || b.status === 'confirmed') && d && !isNaN(d.getTime()) && d >= now;
+    });
+  } else if (filterType === 'completed') {
+    filtered = filtered.filter(b => b.status === 'completed');
+  } else if (filterType === 'cancelled') {
+    filtered = filtered.filter(b => b.status === 'declined' || b.status === 'cancelled');
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:24px 0;">No bookings here yet.</p>';
+    return;
+  }
+
+  container.innerHTML = filtered.map(b => {
+    const cls = statusMap[b.status] || 'confirmed';
+    const label = statusLabel[b.status] || 'Pending';
+    const canComplete = b.status === 'accepted';
+    const canMessage = ['confirmed', 'accepted', 'pending_confirmation'].includes(b.status);
+    return `
+      <div class="prov-booking-card" style="${(canComplete || canMessage) ? 'flex-direction:column; align-items:stretch; gap:10px;' : ''}">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="review-avatar" style="width:44px; height:44px; font-size:16px;">${(b.customer_name || 'C').charAt(0).toUpperCase()}</div>
+          <div style="flex:1;">
+            <p style="font-size:14px; font-weight:500;">${b.customer_name || 'Customer'}</p>
+            <p style="font-size:12px; color:var(--text3); margin-top:2px;">${b.service || ''} · ${b.booking_date || ''} ${b.booking_time || ''}</p>
+            <p style="font-size:11px; color:var(--text2); margin-top:1px;">${b.customer_phone || ''}</p>
+          </div>
+          <div style="text-align:right;">
+            <span class="status ${cls}">${label}</span>
+            <p style="font-size:12px; color:var(--primary-dark); font-weight:600; margin-top:4px;">${b.amount || ''}</p>
+          </div>
+        </div>
+        ${(canComplete || canMessage) ? `<div style="display:flex; gap:8px;">
+          ${canMessage ? `<button class="btn-secondary" style="flex:1;padding:8px; font-size:12px;" onclick="openChat('${b.id}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;margin-right:4px;display:inline-block;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Message</button>` : ''}
+          ${canComplete ? `<button class="btn-primary" style="flex:1;padding:8px; font-size:12px;" onclick="markServiceDone('${b.id}', this)">Service Done</button>` : ''}
+        </div>` : ''}
+      </div>`;
+  }).join('');
+}
+
 function filterProvBookings(el, type) {
   document.querySelectorAll('#screen-provider-all-bookings .filter-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  const cards = document.querySelectorAll('#prov-all-bookings-list .prov-booking-card');
-  cards.forEach(card => {
-    const statusEl = card.querySelector('.status');
-    if (!statusEl) return;
-    const status = statusEl.textContent.toLowerCase();
-    if (type === 'all') card.style.display = 'flex';
-    else if (type === 'today') card.style.display = card.querySelector('.booking-item-meta, p') && card.innerHTML.includes('Today') ? 'flex' : 'none';
-    else if (type === 'upcoming') card.style.display = (card.innerHTML.includes('Tomorrow') || card.innerHTML.includes('Sat') || card.innerHTML.includes('Mon')) ? 'flex' : 'none';
-    else if (type === 'completed') card.style.display = status.includes('completed') ? 'flex' : 'none';
-    else if (type === 'cancelled') card.style.display = status.includes('cancelled') ? 'flex' : 'none';
-  });
+  renderProviderAllBookings(type);
 }
 
 function sendWhatsAppReminder(clientName, service, time) {
@@ -3196,37 +5121,36 @@ function sendWhatsAppReminder(clientName, service, time) {
 }
 
 // PROVIDER CALENDAR
-const providerBookings = {
-  0: [], // Sunday
-  1: [ // Monday
-    { time: '10:00 AM', name: 'Adebayo O.', service: 'Signature Fade', amount: '₦2,500', status: 'confirmed' },
-    { time: '12:00 PM', name: 'Chidi U.', service: 'Beard Trim', amount: '₦1,500', status: 'confirmed' },
-    { time: '3:00 PM', name: 'Tunde A.', service: 'Full Cut + Beard', amount: '₦3,500', status: 'confirmed' }
-  ],
-  2: [ // Tuesday
-    { time: '9:00 AM', name: 'Emeka O.', service: 'Line-up', amount: '₦1,000', status: 'confirmed' },
-    { time: '2:00 PM', name: 'Bola K.', service: 'Signature Fade', amount: '₦2,500', status: 'confirmed' }
-  ],
-  3: [ // Wednesday
-    { time: '11:00 AM', name: 'Segun F.', service: 'Beard Trim', amount: '₦1,500', status: 'confirmed' }
-  ],
-  4: [ // Thursday
-    { time: '10:00 AM', name: 'Femi A.', service: 'Full Cut + Beard', amount: '₦3,500', status: 'confirmed' },
-    { time: '4:00 PM', name: 'Kunle B.', service: 'Signature Fade', amount: '₦2,500', status: 'confirmed' }
-  ],
-  5: [ // Friday
-    { time: '9:00 AM', name: 'Dapo R.', service: 'Line-up', amount: '₦1,000', status: 'confirmed' },
-    { time: '11:00 AM', name: 'Wale S.', service: 'Signature Fade', amount: '₦2,500', status: 'confirmed' },
-    { time: '2:00 PM', name: 'Jide M.', service: 'Full Cut + Beard', amount: '₦3,500', status: 'confirmed' }
-  ],
-  6: [ // Saturday
-    { time: '10:00 AM', name: 'Kayode A.', service: 'Signature Fade', amount: '₦2,500', status: 'confirmed' },
-    { time: '12:00 PM', name: 'Tola P.', service: 'Beard Trim', amount: '₦1,500', status: 'confirmed' }
-  ]
-};
-
+let providerCalendarBookings = []; // real bookings, fetched from Supabase — replaces the old hardcoded fake schedule
 let currentWeekOffset = 0;
 let selectedCalDay = new Date().getDay();
+
+async function loadProviderCalendar() {
+  if (!db) return;
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (!provName) return;
+  try {
+    const { data, error } = await db.from('bookings').select('*').eq('provider_name', provName).eq('status', 'accepted');
+    if (error) { console.error('Calendar fetch error:', error); return; }
+    providerCalendarBookings = data || [];
+  } catch (e) { console.error('Calendar load error:', e); }
+  initCalendar();
+}
+
+function getCalWeekStart() {
+  const today = new Date();
+  const start = new Date(today);
+  start.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7));
+  start.setHours(0, 0, 0, 0);
+  return start;
+}
+
+function calBookingsForDate(dateObj) {
+  return providerCalendarBookings.filter(b => {
+    const d = b.booking_date ? new Date(b.booking_date) : null;
+    return d && !isNaN(d.getTime()) && d.toDateString() === dateObj.toDateString();
+  });
+}
 
 function initCalendar() {
   renderCalDays();
@@ -3237,9 +5161,7 @@ function renderCalDays() {
   const container = document.getElementById('cal-days');
   if (!container) return;
   const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const today = new Date();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7));
+  const startOfWeek = getCalWeekStart();
 
   const weekLabel = document.getElementById('cal-week-label');
   if (currentWeekOffset === 0) weekLabel.textContent = 'This Week';
@@ -3254,7 +5176,7 @@ function renderCalDays() {
     const date = new Date(startOfWeek);
     date.setDate(startOfWeek.getDate() + i);
     const isActive = i === selectedCalDay;
-    const hasBooking = providerBookings[i] && providerBookings[i].length > 0;
+    const hasBooking = calBookingsForDate(date).length > 0;
     return '<div class="cal-day' + (isActive ? ' active' : '') + (hasBooking ? ' has-booking' : '') + '" onclick="selectCalDay(' + i + ')">' +
       '<div class="cal-day-name">' + day + '</div>' +
       '<div class="cal-day-num">' + date.getDate() + '</div>' +
@@ -3272,23 +5194,26 @@ function selectCalDay(dayIndex) {
 function renderCalBookings(dayIndex) {
   const container = document.getElementById('cal-bookings');
   if (!container) return;
-  const bookings = providerBookings[dayIndex] || [];
+  const startOfWeek = getCalWeekStart();
+  const date = new Date(startOfWeek);
+  date.setDate(startOfWeek.getDate() + dayIndex);
+  const bookings = calBookingsForDate(date).sort((a, b) => (a.booking_time || '').localeCompare(b.booking_time || ''));
   const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   if (bookings.length === 0) {
-    container.innerHTML = '<div class="cal-empty"><p style="font-size:32px; margin-bottom:8px;">📭</p><p>No bookings on ' + days[dayIndex] + '</p><p style="font-size:12px; color:#444; margin-top:4px;">Enjoy your free time!</p></div>';
+    container.innerHTML = '<div class="cal-empty"><div style="margin-bottom:8px;display:flex;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--text3)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div><p>No bookings on ' + days[dayIndex] + '</p><p style="font-size:12px; color:var(--text3); margin-top:4px;">Enjoy your free time!</p></div>';
     return;
   }
 
-  container.innerHTML = '<p style="font-size:12px; color:#888; margin-bottom:8px;">' + bookings.length + ' booking' + (bookings.length > 1 ? 's' : '') + ' on ' + days[dayIndex] + '</p>' +
+  container.innerHTML = '<p style="font-size:12px; color:var(--text3); margin-bottom:8px;">' + bookings.length + ' booking' + (bookings.length > 1 ? 's' : '') + ' on ' + days[dayIndex] + '</p>' +
     bookings.map(b =>
       '<div class="cal-booking-slot' + (b.status === 'completed' ? ' completed' : b.status === 'cancelled' ? ' cancelled' : '') + '">' +
-      '<div class="cal-time">' + b.time + '</div>' +
+      '<div class="cal-time">' + (b.booking_time || '') + '</div>' +
       '<div class="cal-booking-info">' +
-      '<p class="cal-booking-name">' + b.name + '</p>' +
-      '<p class="cal-booking-service">' + b.service + '</p>' +
+      '<p class="cal-booking-name">' + (b.customer_name || 'Customer') + '</p>' +
+      '<p class="cal-booking-service">' + (b.service || '') + '</p>' +
       '</div>' +
-      '<div class="cal-booking-amount">' + b.amount + '</div>' +
+      '<div class="cal-booking-amount">' + (b.amount || '') + '</div>' +
       '</div>'
     ).join('');
 }
@@ -3298,7 +5223,6 @@ function changeWeek(direction) {
   renderCalDays();
   renderCalBookings(selectedCalDay);
 }
-
 // WHATSAPP NOTIFICATIONS
 let whatsappEnabled = true;
 
@@ -3363,9 +5287,21 @@ async function handleSkillPhoto(input) {
       window.skillPhotoUrl = url;
       photoUploaded = true;
       if (box) box.style.borderColor = 'var(--success)';
+      if (placeholder) {
+        placeholder.style.display = 'none';
+      }
     } else {
       if (box) box.style.borderColor = 'var(--error)';
-      alert('Upload failed. Please try again.');
+      if (placeholder) {
+        placeholder.innerHTML = '<p style="color:var(--error);font-size:12px;text-align:center;">Upload failed. Check your connection and try again.</p>';
+        placeholder.style.display = 'flex';
+      }
+    }
+  }).catch(e => {
+    if (box) box.style.borderColor = 'var(--error)';
+    if (placeholder) {
+      placeholder.innerHTML = '<p style="color:var(--error);font-size:12px;text-align:center;">Upload failed. Check your connection and try again.</p>';
+      placeholder.style.display = 'flex';
     }
   });
 }
@@ -3405,7 +5341,7 @@ async function handleSkillVideo(input) {
       window.skillVideoUrl = url;
       videoUploaded = true;
       if (box) box.style.borderColor = 'var(--success)';
-      if (progressEl) progressEl.textContent = '✓ Video uploaded successfully';
+      if (progressEl) progressEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg> Video uploaded successfully';
     } else {
       if (box) box.style.borderColor = 'var(--error)';
       if (progressEl) progressEl.textContent = 'Upload failed. Try again.';
@@ -3445,28 +5381,33 @@ function uploadTeamMemberPhoto() {
   });
 }
 
-function addTeamMember() {
+async function addTeamMember() {
   const name = document.getElementById('team-name').value.trim();
   const role = document.getElementById('team-role').value.trim();
   const experience = document.getElementById('team-experience').value;
   if (!name) { alert('Please enter the team member name.'); return; }
   if (!role) { alert('Please enter their role or title.'); return; }
 
-  const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  const avatarHtml = teamPhotoUrl
-    ? '<div class="team-member-avatar" style="background-image:url(' + teamPhotoUrl + '); background-size:cover; background-position:center;"></div>'
-    : '<div class="team-member-avatar">' + initials + '</div>';
-  const card = document.createElement('div');
-  card.className = 'team-member-card';
-  card.innerHTML = avatarHtml +
-    '<div style="flex:1;">' +
-    '<p style="font-size:14px; font-weight:500;">' + name + '</p>' +
-    '<p style="font-size:12px; color:var(--text3); margin-top:2px;">' + role + ' · ' + experience + '</p>' +
-    '<p style="font-size:11px; color:var(--primary); margin-top:2px;">New member</p>' +
-    '</div>' +
-    '<button class="remove-btn" onclick="removeTeamMember(this)">Remove</button>';
-
-  document.getElementById('team-list').appendChild(card);
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  if (db && provName) {
+    try {
+      const { error } = await db.from('team_members').insert([{
+        provider_name: provName,
+        name: name,
+        role: role,
+        years_experience: experience
+      }]);
+      if (error) {
+        alert('Could not save this team member:\n\n' + error.message);
+        console.error('Team member save error:', error);
+        return;
+      }
+    } catch (e) {
+      alert('Could not save this team member. Please try again.');
+      console.error('Team member save failed:', e);
+      return;
+    }
+  }
 
   document.getElementById('team-name').value = '';
   document.getElementById('team-role').value = '';
@@ -3479,11 +5420,51 @@ function addTeamMember() {
   document.getElementById('team-photo-preview').style.backgroundImage = '';
   document.getElementById('team-photo-box').classList.remove('uploaded');
   alert(name + ' has been added to your team!');
+  loadManageTeamList();
 }
 
-function removeTeamMember(btn) {
-  if (confirm('Remove this team member from your profile?')) {
-    btn.closest('.team-member-card').remove();
+async function loadManageTeamList() {
+  const provName = localStorage.getItem('preen_provider_name') || '';
+  const container = document.getElementById('team-list');
+  if (!container || !db || !provName) return;
+
+  try {
+    const { data, error } = await db.from('team_members').select('*').eq('provider_name', provName).order('created_at', { ascending: true });
+    if (error) { console.error('Team list fetch error:', error); return; }
+
+    const members = data || [];
+    if (members.length === 0) {
+      container.innerHTML = '<p id="team-list-empty" style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No team members added yet.</p>';
+      return;
+    }
+
+    container.innerHTML = members.map(m => {
+      const initials = (m.name || 'T').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      return `
+      <div class="team-member-card">
+        <div class="team-member-avatar">${initials}</div>
+        <div style="flex:1;">
+          <p style="font-size:14px; font-weight:500;">${m.name}</p>
+          <p style="font-size:12px; color:var(--text3); margin-top:2px;">${m.role || ''} · ${m.years_experience || ''}</p>
+        </div>
+        <button class="remove-btn" onclick="removeTeamMember(this, '${m.id}')">Remove</button>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error('Team list load error:', e); }
+}
+
+async function removeTeamMember(btn, teamMemberId) {
+  if (!confirm('Remove this team member from your profile?')) return;
+  if (db && teamMemberId) {
+    try {
+      const { error } = await db.from('team_members').delete().eq('id', teamMemberId);
+      if (error) { console.error('Team member delete error:', error); alert('Could not remove this team member. Please try again.'); return; }
+    } catch (e) { console.error('Team member delete failed:', e); alert('Could not remove this team member. Please try again.'); return; }
+  }
+  btn.closest('.team-member-card').remove();
+  const container = document.getElementById('team-list');
+  if (container && container.children.length === 0) {
+    container.innerHTML = '<p id="team-list-empty" style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No team members added yet.</p>';
   }
 }
 
@@ -3493,6 +5474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initSplash();
   history.pushState(null, '', window.location.href);
   renderStates();
+  setTimeout(detectCustomerStateFromGPS, 800);
   setTimeout(loadHomeProviders, 500);
   renderStars(0);
   const dateInput = document.getElementById('booking-date');
@@ -3506,7 +5488,7 @@ const origShowScreen = showScreen;
 window.showScreen = function(id) {
   origShowScreen(id);
   if (id === 'screen-provider-calendar') {
-    setTimeout(initCalendar, 100);
+    setTimeout(loadProviderCalendar, 100);
   }
 };
 
@@ -3560,24 +5542,7 @@ function toggleProviderSameWhatsApp() {
 
 
 
-async function submitReport() {
-  if (!selectedReportReason) { alert('Please select a reason for your report.'); return; }
-  const details = document.getElementById('report-details');
-  const detailsText = details ? details.value.trim() : '';
-  if (db) {
-    try {
-      await db.from('reviews').insert([{
-        provider_name: reportBlockTarget.name,
-        customer_name: localStorage.getItem('preen_user_name') || 'Anonymous',
-        rating: 1,
-        review_text: 'REPORT: ' + selectedReportReason + (detailsText ? ' — ' + detailsText : ''),
-        is_anonymous: true
-      }]);
-    } catch(e) {}
-  }
-  alert('Report submitted. Our team will review this within 24 hours. Thank you for keeping Preen safe.');
-  goBack();
-}
+// (dead duplicate submitReport removed — kept the version above that uses the real reports table)
 
 
 // ===== WAITING FOR PROVIDER =====
@@ -3623,6 +5588,10 @@ function requireAuth(action) {
 }
 
 function showGuestSignup(action) {
+  const activeScreen = document.querySelector('.screen.active');
+  if (activeScreen && activeScreen.id !== 'screen-signup' && activeScreen.id !== 'screen-login') {
+    localStorage.setItem('preen_redirect_screen', activeScreen.id);
+  }
   const existing = document.getElementById('guest-signup-sheet');
   if (existing) existing.remove();
   const existingOv = document.getElementById('guest-signup-overlay');
@@ -3638,12 +5607,12 @@ function showGuestSignup(action) {
   sheet.innerHTML =
     '<div style="padding:24px 20px;text-align:center;">' +
     '<div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 20px;"></div>' +
-    '<div style="font-size:44px;margin-bottom:12px;">✨</div>' +
+    '<div style="margin-bottom:12px;display:flex;justify-content:center;"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" style="vertical-align:-2px;display:inline-block;"><path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/></svg></div>' +
     '<p style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px;">Join Preen ' + actionText + '</p>' +
     '<p style="font-size:13px;color:var(--text3);margin-bottom:24px;line-height:1.6;">Book top beauty professionals near you.</p>' +
     '<button onclick="closeGuestSheet();showScreen(\'screen-signup\')" style="width:100%;background:var(--primary);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:700;font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:10px;">Create Free Account</button>' +
     '<button onclick="closeGuestSheet();showScreen(\'screen-login\')" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:10px;">I already have an account</button>' +
-    '<button onclick="closeGuestSheet();showProviderJoin()" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:16px;">💼 Join as a Provider</button>' +
+    '<button onclick="closeGuestSheet();showProviderJoin()" style="width:100%;background:transparent;border:1.5px solid var(--border);border-radius:14px;padding:14px;font-size:14px;font-weight:600;color:var(--text2);font-family:Poppins,sans-serif;cursor:pointer;margin-bottom:16px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> Join as a Provider</button>' +
     '<p onclick="closeGuestSheet()" style="font-size:12px;color:var(--text3);cursor:pointer;">Maybe later</p>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -3665,7 +5634,7 @@ function updateHomeForGuest() {
   if (signinBtn) signinBtn.style.display = isGuest() ? 'flex' : 'none';
   if (greeting) {
     const uname = localStorage.getItem('preen_user_name');
-    greeting.textContent = uname ? 'Hey ' + uname.split(' ')[0] + ' 👋' : 'Good day 👋';
+    greeting.textContent = uname ? 'Hey ' + uname.split(' ')[0] : 'Good day';
   }
 }
 
@@ -3710,7 +5679,9 @@ async function handleLogin() {
       localStorage.setItem('preen_user_name', data.full_name);
       localStorage.setItem('preen_user_email', data.email);
       localStorage.setItem('preen_user_phone', data.phone || '');
-      showScreen('screen-home');
+      const redirect = localStorage.getItem('preen_redirect_screen');
+      localStorage.removeItem('preen_redirect_screen');
+      showScreen(redirect || 'screen-home');
       setTimeout(updateHomeForGuest, 100);
     }
   } catch(e) {
