@@ -627,8 +627,8 @@ async function loadLeaderboard() {
           ${(p.full_name||'P').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
         </div>
         <div style="flex:1;">
-          <p style="font-size:14px;font-weight:600;">${p.full_name || 'Provider'}</p>
-          <p style="font-size:11px;color:var(--text3);">${p.category || ''} · ${p.location || state || ''}</p>
+          <p style="font-size:14px;font-weight:600;">${sanitize(p.full_name) || 'Provider'}</p>
+          <p style="font-size:11px;color:var(--text3);">${sanitize(p.category) || ''} · ${sanitize(p.location) || sanitize(state) || ''}</p>
         </div>
         <div style="text-align:right;">
           <div class="lb-score">${p.rating > 0 ? p.rating.toFixed(1) + ' <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="2" style="vertical-align:-2px;display:inline-block;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>' : 'New'}</div>
@@ -942,8 +942,8 @@ async function openBookingDetail(bookingId) {
 
     document.getElementById('bd-provider-name').textContent = booking.provider_name || 'Provider';
 
-    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
-    const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Your Confirmation', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', paid: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+    const statusLabel = { confirmed: 'Pending', accepted: 'Awaiting Payment', pending_confirmation: 'Awaiting Your Confirmation', paid: 'Confirmed', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
     const badge = document.getElementById('bd-status-badge');
     badge.className = 'status ' + (statusMap[booking.status] || 'confirmed');
     badge.textContent = statusLabel[booking.status] || 'Pending';
@@ -1182,14 +1182,99 @@ function openChatForBookingDetail() {
   openChat(currentDetailBooking.id);
 }
 
+// PAYSTACK INTEGRATION
+// TODO: Replace with your real Paystack TEST public key from dashboard.paystack.com → Settings → API Keys
+// Test key format: pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+// When you go live (after CAC), swap for your live key: pk_live_xxxxxxxx — no other code change needed
+const PAYSTACK_PUBLIC_KEY = 'pk_test_1b30ea9eb47a401d46c79d3cf4061b000b60553a';
+
 function proceedToPayment() {
   if (paymentTimer) clearInterval(paymentTimer);
-  // In production — open Paystack here
-  // For now simulate payment success
-  if (currentBookingDetails && currentBookingDetails.bookingId) {
-    openBookingDetail(currentBookingDetails.bookingId);
-  } else {
-    showScreen('screen-home');
+
+  const email = localStorage.getItem('preen_user_email') || '';
+  const bookingId = currentBookingDetails.bookingId;
+
+  // Parse amount cleanly — handles both number (2500) and string ('₦2,500') formats
+  const rawAmount = currentBookingDetails.amount || 0;
+  const amountNaira = typeof rawAmount === 'number'
+    ? rawAmount
+    : Number(String(rawAmount).replace(/[₦,\s]/g, '')) || 0;
+  const amountKobo = amountNaira * 100; // Paystack always works in kobo
+
+  if (!email) {
+    alert('Could not find your account email. Please log out and log back in.');
+    return;
+  }
+  if (!bookingId) {
+    alert('Booking reference lost. Please go back and try again.');
+    return;
+  }
+  if (!amountKobo) {
+    alert('Could not determine payment amount. Please go back and try again.');
+    return;
+  }
+  if (PAYSTACK_PUBLIC_KEY.includes('REPLACE_WITH')) {
+    alert('Paystack is not configured yet. Add your test key to app.js to enable payments.');
+    return;
+  }
+
+  // If PaystackPop didn't load (slow network, blocker, etc.) load it now then retry
+  if (typeof PaystackPop === 'undefined') {
+    const script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.onload = () => proceedToPayment();
+    script.onerror = () => alert('Could not load the payment system. Please check your internet connection and try again.');
+    document.head.appendChild(script);
+    return;
+  }
+
+  const reference = 'preen_' + bookingId + '_' + Date.now();
+
+  try {
+    const handler = PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: email,
+      amount: amountKobo,
+      currency: 'NGN',
+      ref: reference,
+      label: 'Preen Booking',
+      metadata: {
+        custom_fields: [
+          { display_name: 'Booking ID', variable_name: 'booking_id', value: String(bookingId) },
+          { display_name: 'Provider', variable_name: 'provider_name', value: currentBookingDetails.providerName || '' },
+          { display_name: 'Service', variable_name: 'service', value: currentBookingDetails.serviceLabel || '' }
+        ]
+      },
+      callback: function(response) {
+        console.log('Payment successful. Reference:', response.reference);
+        if (db && bookingId) {
+          db.from('bookings').update({
+            status: 'paid',
+            payment_reference: response.reference
+          }).eq('id', bookingId).then(function() {
+            openBookingDetail(bookingId);
+          }).catch(function() {
+            openBookingDetail(bookingId); // navigate even if DB update fails
+          });
+        } else {
+          openBookingDetail(bookingId);
+        }
+      },
+      onClose: function() {
+        // User closed popup without paying — resume countdown from current time
+        const el = document.getElementById('payment-countdown');
+        if (el && el.textContent !== 'EXPIRED') {
+          const parts = el.textContent.split(':');
+          const remainingSecs = (parseInt(parts[0]) || 0) * 60 + (parseInt(parts[1]) || 0);
+          if (remainingSecs > 0) startPaymentCountdown(remainingSecs);
+        }
+      }
+    });
+
+    handler.openIframe();
+  } catch(e) {
+    console.error('Paystack error:', e);
+    alert('Payment could not open. Error: ' + e.message + '\n\nPlease check your Paystack key is correct and try again.');
   }
 }
 
@@ -1393,8 +1478,8 @@ async function loadMyBookings() {
       return;
     }
 
-    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
-    const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Your Confirmation', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+    const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', paid: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+    const statusLabel = { confirmed: 'Pending', accepted: 'Awaiting Payment', pending_confirmation: 'Awaiting Your Confirmation', paid: 'Confirmed', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
 
     // Check which of these bookings already have a review and/or tip attached,
     // so those buttons can correctly disappear instead of being reusable forever
@@ -1874,15 +1959,58 @@ let activePriceRange = 'any';
 // ============ LOCATION SELECTION — SET STATE ============
 
 
-// FORGOT PASSWORD
-function sendResetEmail() {
+// FORGOT PASSWORD — uses Supabase Auth built-in reset email
+async function sendResetEmail() {
   const email = document.getElementById('forgot-email').value.trim();
   if (!email) { alert('Please enter your email address.'); return; }
   if (!email.includes('@')) { alert('Please enter a valid email address.'); return; }
+
+  const btn = document.querySelector('#screen-forgot-password .btn-primary');
+  setLoading(btn, true);
+
+  try {
+    // Supabase sends the reset email automatically — don't reveal if email exists or not
+    await db.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://preen-two.vercel.app/'
+    });
+  } catch(e) {
+    console.error('Reset email error:', e);
+  } finally {
+    setLoading(btn, false);
+  }
+
+  // Always show success for security — never reveal if email exists
   document.getElementById('forgot-email-sent').textContent = email;
   document.getElementById('forgot-form').style.display = 'none';
   document.getElementById('forgot-success').style.display = 'block';
-  // In production this calls Supabase auth.resetPasswordForEmail(email)
+}
+
+// SAVE NEW PASSWORD — called from the reset password screen after user clicks link in email
+async function saveNewPassword() {
+  const newPass = document.getElementById('new-password-input').value.trim();
+  const confirmPass = document.getElementById('confirm-password-input').value.trim();
+  if (!newPass || !confirmPass) { alert('Please fill in both fields.'); return; }
+  if (newPass.length < 6) { alert('Password must be at least 6 characters.'); return; }
+  if (newPass !== confirmPass) { alert('Passwords do not match. Please try again.'); return; }
+
+  const btn = document.getElementById('save-new-pw-btn');
+  setLoading(btn, true);
+
+  try {
+    // Supabase Auth handles the password update — session is already set from the reset link
+    const { error } = await db.auth.updateUser({ password: newPass });
+    if (error) throw error;
+
+    alert('Password updated successfully! Please log in with your new password.');
+    await db.auth.signOut();
+    clearPreenSession();
+    showScreen('screen-login');
+  } catch(e) {
+    alert('Could not update password:\n\n' + e.message + '\n\nYour reset link may have expired. Please request a new one.');
+    showScreen('screen-forgot-password');
+  } finally {
+    setLoading(btn, false);
+  }
 }
 
 // EDIT PROFILE
@@ -2030,6 +2158,8 @@ async function closeAccount() {
   localStorage.removeItem('preen_browse_history');
   selectedCloseReason = '';
 
+  await db.auth.signOut();
+  clearPreenSession();
   alert('Your account has been closed. We are sorry to see you go.');
   showScreen('screen-welcome');
 }
@@ -2144,34 +2274,105 @@ function selectWithdrawalMethod(el, method) {
   }
 }
 
+// Paystack bank code map — used for account verification and transfers
+const BANK_CODES = {
+  'Access Bank': '044', 'GTBank': '058', 'Zenith Bank': '057',
+  'First Bank': '011', 'UBA': '033', 'Fidelity Bank': '070',
+  'Sterling Bank': '232', 'Wema Bank': '035', 'Kuda Bank': '090267',
+  'Opay': '304', 'PalmPay': '999991', 'Moniepoint': '50515'
+};
+
+const SUPABASE_FUNCTIONS_URL = 'https://noucyqailmqgaujgzxay.supabase.co/functions/v1';
+const TRANSFER_FEE = 50; // ₦50 Paystack transfer fee deducted from provider
+
 async function loadWithdrawalBalance() {
   if (!db) return;
   const provName = localStorage.getItem('preen_provider_name') || '';
   if (!provName) return;
 
   try {
-    const { data, error } = await db.from('bookings').select('*').eq('provider_name', provName).eq('status', 'completed');
-    if (error) { console.error('Withdrawal balance error:', error); return; }
+    const [settingsRes, providerRes, bookingsRes, withdrawalsRes] = await Promise.all([
+      db.from('settings').select('*'),
+      db.from('providers').select('bank_name,bank_code,account_number,account_name,recipient_code,preen_score').eq('full_name', provName).single(),
+      db.from('bookings').select('amount').eq('provider_name', provName).eq('status', 'completed'),
+      db.from('withdrawals').select('*').eq('provider_name', provName).order('created_at', { ascending: false })
+    ]);
 
-    const completed = data || [];
-    const gross = completed.reduce((sum, b) => sum + (parseInt((b.amount || '0').toString().replace(/[^0-9]/g, '')) || 0), 0);
-    const net = gross - Math.round(gross * 0.10);
+    // Read commission rates from Supabase settings — no hardcoded values
+    const settings = {};
+    (settingsRes.data || []).forEach(row => { settings[row.key] = row.value; });
+    const standardRate = parseFloat(settings.platform_fee || '10') / 100;
+    const eliteRate = parseFloat(settings.elite_fee || '8') / 100;
 
-    // No withdrawal-tracking table exists yet, so "Already Withdrawn" is honestly
-    // always ₦0 for now — the full amount earned is what's available.
-    window.realAvailableBalance = net;
+    // Check Elite status: Preen Score ≥ 85
+    const provider = providerRes.data || {};
+    const preenScore = provider.preen_score || 0;
+    const isElite = preenScore >= 85;
+    const commissionRate = isElite ? eliteRate : standardRate;
+
+    // Pre-fill saved bank details if provider has them
+    if (provider.bank_name) {
+      const bankSelect = document.getElementById('bank-name');
+      if (bankSelect) bankSelect.value = provider.bank_name;
+      const accNum = document.getElementById('account-number');
+      if (accNum) accNum.value = provider.account_number || '';
+      const accName = document.getElementById('account-name');
+      if (accName) accName.value = provider.account_name || '';
+      window.savedRecipientCode = provider.recipient_code || null;
+      window.savedBankCode = provider.bank_code || null;
+    }
+
+    // Calculate gross from completed bookings
+    const completed = bookingsRes.data || [];
+    const gross = completed.reduce((sum, b) => {
+      const raw = b.amount || 0;
+      const n = typeof raw === 'number' ? raw : Number(String(raw).replace(/[₦,\s]/g, '')) || 0;
+      return sum + n;
+    }, 0);
+    const commission = Math.round(gross * commissionRate);
+    const totalEarned = gross - commission;
+
+    // Already successfully withdrawn
+    const withdrawals = withdrawalsRes.data || [];
+    const alreadyWithdrawn = withdrawals
+      .filter(w => w.status === 'success')
+      .reduce((sum, w) => sum + (w.amount || 0), 0);
+
+    const available = Math.max(totalEarned - alreadyWithdrawn, 0);
+    window.realAvailableBalance = available;
 
     const balEl = document.getElementById('withdraw-available-balance');
-    if (balEl) balEl.textContent = '₦' + net.toLocaleString();
+    if (balEl) balEl.textContent = '₦' + available.toLocaleString();
     const countEl = document.getElementById('withdraw-completed-count');
-    if (countEl) countEl.textContent = 'From ' + completed.length + (completed.length === 1 ? ' completed booking' : ' completed bookings');
+    if (countEl) countEl.textContent = 'From ' + completed.length + (completed.length === 1 ? ' completed booking' : ' completed bookings') + (isElite ? ' · Elite rate (' + Math.round(eliteRate * 100) + '%)' : '');
     const totalEl = document.getElementById('withdraw-total-earned');
-    if (totalEl) totalEl.textContent = '₦' + net.toLocaleString();
+    if (totalEl) totalEl.textContent = '₦' + totalEarned.toLocaleString();
     const withdrawnEl = document.getElementById('withdraw-already-withdrawn');
-    if (withdrawnEl) withdrawnEl.textContent = '₦0';
+    if (withdrawnEl) withdrawnEl.textContent = '₦' + alreadyWithdrawn.toLocaleString();
     const allOption = document.getElementById('withdraw-all-option');
-    if (allOption) allOption.textContent = 'All ₦' + net.toLocaleString();
+    if (allOption) allOption.textContent = 'All ₦' + available.toLocaleString();
+
+    renderWithdrawalHistory(withdrawals);
   } catch (e) { console.error('Withdrawal balance load error:', e); }
+}
+
+function renderWithdrawalHistory(withdrawals) {
+  const el = document.getElementById('withdrawal-history-list');
+  if (!el) return;
+  if (!withdrawals || withdrawals.length === 0) {
+    el.innerHTML = '<p style="font-size:12px; color:var(--text3); text-align:center; padding:16px 0;">No withdrawals yet.</p>';
+    return;
+  }
+  const statusColor = { success: 'var(--success)', failed: 'var(--error)', pending: 'var(--text3)' };
+  const statusLabel = { success: 'Paid', failed: 'Failed', pending: 'Processing' };
+  el.innerHTML = withdrawals.map(w => `
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <p style="font-size:14px; font-weight:600; color:var(--text);">₦${(w.amount || 0).toLocaleString()}</p>
+        <p style="font-size:11px; color:var(--text3); margin-top:2px;">${w.bank_name || ''} · ${w.account_number || ''} · ${new Date(w.created_at).toLocaleDateString()}</p>
+      </div>
+      <span style="font-size:12px; font-weight:600; color:${statusColor[w.status] || 'var(--text3)'};">${statusLabel[w.status] || w.status}</span>
+    </div>`).join('');
 }
 
 function setWithdrawAmount(el, amount) {
@@ -2190,38 +2391,125 @@ function setCustomWithdrawAmount(value) {
 }
 
 function updateWithdrawSummary(amount) {
+  const receive = Math.max(amount - TRANSFER_FEE, 0);
   document.getElementById('withdraw-amount-display').textContent = '₦' + amount.toLocaleString();
-  document.getElementById('withdraw-receive-display').textContent = '₦' + amount.toLocaleString();
+  const feeEl = document.getElementById('withdraw-fee-display');
+  if (feeEl) feeEl.textContent = '₦' + TRANSFER_FEE.toLocaleString();
+  document.getElementById('withdraw-receive-display').textContent = '₦' + receive.toLocaleString();
   document.getElementById('withdraw-summary').style.display = 'block';
 }
 
-function verifyAccountNumber() {
+async function verifyAccountNumber() {
   const number = document.getElementById('account-number').value;
+  const bankName = document.getElementById('bank-name').value;
   if (!number || number.length < 10) { alert('Please enter a valid 10-digit account number.'); return; }
-  document.getElementById('account-name').value = 'Verifying...';
-  setTimeout(() => {
-    document.getElementById('account-name').value = 'ADEYANJU WISDOM';
-    alert('Account verified\nName: ADEYANJU WISDOM');
-  }, 1500);
+
+  const bankCode = BANK_CODES[bankName];
+  if (!bankCode) { alert('Please select a valid bank from the list.'); return; }
+
+  const nameInput = document.getElementById('account-name');
+  const verifyBtn = document.querySelector('#bank-details-section .btn-secondary');
+  nameInput.value = 'Verifying...';
+  nameInput.disabled = true;
+  setLoading(verifyBtn, true);
+
+  try {
+    const provName = localStorage.getItem('preen_provider_name') || '';
+    const provId = localStorage.getItem('preen_provider_id') || '';
+
+    const res = await fetch(SUPABASE_FUNCTIONS_URL + '/create-recipient', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ account_number: number, bank_code: bankCode, bank_name: bankName, provider_name: provName, provider_id: provId })
+    });
+
+    const result = await res.json();
+
+    if (result.error) {
+      nameInput.value = '';
+      alert('Could not verify account:\n\n' + result.error + '\n\nPlease check the account number and bank and try again.');
+      return;
+    }
+
+    nameInput.value = result.account_name;
+    window.savedRecipientCode = result.recipient_code;
+    window.savedBankCode = bankCode;
+    alert('Account verified!\n\nName: ' + result.account_name + '\n\nYour bank details have been saved to your profile.');
+
+  } catch (e) {
+    nameInput.value = '';
+    alert('Verification failed. Please check your connection and try again.');
+    console.error('Account verify error:', e);
+  } finally {
+    nameInput.disabled = false;
+    setLoading(verifyBtn, false);
+  }
 }
 
-function requestWithdrawal() {
+async function requestWithdrawal() {
   const realBalance = window.realAvailableBalance || 0;
   if (selectedWithdrawAmount === 0) { alert('Please select or enter a withdrawal amount.'); return; }
   if (selectedWithdrawAmount < 1000) { alert('Minimum withdrawal amount is ₦1,000.'); return; }
   if (selectedWithdrawAmount > realBalance) { alert('Amount exceeds your available balance of ₦' + realBalance.toLocaleString() + '.'); return; }
+
   if (selectedWithdrawMethod === 'bank') {
-    const bank = document.getElementById('bank-name').value;
-    const number = document.getElementById('account-number').value;
-    const name = document.getElementById('account-name').value;
-    if (!number || !name || name === 'Verifying...') { alert('Please verify your account number first.'); return; }
-    alert('Withdrawal request submitted!\n\nAmount: ₦' + selectedWithdrawAmount.toLocaleString() + '\nBank: ' + bank + '\nAccount: ' + number + '\n\nYou will receive your funds within 1 to 2 business days.');
+    const bankName = document.getElementById('bank-name').value;
+    const accountNumber = document.getElementById('account-number').value;
+    const accountName = document.getElementById('account-name').value;
+    const recipientCode = window.savedRecipientCode;
+    const bankCode = window.savedBankCode;
+
+    if (!accountNumber || !accountName || accountName === 'Verifying...') {
+      alert('Please verify your account number first.'); return;
+    }
+    if (!recipientCode) {
+      alert('Please verify your account number first — tap "Verify Account Number" below.'); return;
+    }
+
+    const providerName = localStorage.getItem('preen_provider_name') || '';
+    const providerId = localStorage.getItem('preen_provider_id') || '';
+    const netAmount = selectedWithdrawAmount - TRANSFER_FEE;
+
+    const btn = document.querySelector('#screen-withdrawal .btn-primary');
+    setLoading(btn, true);
+
+    try {
+      const res = await fetch(SUPABASE_FUNCTIONS_URL + '/payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({
+          provider_id: providerId,
+          provider_name: providerName,
+          amount_naira: selectedWithdrawAmount,
+          recipient_code: recipientCode,
+          bank_name: bankName,
+          bank_code: bankCode,
+          account_number: accountNumber,
+          account_name: accountName
+        })
+      });
+
+      const result = await res.json();
+
+      if (result.error) {
+        alert('Withdrawal failed:\n\n' + result.error);
+        return;
+      }
+
+      alert('Withdrawal initiated!\n\nAmount requested: ₦' + selectedWithdrawAmount.toLocaleString() + '\nTransfer fee: ₦' + TRANSFER_FEE.toLocaleString() + '\nYou will receive: ₦' + netAmount.toLocaleString() + '\nBank: ' + bankName + '\nAccount: ' + accountNumber + '\n\nFunds arrive within 1 to 2 business days.');
+      await loadWithdrawalBalance();
+      showScreen('screen-provider-dashboard');
+
+    } catch (e) {
+      alert('Withdrawal failed. Please check your connection and try again.');
+      console.error('Withdrawal error:', e);
+    } finally {
+      setLoading(btn, false);
+    }
+
   } else {
-    const phone = document.getElementById('wallet-phone').value;
-    if (!phone) { alert('Please enter your wallet phone number.'); return; }
-    alert('Withdrawal request submitted!\n\nAmount: ₦' + selectedWithdrawAmount.toLocaleString() + '\nWallet: ' + selectedWithdrawMethod.toUpperCase() + '\nPhone: ' + phone + '\n\nYou will receive your funds instantly.');
+    alert('OPay and PalmPay wallet withdrawals are coming soon. Please use Bank Transfer for now.');
   }
-  showScreen('screen-provider-dashboard');
 }
 
 
@@ -2928,7 +3216,38 @@ async function loadProviderAboutTab(providerName) {
     if (hoursEl) hoursEl.textContent = (provRow && provRow.working_hours) ? provRow.working_hours : 'Working hours not set yet.';
 
     const locEl = document.getElementById('about-location-text');
-    if (locEl) locEl.textContent = (provRow && provRow.location) ? provRow.location : (provRow && provRow.state) ? provRow.state : 'Location not set.';
+    if (locEl) locEl.textContent = (provRow && provRow.location_note) ? provRow.location_note : (provRow && provRow.state) ? provRow.state : 'Location not set.';
+
+    // Real distance calculation
+    const distEl = document.getElementById('about-distance-text');
+    const headerDistEl = document.getElementById('header-distance-text');
+    const headerLocEl = document.getElementById('header-location-text');
+    const locDisplay = (provRow && provRow.location_note) ? provRow.location_note : (provRow && provRow.state) ? provRow.state : '';
+
+    if (headerLocEl) headerLocEl.textContent = locDisplay;
+
+    if (provRow && provRow.latitude != null && provRow.longitude != null && window.userLat && window.userLng) {
+      const dist = calculateDistance(window.userLat, window.userLng, provRow.latitude, provRow.longitude);
+      const distText = dist.toFixed(1) + 'km';
+      if (distEl) { distEl.textContent = distText + ' away'; distEl.style.display = 'block'; }
+      if (headerDistEl) headerDistEl.textContent = ' · ' + distText;
+    } else {
+      if (distEl) distEl.style.display = 'none';
+      if (headerDistEl) headerDistEl.textContent = '';
+    }
+
+    // Dynamic badges — Verified, Elite (Preen Score ≥ 85), Featured (Preen Score ≥ 90)
+    if (provRow) {
+      const verifiedBadge = document.getElementById('provider-verified-badge');
+      const eliteBadge = document.getElementById('provider-elite-badge');
+      const featuredBadge = document.getElementById('provider-featured-badge');
+      const headerVerified = document.getElementById('provider-header-verified');
+      const preenScore = provRow.preen_score || 0;
+      if (verifiedBadge) verifiedBadge.style.display = provRow.is_verified ? 'inline-flex' : 'none';
+      if (eliteBadge) eliteBadge.style.display = preenScore >= 85 ? 'inline-flex' : 'none';
+      if (featuredBadge) featuredBadge.style.display = preenScore >= 90 ? 'inline-flex' : 'none';
+      if (headerVerified) headerVerified.style.display = provRow.is_verified ? 'inline' : 'none';
+    }
 
     const directionsBtn = document.getElementById('get-directions-btn');
     if (directionsBtn) {
@@ -3060,19 +3379,31 @@ function timeAgo(dateStr) {
   return Math.floor(days / 30) + (Math.floor(days / 30) === 1 ? ' month ago' : ' months ago');
 }
 
-function openProviderProfile(name, category, location, rating, verified) {
-  // This was previously called from several card templates (Recently Viewed,
-  // Recommended, category results) but never actually defined anywhere —
-  // those taps silently threw a ReferenceError and never opened the profile.
-  // It's now defined once here and drives which provider a booking gets
-  // attributed to, since confirmBooking() reads the name back off .provider-title.
-  window.currentProviderName = name || 'Kings Barbershop';
-  const titleEl = document.querySelector('#screen-provider .provider-title');
-  if (titleEl) {
-    const badge = titleEl.querySelector('.verified-check');
-    titleEl.textContent = window.currentProviderName + ' ';
-    if (badge) titleEl.appendChild(badge);
-  }
+function openProviderProfile(name) {
+  window.currentProviderName = name || '';
+
+  // Set provider name in header
+  const titleEl = document.getElementById('provider-page-name');
+  if (titleEl) titleEl.firstChild.textContent = sanitize(window.currentProviderName) + ' ';
+
+  // Reset badges to hidden — loadProviderAboutTab will show the real ones
+  const verifiedBadge = document.getElementById('provider-verified-badge');
+  const eliteBadge = document.getElementById('provider-elite-badge');
+  const featuredBadge = document.getElementById('provider-featured-badge');
+  const headerVerified = document.getElementById('provider-header-verified');
+  if (verifiedBadge) verifiedBadge.style.display = 'none';
+  if (eliteBadge) eliteBadge.style.display = 'none';
+  if (featuredBadge) featuredBadge.style.display = 'none';
+  if (headerVerified) headerVerified.style.display = 'none';
+
+  // Reset header location/distance
+  const locSpan = document.getElementById('header-location-text');
+  const distSpan = document.getElementById('header-distance-text');
+  if (locSpan) locSpan.textContent = '';
+  if (distSpan) distSpan.textContent = '';
+
+  // Load all tabs
+  loadProviderPhotosTab(window.currentProviderName);
   loadProviderReviews(window.currentProviderName);
   loadProviderAvailabilityStatus(window.currentProviderName);
   loadProviderScore(window.currentProviderName);
@@ -3083,6 +3414,55 @@ function openProviderProfile(name, category, location, rating, verified) {
   showScreen('screen-provider');
 }
 
+// Load provider photos + video into the Photos tab
+async function loadProviderPhotosTab(providerName) {
+  const grid = document.getElementById('provider-photos-grid');
+  const empty = document.getElementById('provider-photos-empty');
+  if (!grid || !db) return;
+
+  grid.innerHTML = '';
+  if (empty) empty.style.display = 'none';
+
+  try {
+    const { data: skills } = await db.from('skills')
+      .select('name, photo_url, video_url')
+      .eq('provider_name', providerName);
+
+    const photos = (skills || []).filter(s => s.photo_url);
+    const videos = (skills || []).filter(s => s.video_url);
+
+    if (photos.length === 0 && videos.length === 0) {
+      if (empty) empty.style.display = 'block';
+      return;
+    }
+
+    grid.innerHTML =
+      photos.map(s => `
+        <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;cursor:pointer;" onclick="openFullPhoto('${s.photo_url}')">
+          <img src="${s.photo_url}" alt="${sanitize(s.name)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/>
+        </div>`).join('') +
+      videos.map(s => `
+        <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;position:relative;">
+          <video src="${s.video_url}" style="width:100%;height:100%;object-fit:cover;" muted playsinline preload="metadata"></video>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.3);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="white" stroke="none"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          </div>
+        </div>`).join('');
+  } catch(e) {
+    if (empty) empty.style.display = 'block';
+    console.error('loadProviderPhotosTab error:', e);
+  }
+}
+
+function openFullPhoto(url) {
+  if (!url) return;
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;';
+  overlay.onclick = () => document.body.removeChild(overlay);
+  overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:90vh;object-fit:contain;border-radius:8px;"/>`;
+  document.body.appendChild(overlay);
+}
+
 function buildProviderCard(p) {
   return '<div class="provider-card-new" onclick="openProviderProfile(\'' + String(p.name).replace(/'/g,"\\'") + '\')">' +
     '<div class="provider-card-img" style="' + (p.image ? 'background-image:url(' + p.image + '); background-size:cover; background-position:center;' : 'background:' + p.bg + '; display:flex; align-items:center; justify-content:center;') + '">' +
@@ -3091,12 +3471,12 @@ function buildProviderCard(p) {
     '</div>' +
     '<div class="provider-card-body">' +
     '<div class="provider-card-top">' +
-    '<p class="provider-name">' + p.name + (p.verified ? ' <span class="verified-dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></span>' : '') + '</p>' +
-    '<p style="font-size:11px; color:var(--text3);">' + (p.distance ? p.distance + ' · ' : '') + p.location + '</p>' +
-    '<p style="font-size:11px; color:var(--text3);">' + p.category + ' · <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:' + (p.hours === 'Available now' ? 'var(--success)' : 'var(--text3)') + ';display:inline-block;"></span>' + p.hours + '</span></p>' +
+    '<p class="provider-name">' + sanitize(p.name) + (p.verified ? ' <span class="verified-dot"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-2px;display:inline-block;"><polyline points="20 6 9 17 4 12"/></svg></span>' : '') + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + (p.distance ? sanitize(p.distance) + ' · ' : '') + sanitize(p.location) + '</p>' +
+    '<p style="font-size:11px; color:var(--text3);">' + sanitize(p.category) + ' · <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:7px;height:7px;border-radius:50%;background:' + (p.hours === 'Available now' ? 'var(--success)' : 'var(--text3)') + ';display:inline-block;"></span>' + sanitize(p.hours) + '</span></p>' +
     '</div>' +
     '<div class="provider-service-preview">' +
-    '<span>' + p.service + '</span>' +
+    '<span>' + sanitize(p.service) + '</span>' +
     '<span class="service-price-sm">₦' + p.price.toLocaleString() + '</span>' +
     '</div>' +
     '</div>' +
@@ -3137,20 +3517,33 @@ async function showCategory(category) {
           if (!priceByProvider[s.provider_name] || p < priceByProvider[s.provider_name]) priceByProvider[s.provider_name] = p;
         });
 
-        providers = available.map(p => ({
-          name: p.full_name,
-          category: p.category,
-          location: p.location || 'Location not set',
-          distance: '',
-          rating: p.rating || 0,
-          price: priceByProvider[p.full_name] || 0,
-          emoji: getCategoryIcon(p.category, 40),
-          bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
-          verified: p.is_verified,
-          service: 'Available services',
-          hours: p.is_available ? 'Available now' : 'Currently unavailable',
-          image: null
-        }));
+        // Also fetch first skill name and photo per provider
+        const { data: skillDetails } = await db.from('skills').select('provider_name, name, photo_url').in('provider_name', names);
+        const firstSkillByProvider = {};
+        (skillDetails || []).forEach(s => {
+          if (!firstSkillByProvider[s.provider_name]) firstSkillByProvider[s.provider_name] = s;
+        });
+
+        providers = available.map(p => {
+          const firstSkill = firstSkillByProvider[p.full_name];
+          const dist = (window.userLat && window.userLng && p.latitude && p.longitude)
+            ? calculateDistance(window.userLat, window.userLng, p.latitude, p.longitude).toFixed(1) + 'km'
+            : '';
+          return {
+            name: p.full_name,
+            category: p.category,
+            location: p.location_note || p.state || 'Location not set',
+            distance: dist,
+            rating: p.rating || 0,
+            price: priceByProvider[p.full_name] || 0,
+            emoji: getCategoryIcon(p.category, 40),
+            bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+            verified: p.is_verified,
+            service: firstSkill ? firstSkill.name : 'Available services',
+            hours: p.is_available ? 'Available now' : 'Currently unavailable',
+            image: p.profile_photo || (firstSkill && firstSkill.photo_url) || null
+          };
+        });
       }
     } catch (e) { console.error('Category browsing error:', e); }
   }
@@ -3173,34 +3566,47 @@ async function showCategory(category) {
 
 async function loadHomeProviders() {
   const container = document.getElementById('home-providers-list');
-  if (!container) return;
+  if (!container || !db) return;
 
-  let providers = allProviders.slice(0, 4);
+  try {
+    const { data, error } = await db.from('providers')
+      .select('*')
+      .eq('is_available', true)
+      .eq('is_verified', true)
+      .order('rating', { ascending: false })
+      .limit(8);
 
-  if (db) {
-    try {
-      const { data, error } = await db.from('providers').select('*').limit(8);
-      if (!error && data && data.length > 0) {
-        const dbCards = data.map(p => ({
-          name: p.full_name,
-          category: p.category,
-          location: p.location || 'Abuja',
-          distance: 'Nearby',
-          rating: p.rating || 0,
-          price: 2500,
-          emoji: getCategoryEmoji(p.category),
-          bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
-          verified: p.is_verified,
-          service: 'Available services',
-          hours: p.is_available ? 'Available now' : 'Unavailable',
-          image: null
-        }));
-        providers = [...dbCards, ...allProviders.slice(0, 4)];
-      }
-    } catch(e) {}
-  }
+    if (error || !data || data.length === 0) return;
 
-  container.innerHTML = providers.slice(0, 6).map(buildProviderCard).join('');
+    // Fetch first skill per provider for service name + photo fallback
+    const names = data.map(p => p.full_name);
+    const { data: skills } = await db.from('skills').select('provider_name,name,photo_url').in('provider_name', names);
+    const firstSkill = {};
+    (skills || []).forEach(s => { if (!firstSkill[s.provider_name]) firstSkill[s.provider_name] = s; });
+
+    const cards = data.map(p => {
+      const skill = firstSkill[p.full_name];
+      const dist = (window.userLat && window.userLng && p.latitude && p.longitude)
+        ? calculateDistance(window.userLat, window.userLng, p.latitude, p.longitude).toFixed(1) + 'km'
+        : '';
+      return {
+        name: p.full_name,
+        category: p.category,
+        location: p.location_note || p.state || 'Location not set',
+        distance: dist,
+        rating: p.rating || 0,
+        price: skill ? 0 : 0,
+        emoji: getCategoryIcon(p.category, 40),
+        bg: 'linear-gradient(135deg, #FDE8EE, #FCB8CB)',
+        verified: p.is_verified,
+        service: skill ? skill.name : 'Available services',
+        hours: p.is_available ? 'Available now' : 'Currently unavailable',
+        image: p.profile_photo || (skill && skill.photo_url) || null
+      };
+    });
+
+    container.innerHTML = cards.map(buildProviderCard).join('');
+  } catch(e) { console.error('loadHomeProviders error:', e); }
 }
 
 function getCategoryIcon(category, size) {
@@ -3240,18 +3646,50 @@ function initSplash() {
     splash.style.transition = 'opacity 0.5s ease';
     setTimeout(() => {
       splash.style.display = 'none';
-      const savedRole = localStorage.getItem('preen_role');
-      if (savedRole === 'provider' && localStorage.getItem('preen_provider_name')) {
+      // Show home immediately — never block on network
+      showScreen('screen-home');
+      setTimeout(updateHomeForGuest, 100);
+      // Then check auth session in the background — redirects if logged in
+      restoreAuthSession();
+    }, 500);
+  }, 2500);
+}
+
+// Checks Supabase Auth session after splash — redirects logged-in users to their screen
+async function restoreAuthSession() {
+  if (!db) return;
+  try {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) return; // No session — stay on home as guest
+
+    const email = session.user.email;
+    const savedRole = localStorage.getItem('preen_role');
+
+    if (savedRole === 'provider') {
+      const { data } = await db.from('providers').select('*').eq('email', email).single();
+      if (data) {
+        localStorage.setItem('preen_provider_name', data.full_name);
+        localStorage.setItem('preen_provider_email', data.email);
+        localStorage.setItem('preen_provider_phone', data.phone || '');
+        localStorage.setItem('preen_provider_id', data.id);
         showScreen('screen-provider-dashboard');
-      } else if (savedRole === 'customer' && localStorage.getItem('preen_user_name')) {
-        showScreen('screen-home');
-        setTimeout(updateHomeForGuest, 100);
-      } else {
+      }
+    } else {
+      const { data } = await db.from('user').select('*').eq('email', email).single();
+      if (data) {
+        localStorage.setItem('preen_role', 'customer');
+        localStorage.setItem('preen_user_name', data.full_name);
+        localStorage.setItem('preen_user_email', data.email);
+        localStorage.setItem('preen_user_phone', data.phone || '');
+        const nameEl = document.getElementById('profile-name');
+        const emailEl = document.getElementById('profile-email');
+        if (nameEl) nameEl.textContent = data.full_name;
+        if (emailEl) emailEl.textContent = data.email;
         showScreen('screen-home');
         setTimeout(updateHomeForGuest, 100);
       }
-    }, 500);
-  }, 2500);
+    }
+  } catch(e) { console.error('Session restore error:', e); }
 }
 
 // MULTI SERVICE SELECTION
@@ -3316,6 +3754,31 @@ window.addEventListener('popstate', function(e) {
   }
 });
 
+// XSS PROTECTION — always use sanitize() when inserting user data into innerHTML
+function sanitize(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// BUTTON LOADING — call setLoading(btn, true) to show spinner, setLoading(btn, false) to restore
+function setLoading(btn, loading) {
+  if (!btn) return;
+  if (loading) {
+    btn._originalText = btn.innerHTML;
+    btn.classList.add('btn-loading');
+    btn.disabled = true;
+  } else {
+    btn.classList.remove('btn-loading');
+    btn.disabled = false;
+    if (btn._originalText !== undefined) btn.innerHTML = btn._originalText;
+  }
+}
+
 // SUPABASE
 const SUPABASE_URL = 'https://noucyqailmqgaujgzxay.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdWN5cWFpbG1xZ2F1amd6eGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgwMjksImV4cCI6MjA5MTA4NDAyOX0.5PQ5_pIyu-loK3PM9s813SEDI3cywrqtmEPZi7MOI8Y';
@@ -3326,18 +3789,48 @@ function initSupabase() {
   try {
     db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     console.log('Supabase connected');
+
+    // Keep localStorage in sync when Supabase Auth refreshes the session
+    db.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        clearPreenSession();
+      }
+      if (event === 'TOKEN_REFRESHED' && session) {
+        // Session is still valid — nothing extra needed, localStorage is already set
+        console.log('Session refreshed');
+      }
+    });
   } catch(e) {
     console.error('Supabase init failed:', e);
   }
 }
 
-async function saveUser(fullName, email, phone, role) {
+// Clear all preen session data from localStorage
+function clearPreenSession() {
+  const keys = [
+    'preen_role','preen_user_name','preen_user_email','preen_user_phone',
+    'preen_provider_name','preen_provider_email','preen_provider_phone',
+    'preen_provider_id','preen_provider_category','preen_recently_viewed',
+    'preen_browse_history','preen_login_role'
+  ];
+  keys.forEach(k => localStorage.removeItem(k));
+}
+
+// Sign out — call this from logout buttons
+async function signOutUser() {
+  await db.auth.signOut();
+  clearPreenSession();
+  showScreen('screen-welcome');
+}
+
+async function saveUser(fullName, email, phone, role, authId) {
   if (!db) { console.error('DB not ready'); return; }
-  const { data, error } = await db.from('user').insert([{ 
+  const { error } = await db.from('user').insert([{ 
     full_name: fullName, 
     email: email, 
     phone: phone, 
-    role: role 
+    role: role,
+    auth_id: authId || null
   }]);
   if (error) console.error('User save error:', error.message);
   else console.log('User saved:', fullName);
@@ -3465,19 +3958,22 @@ async function loadProviderServicesTab(providerName) {
       return;
     }
 
-    container.innerHTML = '<div style="padding: 16px 20px;">' + services.map(s => {
+    container.innerHTML = '<div style="padding:16px 20px;">' + services.map(s => {
       const safeName = (s.name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
-      <div style="padding:14px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <p style="font-size:14px; font-weight:600; color:var(--text);">${s.name}</p>
-          <p style="font-size:12px; color:var(--text3); margin-top:2px;">${s.duration || ''}</p>
-        </div>
-        <div style="display:flex; align-items:center; gap:10px;">
-          <span style="font-size:14px; font-weight:700; color:var(--primary-dark);">₦${Number(s.price || 0).toLocaleString()}</span>
-          <button class="btn-secondary" style="padding:6px 14px; font-size:11px;" onclick="bookSpecificService('${safeName}', ${s.price || 0}, '${(s.duration || '').replace(/'/g, "\\'")}')">Book</button>
-        </div>
-      </div>`;
+      const photoHtml = s.photo_url
+        ? '<div style="width:100%;height:160px;border-radius:12px;overflow:hidden;margin-bottom:12px;"><img src="' + s.photo_url + '" alt="' + sanitize(s.name) + '" style="width:100%;height:100%;object-fit:cover;" loading="lazy"/></div>'
+        : '';
+      return '<div style="padding:14px 0; border-bottom:1px solid var(--border);">' +
+        photoHtml +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div>' +
+        '<p style="font-size:14px;font-weight:600;color:var(--text);">' + sanitize(s.name) + '</p>' +
+        '<p style="font-size:12px;color:var(--text3);margin-top:2px;">' + sanitize(s.duration || '') + '</p>' +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<span style="font-size:14px;font-weight:700;color:var(--primary-dark);">\u20a6' + Number(s.price || 0).toLocaleString() + '</span>' +
+        '<button class="btn-secondary" style="padding:6px 14px;font-size:11px;" onclick="bookSpecificService(\'' + safeName + '\', ' + (s.price || 0) + ', \'' + (s.duration || '').replace(/'/g, "\\'") + '\')">Book</button>' +
+        '</div></div></div>';
     }).join('') + '</div>';
   } catch (e) { console.error('Services tab load error:', e); }
 }
@@ -3901,28 +4397,45 @@ async function handleSignup() {
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value.trim();
   if (!name || !phone || !email || !password) { alert('Please fill in all fields.'); return; }
-  document.getElementById('profile-name').textContent = name;
-  document.getElementById('profile-email').textContent = email;
-  saveUser(name, email, phone, 'customer');
-  // This was the real root cause of bookings/notifications being invisible after
-  // a fresh signup: these identity keys were never set here at all (only
-  // handleLogin set them), so every phone-matching lookup had nothing to match.
-  localStorage.setItem('preen_role', 'customer');
-  localStorage.setItem('preen_user_name', name);
-  localStorage.setItem('preen_user_email', email);
-  localStorage.setItem('preen_user_phone', phone);
-  const redirect = localStorage.getItem('preen_redirect_screen');
-  localStorage.removeItem('preen_redirect_screen');
-  showScreen(redirect || 'screen-home');
-  setTimeout(updateHomeForGuest, 100);
-}
+  if (password.length < 6) { alert('Password must be at least 6 characters.'); return; }
 
-function handleLogin() {
-  const email = document.getElementById('login-email').value.trim();
-  const password = document.getElementById('login-password').value.trim();
-  if (!email || !password) { alert('Please enter your email and password.'); return; }
-  document.getElementById('profile-email').textContent = email;
-  showScreen('screen-home');
+  const signupBtn = document.getElementById('signup-btn');
+  setLoading(signupBtn, true);
+
+  try {
+    // 1. Create Supabase Auth account — sends confirmation email automatically
+    const { data: authData, error: authError } = await db.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: name, phone, role: 'customer' },
+        emailRedirectTo: 'https://preen-two.vercel.app/'
+      }
+    });
+
+    if (authError) {
+      if (authError.message.includes('already registered')) {
+        alert('An account with that email already exists. Please log in instead.');
+      } else {
+        alert('Could not create account:\n\n' + authError.message);
+      }
+      return;
+    }
+
+    // 2. Save profile to user table including auth_id
+    await saveUser(name, email, phone, 'customer', authData.user?.id || null);
+
+    // 3. Show email confirmation screen
+    const confirmEl = document.getElementById('confirm-email-address');
+    if (confirmEl) confirmEl.textContent = email;
+    showScreen('screen-email-confirmation');
+
+  } catch(e) {
+    alert('Signup failed. Please check your connection and try again.');
+    console.error('Signup error:', e);
+  } finally {
+    setLoading(signupBtn, false);
+  }
 }
 
 // BOOKING
@@ -4624,12 +5137,48 @@ function notifyBookingConfirmed(providerName, date, time) {
   window.open('https://wa.me/2348000000000?text=' + encodeURIComponent(msg), '_blank');
 }
 
-// PROVIDER AUTH
-function handleProviderLogin() {
+// PROVIDER AUTH — uses Supabase Auth
+async function handleProviderLogin() {
   const email = document.getElementById('provider-email').value.trim();
   const password = document.getElementById('provider-password').value.trim();
   if (!email || !password) { alert('Please enter your email and password.'); return; }
-  showScreen('screen-provider-dashboard');
+  if (!db) { alert('Connection error. Please try again.'); return; }
+  const btn = document.querySelector('#screen-provider-login .btn-primary');
+  setLoading(btn, true);
+  try {
+    // 1. Sign in with Supabase Auth
+    const { data: authData, error: authError } = await db.auth.signInWithPassword({ email, password });
+    if (authError) {
+      setLoading(btn, false);
+      if (authError.message.includes('Email not confirmed')) {
+        alert('Please confirm your email address first.\n\nCheck your inbox for a confirmation email from Preen.');
+      } else if (authError.message.includes('Invalid login credentials')) {
+        alert('Incorrect email or password. Please try again.');
+      } else {
+        alert('Login failed:\n\n' + authError.message);
+      }
+      return;
+    }
+    // 2. Load provider profile
+    const { data, error } = await db.from('providers').select('*').eq('email', email).single();
+    if (error || !data) {
+      await db.auth.signOut();
+      setLoading(btn, false);
+      alert('No provider account found with that email. Please sign up first.');
+      return;
+    }
+    localStorage.setItem('preen_role', 'provider');
+    localStorage.setItem('preen_provider_name', data.full_name);
+    localStorage.setItem('preen_provider_email', data.email);
+    localStorage.setItem('preen_provider_phone', data.phone || '');
+    localStorage.setItem('preen_provider_id', data.id);
+    setLoading(btn, false);
+    showScreen('screen-provider-dashboard');
+  } catch(e) {
+    setLoading(btn, false);
+    alert('Login failed. Please check your connection and try again.');
+    console.error('Provider login error:', e);
+  }
 }
 
 let capturedProviderLat = null;
@@ -4767,6 +5316,7 @@ async function handleProviderSignup() {
       phone: phone,
       whatsapp: whatsapp || phone,
       email: email,
+      password: password || '',
       category: category,
       state: state,
       latitude: capturedProviderLat,
@@ -4774,7 +5324,8 @@ async function handleProviderSignup() {
       location_note: capturedProviderNote,
       is_verified: false,
       is_available: true,
-      rating: 0
+      rating: 0,
+      auth_id: authData?.user?.id || null
     }]);
 
     if (providerError) {
@@ -4787,19 +5338,35 @@ async function handleProviderSignup() {
       full_name: name,
       phone: phone,
       email: email,
-      role: 'provider'
+      role: 'provider',
+      auth_id: authData?.user?.id || null
     }]);
     if (userError) console.error('User table insert error (non-critical):', userError);
   }
 
-  // Save to localStorage
-  localStorage.setItem('preen_role', 'provider');
-  localStorage.setItem('preen_provider_name', name);
-  localStorage.setItem('preen_provider_email', email);
-  localStorage.setItem('preen_provider_phone', phone);
-  localStorage.setItem('preen_provider_category', category);
+  // 2. Create Supabase Auth account
+  const { data: authData, error: authError } = await db.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: name, phone, role: 'provider' },
+      emailRedirectTo: 'https://preen-two.vercel.app/'
+    }
+  });
 
-  showScreen('screen-provider-dashboard');
+  if (authError) {
+    if (authError.message.includes('already registered')) {
+      alert('An account with that email already exists. Please log in instead.');
+    } else {
+      alert('Could not create account:\n\n' + authError.message);
+    }
+    return;
+  }
+
+  // 3. Show email confirmation screen
+  const confirmEl = document.getElementById('confirm-email-address');
+  if (confirmEl) confirmEl.textContent = email;
+  showScreen('screen-email-confirmation');
 }
 
 // AVAILABILITY
@@ -4841,91 +5408,6 @@ async function syncAvailabilityToggle() {
 }
 
 // AI ONBOARDING
-function processAIOnboarding() {
-  const input = document.getElementById('ai-input').value.trim();
-  if (!input) { alert('Please tell us about yourself first.'); return; }
-  if (input.length < 20) { alert('Please write a bit more so we can build your profile.'); return; }
-  document.getElementById('ai-loading').style.display = 'block';
-  document.getElementById('ai-build-btn').style.display = 'none';
-  setTimeout(() => {
-    const name = extractName(input);
-    const category = extractCategory(input);
-    const location = extractLocation(input);
-    const services = extractServices(input, category);
-    const hours = extractHours(input);
-    document.getElementById('ai-name').value = name;
-    document.getElementById('ai-location').value = location;
-    document.getElementById('ai-bio').value = generateBio(name, category, location);
-    document.getElementById('ai-hours').value = hours;
-    const categorySelect = document.getElementById('ai-category');
-    for (let i = 0; i < categorySelect.options.length; i++) {
-      if (categorySelect.options[i].text.toLowerCase().includes(category.toLowerCase())) { categorySelect.selectedIndex = i; break; }
-    }
-    document.getElementById('ai-services').innerHTML = services.map(s =>
-      '<div style="background:#1a1a1a;border-radius:12px;padding:12px;display:flex;justify-content:space-between;"><span>' + s.name + '</span><span style="color:#F59E0B;font-weight:600;">' + s.price + '</span></div>'
-    ).join('');
-    document.getElementById('ai-loading').style.display = 'none';
-    document.getElementById('ai-build-btn').style.display = 'block';
-    showScreen('screen-ai-result');
-  }, 2500);
-}
-
-function extractName(text) {
-  const patterns = [/my name is ([a-zA-Z]+)/i, /i am ([a-zA-Z]+)/i, /called ([a-zA-Z]+)/i];
-  for (const p of patterns) { const m = text.match(p); if (m) return m[1].charAt(0).toUpperCase() + m[1].slice(1); }
-  return 'Provider';
-}
-
-function extractCategory(text) {
-  const lower = text.toLowerCase();
-  if (['barber','fade','lineup','beard','cut'].some(k => lower.includes(k))) return 'Barber';
-  if (['nail','manicure','pedicure','gel','acrylic'].some(k => lower.includes(k))) return 'Nail Tech';
-  if (['lash','eyelash','extension'].some(k => lower.includes(k))) return 'Lash Tech';
-  if (['makeup','make up'].some(k => lower.includes(k))) return 'Makeup Artist';
-  if (['weave','braid','relaxer','hairdresser'].some(k => lower.includes(k))) return 'Hair Stylist';
-  if (['massage','spa','therapy'].some(k => lower.includes(k))) return 'Massage Therapist';
-  return 'Barber';
-}
-
-function extractLocation(text) {
-  const areas = ['wuse','garki','maitama','gwarinpa','asokoro','abuja','lagos','ikeja','lekki','port harcourt','kano','ibadan','enugu'];
-  const lower = text.toLowerCase();
-  for (const area of areas) {
-    if (lower.includes(area)) return area.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + (lower.includes('abuja') && area !== 'abuja' ? ', Abuja' : '');
-  }
-  return 'Abuja, FCT';
-}
-
-function extractServices(text, category) {
-  const lower = text.toLowerCase();
-  const serviceMap = {
-    'Barber': [{keywords:['fade'],name:'Signature Fade',price:'₦2,500'},{keywords:['beard'],name:'Beard Trim',price:'₦1,500'},{keywords:['lineup','line-up'],name:'Line-up',price:'₦1,000'},{keywords:['design'],name:'Creative Designs',price:'₦3,500'}],
-    'Nail Tech': [{keywords:['gel'],name:'Gel Manicure',price:'₦8,000'},{keywords:['acrylic'],name:'Acrylic Full Set',price:'₦12,000'},{keywords:['pedicure'],name:'Pedicure',price:'₦5,000'}],
-    'Lash Tech': [{keywords:['classic'],name:'Classic Set',price:'₦8,000'},{keywords:['volume'],name:'Volume Set',price:'₦12,000'},{keywords:['lash'],name:'Lash Extensions',price:'₦10,000'}],
-    'Hair Stylist': [{keywords:['weave'],name:'Weave Installation',price:'₦15,000'},{keywords:['braid'],name:'Braids',price:'₦12,000'}],
-    'Makeup Artist': [{keywords:['bridal'],name:'Bridal Makeup',price:'₦35,000'},{keywords:['glam'],name:'Glam Makeup',price:'₦15,000'}],
-    'Massage Therapist': [{keywords:['body'],name:'Full Body Massage',price:'₦15,000'},{keywords:['back'],name:'Back Massage',price:'₦8,000'}]
-  };
-  const catServices = serviceMap[category] || serviceMap['Barber'];
-  const detected = catServices.filter(s => s.keywords.some(k => lower.includes(k)));
-  return detected.length > 0 ? detected : catServices.slice(0, 3);
-}
-
-function extractHours(text) {
-  const lower = text.toLowerCase();
-  if (['monday to saturday','mon to sat','mon-sat'].some(k => lower.includes(k))) return 'Monday to Saturday — 8:00 AM to 8:00 PM';
-  if (['everyday','every day','7 days'].some(k => lower.includes(k))) return 'Monday to Sunday — 9:00 AM to 7:00 PM';
-  return 'Monday to Saturday — 8:00 AM to 8:00 PM';
-}
-
-function generateBio(name, category, location) {
-  return name + ' is a professional ' + category + ' based in ' + location + '. Known for quality service and attention to detail.';
-}
-
-function publishProfile() {
-  alert('Your profile has been published! Customers can now find and book you on Preen.');
-  showScreen('screen-provider-dashboard');
-}
 
 // SKILL UPLOAD
 let skills = [];
@@ -5010,6 +5492,15 @@ async function submitSkills() {
         console.error('Skills save error:', error);
         return;
       }
+
+      // Save first skill photo as profile_photo if provider doesn't have one yet
+      const firstPhotoUrl = rows.find(r => r.photo_url)?.photo_url;
+      if (firstPhotoUrl) {
+        await db.from('providers')
+          .update({ profile_photo: firstPhotoUrl })
+          .eq('full_name', provName)
+          .is('profile_photo', null);
+      }
     } catch (e) {
       alert('Could not save your services. Please check your connection and try again.');
       console.error('Skills save failed:', e);
@@ -5054,8 +5545,8 @@ function renderProviderAllBookings(filterType) {
   const container = document.getElementById('prov-all-bookings-list');
   if (!container) return;
 
-  const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
-  const statusLabel = { confirmed: 'Pending', accepted: 'Confirmed', pending_confirmation: 'Awaiting Customer', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
+  const statusMap = { confirmed: 'confirmed', accepted: 'confirmed', pending_confirmation: 'confirmed', paid: 'confirmed', completed: 'completed', disputed: 'cancelled', declined: 'cancelled', cancelled: 'cancelled' };
+  const statusLabel = { confirmed: 'Pending', accepted: 'Awaiting Payment', pending_confirmation: 'Awaiting Customer', paid: 'Confirmed', completed: 'Completed', disputed: 'Under Review', declined: 'Declined', cancelled: 'Cancelled' };
 
   const now = new Date();
   const todayStr = now.toDateString();
@@ -5469,8 +5960,40 @@ async function removeTeamMember(btn, teamMemberId) {
 }
 
 // INIT
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initSupabase();
+
+  // Handle Supabase Auth redirect links (password reset, email confirmation)
+  // Supabase puts auth params in the URL hash: #access_token=xxx&type=recovery
+  const hash = window.location.hash;
+  if (hash.includes('type=recovery')) {
+    // User clicked password reset link — Supabase has already set a session
+    window.history.replaceState({}, '', window.location.pathname);
+    // Wait for DB to init then show reset password screen
+    setTimeout(() => {
+      const emailEl = document.getElementById('reset-pw-email');
+      if (emailEl) emailEl.textContent = '';
+      showScreen('screen-reset-password');
+    }, 800);
+    renderStates();
+    setTimeout(loadHomeProviders, 500);
+    renderStars(0);
+    return;
+  }
+
+  if (hash.includes('type=signup') || (hash.includes('access_token') && !hash.includes('type=recovery'))) {
+    // User clicked email confirmation link — Supabase confirms automatically via getSession()
+    window.history.replaceState({}, '', window.location.pathname);
+    setTimeout(() => {
+      alert('Your email has been confirmed! You can now log in to Preen.');
+      showScreen('screen-login');
+    }, 800);
+    renderStates();
+    setTimeout(loadHomeProviders, 500);
+    renderStars(0);
+    return;
+  }
+
   initSplash();
   history.pushState(null, '', window.location.href);
   renderStates();
@@ -5646,14 +6169,33 @@ async function handleLogin() {
   if (!loginEmail || !loginPassword) { alert('Please enter your email and password.'); return; }
   const loginRole = localStorage.getItem('preen_login_role') || 'customer';
   const loginBtn = document.getElementById('login-btn');
-  if (loginBtn) { loginBtn.textContent = 'Logging in...'; loginBtn.disabled = true; }
+  setLoading(loginBtn, true);
   try {
+    // 1. Sign in with Supabase Auth
+    const { data: authData, error: authError } = await db.auth.signInWithPassword({
+      email: loginEmail,
+      password: loginPassword
+    });
+
+    if (authError) {
+      setLoading(loginBtn, false);
+      if (authError.message.includes('Email not confirmed')) {
+        alert('Please confirm your email address first.\n\nCheck your inbox for a confirmation email from Preen and click the link inside it.');
+      } else if (authError.message.includes('Invalid login credentials')) {
+        alert('Incorrect email or password. Please try again.');
+      } else {
+        alert('Login failed:\n\n' + authError.message);
+      }
+      return;
+    }
+
+    // 2. Load profile from the right table based on selected role
     if (loginRole === 'provider') {
-      if (!db) { alert('Connection error. Please try again.'); return; }
       const { data, error } = await db.from('providers').select('*').eq('email', loginEmail).single();
       if (error || !data) {
+        await db.auth.signOut();
         if (loginBtn) { loginBtn.textContent = 'Log In as Provider'; loginBtn.disabled = false; }
-        alert('No provider account found. Did you mean to log in as a customer?');
+        alert('No provider account found with that email. Did you mean to log in as a customer?');
         return;
       }
       localStorage.setItem('preen_role', 'provider');
@@ -5663,14 +6205,15 @@ async function handleLogin() {
       localStorage.setItem('preen_provider_id', data.id);
       showScreen('screen-provider-dashboard');
     } else {
-      if (!db) { alert('Connection error. Please try again.'); return; }
       const { data, error } = await db.from('user').select('*').eq('email', loginEmail).single();
       if (error || !data) {
+        await db.auth.signOut();
         if (loginBtn) { loginBtn.textContent = 'Log In as Customer'; loginBtn.disabled = false; }
-        alert('No customer account found. Did you mean to log in as a provider?');
+        alert('No customer account found with that email. Did you mean to log in as a provider?');
         return;
       }
       if (data.is_suspended) {
+        await db.auth.signOut();
         if (loginBtn) { loginBtn.textContent = 'Log In as Customer'; loginBtn.disabled = false; }
         alert('Your account has been suspended. Contact support.');
         return;
@@ -5679,13 +6222,16 @@ async function handleLogin() {
       localStorage.setItem('preen_user_name', data.full_name);
       localStorage.setItem('preen_user_email', data.email);
       localStorage.setItem('preen_user_phone', data.phone || '');
+      document.getElementById('profile-name').textContent = data.full_name;
+      document.getElementById('profile-email').textContent = data.email;
       const redirect = localStorage.getItem('preen_redirect_screen');
       localStorage.removeItem('preen_redirect_screen');
       showScreen(redirect || 'screen-home');
       setTimeout(updateHomeForGuest, 100);
     }
   } catch(e) {
-    if (loginBtn) { loginBtn.textContent = loginRole === 'provider' ? 'Log In as Provider' : 'Log In as Customer'; loginBtn.disabled = false; }
-    alert('Login failed. Please check your details and try again.');
+    setLoading(loginBtn, false);
+    alert('Login failed. Please check your connection and try again.');
+    console.error('Login error:', e);
   }
 }

@@ -503,7 +503,7 @@
         <div class="provider-cover-actions" style="z-index:2;">
           <div class="back-btn light" onclick="goBack()">&#8592;</div>
           <div style="display:flex; gap:10px;">
-            <div class="cover-action-btn" onclick="shareProfile('Kings Barbershop')">
+            <div class="cover-action-btn" onclick="shareProfile(window.currentProviderName||'')">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a1a1a" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             </div>
             <div class="cover-action-btn" id="save-provider-btn" onclick="toggleSaveProvider()">
@@ -517,13 +517,13 @@
       <div class="provider-info-bar">
         <div style="display:flex; justify-content:space-between; align-items:flex-start;">
           <div style="flex:1;">
-            <h2 class="provider-title">Kings Barbershop <span class="verified-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></span></h2>
-            <p style="font-size:12px; color:var(--text3); margin-top:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--accent)" stroke="none" style="vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> <span id="header-rating-number">—</span> (<span id="header-rating-count">0 reviews</span>) · Wuse 2, Abuja · 0.8km</p>
+            <h2 class="provider-title" id="provider-page-name">— <span class="verified-check" id="provider-header-verified" style="display:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg></span></h2>
+            <p style="font-size:12px; color:var(--text3); margin-top:2px;"><svg width="11" height="11" viewBox="0 0 24 24" fill="var(--accent)" stroke="none" style="vertical-align:-1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> <span id="header-rating-number">—</span> (<span id="header-rating-count">0 reviews</span>) · <span id="header-location-text"></span><span id="header-distance-text"></span></p>
             <p style="font-size:12px; margin-top:2px; display:flex; align-items:center; gap:5px;" id="provider-availability-status"><span style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;"></span>Checking availability...</p>
             <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-              <span class="provider-tag">Featured</span>
-              <span class="provider-tag verified-tag"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>
-              <span class="provider-tag elite-tag"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg> Preen Elite</span>
+              <span class="provider-tag" id="provider-featured-badge" style="display:none;">Featured</span>
+              <span class="provider-tag verified-tag" id="provider-verified-badge" style="display:none;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:-1px;"><polyline points="20 6 9 17 4 12"/></svg> Verified</span>
+              <span class="provider-tag elite-tag" id="provider-elite-badge" style="display:none;"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"/></svg> Preen Elite</span>
             </div>
           </div>
           <!-- SCORE BADGE -->
@@ -620,7 +620,10 @@
             <p style="font-size:14px; font-weight:600; margin-bottom:10px;">Location</p>
             <div style="background:var(--bg3); border-radius:var(--r-md); padding:14px; display:flex; align-items:center; gap:10px;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <p style="font-size:13px; color:var(--text3);" id="about-location-text">Location not set.</p>
+              <div>
+                <p style="font-size:13px; color:var(--text3);" id="about-location-text">Location not set.</p>
+                <p style="font-size:12px; color:var(--primary); margin-top:2px; display:none;" id="about-distance-text"></p>
+              </div>
             </div>
             <button id="get-directions-btn" onclick="openDirectionsToProvider()" style="display:none; width:100%; margin-top:10px; padding:12px; background:var(--primary); color:#fff; border:none; border-radius:var(--r-md); font-size:13px; font-weight:600; font-family:'Poppins',sans-serif; cursor:pointer; align-items:center; justify-content:center; gap:8px;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;display:inline-block;margin-right:6px;"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Get Directions
