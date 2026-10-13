@@ -559,7 +559,7 @@
           <p style="font-size:12px;color:var(--text2);margin-bottom:16px;">Update your login credentials.</p>
           <div style="display:flex;flex-direction:column;gap:10px;">
             <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Email Address</label>
-            <input type="email" id="new-admin-email" class="modal-inp" placeholder="admin@preen.ng"/></div>
+            <input type="email" id="new-admin-email" class="modal-inp" placeholder="New email address"/></div>
             <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">Current Password</label>
             <input type="password" id="current-admin-pass" class="modal-inp" placeholder="Current password"/></div>
             <div><label style="font-size:12px;color:var(--text2);display:block;margin-bottom:4px;">New Password</label>
@@ -767,19 +767,7 @@
 const SURL='https://noucyqailmqgaujgzxay.supabase.co';
 const SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5vdWN5cWFpbG1xZ2F1amd6eGF5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MDgwMjksImV4cCI6MjA5MTA4NDAyOX0.5PQ5_pIyu-loK3PM9s813SEDI3cywrqtmEPZi7MOI8Y';
 
-const DEFAULT_EMAIL='admin@preen.ng';
-const DEFAULT_PASS='Preen@Admin2026';
-
-function getAdminCredentials(){
-  const s=localStorage.getItem('preen_admin_creds');
-  if(s)return JSON.parse(s);
-  const d={email:DEFAULT_EMAIL,password:DEFAULT_PASS,name:'Preen Admin'};
-  localStorage.setItem('preen_admin_creds',JSON.stringify(d));
-  return d;
-}
-function saveAdminCredentials(email,password,name){
-  localStorage.setItem('preen_admin_creds',JSON.stringify({email,password,name}));
-}
+// No hardcoded credentials — authentication is handled entirely by Supabase Auth
 
 // In-memory caches
 let staffMembers=[];
@@ -802,6 +790,26 @@ window.onload=async()=>{
   db=supabase.createClient(SURL,SKEY);
   await loadSettingsFromSupabase();
   applySettingsToUI();
+
+  // Check for existing Supabase Auth session — keeps admin logged in on refresh
+  try{
+    const{data:{session}}=await db.auth.getSession();
+    if(session){
+      const authUser=session.user;
+      const isSuperAdmin=authUser.user_metadata?.admin_role==='super_admin';
+      if(isSuperAdmin){
+        currentUser={email:authUser.email,role:'super_admin',name:authUser.user_metadata?.name||'Preen Admin'};
+        loginSuccess();return;
+      }
+      const{data:staffData}=await db.from('admin_staff').select('*').eq('email',authUser.email).eq('active',true).single();
+      if(staffData){
+        currentUser={email:authUser.email,role:staffData.role,name:staffData.name,permissions:staffData.permissions||[]};
+        loginSuccess();return;
+      }
+      // Session exists but not a valid admin — sign out
+      await db.auth.signOut();
+    }
+  }catch(e){console.error('Session restore error:',e);}
 };
 
 async function loadSettingsFromSupabase(){
@@ -824,22 +832,52 @@ function applySettingsToUI(){
 async function doLogin(){
   const email=document.getElementById('admin-email').value.trim().toLowerCase();
   const pass=document.getElementById('admin-pass').value.trim();
-  const creds=getAdminCredentials();
-  if(email===creds.email&&pass===creds.password){
-    currentUser={email,role:'super_admin',name:creds.name||'Preen Admin'};
-    loginSuccess();return;
-  }
-  // Check Supabase staff table
+  if(!email||!pass){document.getElementById('login-err').style.display='block';return;}
+
+  const loginBtn=document.querySelector('#login-screen button');
+  if(loginBtn){loginBtn.textContent='Logging in...';loginBtn.disabled=true;}
+
   try{
-    const{data,error}=await db.from('admin_staff').select('*').eq('email',email).eq('active',true).single();
-    if(!error&&data&&data.password===pass){
-      currentUser={email,role:data.role,name:data.name,permissions:data.permissions||[]};
-      await db.from('admin_staff').update({last_login:new Date().toISOString()}).eq('id',data.id);
-      logActivity(data.name,'Logged in','login');
+    // Sign in with Supabase Auth — works for both super admin and staff
+    const{data:authData,error:authError}=await db.auth.signInWithPassword({email,password:pass});
+    if(authError){
+      document.getElementById('login-err').style.display='block';
+      if(loginBtn){loginBtn.textContent='Log In';loginBtn.disabled=false;}
+      return;
+    }
+
+    const authUser=authData.user;
+    // Check if super admin via user metadata
+    const isSuperAdmin=authUser.user_metadata?.admin_role==='super_admin';
+
+    if(isSuperAdmin){
+      currentUser={email,role:'super_admin',name:authUser.user_metadata?.name||'Preen Admin'};
       loginSuccess();return;
     }
-  }catch(e){/* not found */}
-  document.getElementById('login-err').style.display='block';
+
+    // Check admin_staff table for role and permissions
+    const{data:staffData,error:staffError}=await db.from('admin_staff')
+      .select('*').eq('email',email).eq('active',true).single();
+
+    if(staffError||!staffData){
+      // Not a staff member — sign out and reject
+      await db.auth.signOut();
+      document.getElementById('login-err').style.display='block';
+      if(loginBtn){loginBtn.textContent='Log In';loginBtn.disabled=false;}
+      return;
+    }
+
+    currentUser={email,role:staffData.role,name:staffData.name,permissions:staffData.permissions||[]};
+    await db.from('admin_staff').update({last_login:new Date().toISOString()}).eq('id',staffData.id);
+    logActivity(staffData.name,'Logged in','login');
+    loginSuccess();
+
+  }catch(e){
+    console.error('Login error:',e);
+    document.getElementById('login-err').style.display='block';
+  }finally{
+    if(loginBtn){loginBtn.textContent='Log In';loginBtn.disabled=false;}
+  }
 }
 
 function loginSuccess(){
@@ -848,8 +886,11 @@ function loginSuccess(){
   setupSidebar();
   loadAll();
 }
-function doLogout(){
+
+async function doLogout(){
   if(currentUser&&currentUser.role!=='super_admin')logActivity(currentUser.name,'Logged out','logout');
+  await db.auth.signOut();
+  currentUser=null;
   document.getElementById('login-screen').style.display='flex';
   document.getElementById('dashboard').style.display='none';
   document.getElementById('admin-email').value='';
@@ -1624,24 +1665,23 @@ function requestMoreInfo(){
   logActivity(currentUser.name,'Requested missing info from: '+name,'staff');
 }
 
-// ===== ADMIN PASSWORD CHANGE =====
-function changeAdminPassword(){
-  const newEmail=document.getElementById('new-admin-email').value.trim();
-  const currentPass=document.getElementById('current-admin-pass').value.trim();
+// ===== ADMIN PASSWORD CHANGE — uses Supabase Auth =====
+async function changeAdminPassword(){
   const newPass=document.getElementById('new-admin-pass').value.trim();
   const confirmPass=document.getElementById('confirm-admin-pass').value.trim();
-  if(!newEmail||!currentPass||!newPass||!confirmPass){showToast('Please fill in all fields','error');return;}
-  const creds=getAdminCredentials();
-  if(currentPass!==creds.password){showToast('Current password is incorrect','error');return;}
+  if(!newPass||!confirmPass){showToast('Please fill in both password fields','error');return;}
   if(newPass.length<8){showToast('New password must be at least 8 characters','error');return;}
   if(newPass!==confirmPass){showToast('New passwords do not match','error');return;}
-  saveAdminCredentials(newEmail,newPass,creds.name);
-  document.getElementById('new-admin-email').value='';
-  document.getElementById('current-admin-pass').value='';
-  document.getElementById('new-admin-pass').value='';
-  document.getElementById('confirm-admin-pass').value='';
-  showToast('Password updated successfully. Use new credentials next login.','success');
-  logActivity(currentUser.name,'Changed admin password','staff');
+  try{
+    const{error}=await db.auth.updateUser({password:newPass});
+    if(error)throw error;
+    document.getElementById('new-admin-pass').value='';
+    document.getElementById('confirm-admin-pass').value='';
+    showToast('Password updated successfully','success');
+    logActivity(currentUser.name,'Changed admin password','staff');
+  }catch(e){
+    showToast('Failed to update password: '+e.message,'error');
+  }
 }
 
 // ===== LAUNCH MODE =====
